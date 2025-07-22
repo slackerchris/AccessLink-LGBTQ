@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "name": "AccessLink LGBTQ+",
+    "slug": "accesslink-lgbtq",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./src/assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.accesslink.lgbtq",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "AccessLink uses your location to find nearby accessible LGBTQ+ businesses and events.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "AccessLink uses your location to find nearby accessible LGBTQ+ businesses and events.",
+        "NSCameraUsageDescription": "AccessLink uses the camera to allow businesses to upload photos showcasing their accessibility features.",
+        "NSPhotoLibraryUsageDescription": "AccessLink accesses your photo library to upload accessibility feature photos.",
+        "UIAccessibilityTraits": "button"
+      },
+      "associatedDomains": ["applinks:accesslink-lgbtq.com"]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.accesslink.lgbtq",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "accesslink-lgbtq.com"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./src/assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow AccessLink to use your location to find nearby accessible LGBTQ+ businesses."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
+  }
+}
