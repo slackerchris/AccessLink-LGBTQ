@@ -1,0 +1,82 @@
+name: Deploy AccessLink LGBTQ+ Website
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'website/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'website/**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Copy website files
+        run: |
+          # Create build directory
+          mkdir -p _site
+          
+          # Copy all website files to build directory
+          cp -r website/* _site/
+          
+          # Create 404 page (copy of index.html for SPA behavior)
+          cp website/index.html _site/404.html
+          
+          # Create robots.txt
+          echo "User-agent: *" > _site/robots.txt
+          echo "Allow: /" >> _site/robots.txt
+          echo "Sitemap: https://accesslinklgbtq.app/sitemap.xml" >> _site/robots.txt
+          
+          # Create basic sitemap.xml
+          cat > _site/sitemap.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            <url>
+              <loc>https://accesslinklgbtq.app/</loc>
+              <lastmod>$(date +%Y-%m-%d)</lastmod>
+              <changefreq>weekly</changefreq>
+              <priority>1.0</priority>
+            </url>
+          </urlset>
+          EOF
+          
+          # Create CNAME file for custom domain
+          echo "accesslinklgbtq.app" > _site/CNAME
+          
+          # List files for debugging
+          echo "Files in _site directory:"
+          ls -la _site/
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified favicon version -->
+  <rect width="32" height="32" rx="6" fill="#6366F1"/>
+  
+  <!-- Simplified rainbow -->
+  <rect x="6" y="10" width="20" height="2" fill="#E40A5D"/>
+  <rect x="6" y="12" width="20" height="2" fill="#FF8E0D"/>
+  <rect x="6" y="14" width="20" height="2" fill="#FFED00"/>
+  <rect x="6" y="16" width="20" height="2" fill="#008F39"/>
+  <rect x="6" y="18" width="20" height="2" fill="#004CFF"/>
+  <rect x="6" y="20" width="20" height="2" fill="#732982"/>
+  
+  <!-- Accessibility symbol -->
+  <circle cx="16" cy="6" r="2" fill="white"/>
+  <path d="M16 8 L15 12 L17 12 Z" fill="white"/>
+  <path d="M13 13 L15 12 L15 16 L14 16.5 L13 16 Z" fill="white"/>
+  <path d="M19 13 L17 12 L17 16 L18 16.5 L19 16 Z" fill="white"/>
+</svg>

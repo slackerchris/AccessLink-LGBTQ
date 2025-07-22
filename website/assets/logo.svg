@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- AccessLink App Icon -->
+  <rect width="1024" height="1024" rx="180" fill="#6366F1"/>
+  
+  <!-- Rainbow Pride Symbol -->
+  <rect x="200" y="300" width="624" height="80" rx="40" fill="#E40A5D"/>
+  <rect x="200" y="380" width="624" height="80" rx="40" fill="#FF8E0D"/>
+  <rect x="200" y="460" width="624" height="80" rx="40" fill="#FFED00"/>
+  <rect x="200" y="540" width="624" height="80" rx="40" fill="#008F39"/>
+  <rect x="200" y="620" width="624" height="80" rx="40" fill="#004CFF"/>
+  <rect x="200" y="700" width="624" height="80" rx="40" fill="#732982"/>
+  
+  <!-- Accessibility Symbol -->
+  <circle cx="512" cy="200" r="60" fill="white"/>
+  <path d="M512 280 L480 400 L544 400 Z" fill="white"/>
+  <path d="M420 450 L480 400 L480 500 L450 520 L420 500 Z" fill="white"/>
+  <path d="M604 450 L544 400 L544 500 L574 520 L604 500 Z" fill="white"/>
+  
+  <!-- Connection Lines -->
+  <line x1="300" y1="150" x2="724" y2="150" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <line x1="300" y1="850" x2="724" y2="850" stroke="white" stroke-width="8" stroke-linecap="round"/>
+</svg>
