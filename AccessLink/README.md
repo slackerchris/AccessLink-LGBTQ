@@ -1,4 +1,92 @@
-# AccessLink LGBTQ+ Mobile App
+# AccessLink LGBT## 📝 Changelog
+
+### July 22, 2025
+- Fixed ESLint issues across all screen components
+  - Corrected style property ordering (alignItems, flex, justifyContent)
+  - Added proper Text wrapping in button components
+  - Removed unused imports
+  - Implemented proper error handling
+  - Fixed variable naming and usage in auth and API services
+- **Prepared iOS deployment configuration**
+  - Created EAS build configuration (eas.json)
+  - Configured iOS permissions and settings
+  - Added deployment documentation
+
+## 🚀 iOS Deployment
+
+### Prerequisites for iOS Build
+- **macOS machine** (required for local iOS builds)
+- **Xcode** (latest version)
+- **iOS Developer Account** (for App Store deployment)
+- **EAS CLI** (installed globally)
+
+### Building for iOS
+
+1. **Install EAS CLI globally:**
+   ```bash
+   npm install -g eas-cli
+   ```
+
+2. **Login to Expo:**
+   ```bash
+   eas login
+   ```
+
+3. **Configure EAS project:**
+   ```bash
+   eas build:configure
+   ```
+
+4. **Build for iOS (cloud build):**
+   ```bash
+   # Development build for testing
+   eas build --platform ios --profile development
+   
+   # Production build for App Store
+   eas build --platform ios --profile production
+   ```
+
+5. **Local iOS build (macOS only):**
+   ```bash
+   # Build locally on macOS
+   eas build --platform ios --local
+   
+   # Or use Expo CLI
+   npx expo run:ios
+   ```
+
+### iOS Simulator Testing
+
+1. **Start development server:**
+   ```bash
+   npm start
+   ```
+
+2. **Press 'i' to open iOS simulator** or run:
+   ```bash
+   npx expo start --ios
+   ```
+
+### App Store Deployment
+
+1. **Create production build:**
+   ```bash
+   eas build --platform ios --profile production
+   ```
+
+2. **Submit to App Store:**
+   ```bash
+   eas submit --platform ios
+   ```
+
+### iOS Configuration Details
+
+The app is configured with:
+- **Bundle Identifier:** `com.accesslink.lgbtq`
+- **Location permissions** for finding nearby businesses
+- **Camera/Photo permissions** for accessibility photos
+- **Accessibility features** optimized for VoiceOver
+- **Universal links** for deep linking App
 
 An accessibility-first mobile application connecting disabled LGBTQ+ individuals with inclusive, accessible businesses and community events.
 

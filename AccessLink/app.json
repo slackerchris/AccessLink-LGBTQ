@@ -4,13 +4,7 @@
     "slug": "accesslink-lgbtq",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./src/assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -30,10 +24,6 @@
       "associatedDomains": ["applinks:accesslink-lgbtq.com"]
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./src/assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
-      },
       "package": "com.accesslink.lgbtq",
       "permissions": [
         "ACCESS_FINE_LOCATION",
