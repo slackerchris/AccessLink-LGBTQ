@@ -70,12 +70,12 @@ AccessLink LGBTQ+ is designed with accessibility as the primary focus, ensuring 
 src/
 ├── accessibility/          # Accessibility utilities and providers
 ├── components/            # Reusable UI components
+├── hooks/                 # Custom React hooks
 ├── navigation/           # Navigation configuration
 ├── screens/             # Screen components
 ├── services/           # API services and data layer
 ├── theme/             # Design system and styling
 ├── types/            # TypeScript type definitions
-├── utils/           # Helper utilities
 └── App.tsx         # Main app component
 ```
 
