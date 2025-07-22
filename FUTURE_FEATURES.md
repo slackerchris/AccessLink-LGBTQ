@@ -16,7 +16,11 @@ This tier would be a subscription-based service for businesses wanting to enhanc
 ### 1. **Enhanced Business Profiles**
 - **Photo & Video Galleries**: Allow businesses to upload multiple photos and videos showcasing their accessible facilities and inclusive environment.
 - **Customizable "About Us" Section**: A dedicated space for businesses to share their story, their commitment to the LGBTQ+ and disabled communities, and detailed accessibility information.
-- **Direct Contact Information**: Display phone number, email, and a link to their website directly on their profile.
+- ✅ **Direct Contact Information**: Display phone number, email, and a link to their website directly on their profile. (Implemented July 2025)
+- **Enhanced Contact Features**:
+  - Click-to-call functionality with accessibility descriptions
+  - Contact form integration for email privacy
+  - Social media profile links and business hours display
 - **Verified Accessibility Checklist**: A detailed, interactive checklist of all available accessibility features, verified by the AccessLink team or certified auditors.
 
 ### 2. **Promoted Listings**
