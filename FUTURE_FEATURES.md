@@ -77,11 +77,21 @@ Enhancements focused on user engagement and community building.
 - **Specific Accessibility Ratings**: Allow users to rate specific accessibility features (e.g., "How was the ramp access?", "Rate the quiet space").
 - **Photo Uploads in Reviews**: Users can add their own photos to reviews to show real-world accessibility.
 - **Verified Stays/Visits**: A system to confirm a user has actually visited a business before leaving a review.
+- **Contact Experience Rating**:
+  - Rate response time and communication quality
+  - Accessibility of communication methods
+  - Staff knowledge of accessibility needs
+  - Language and cultural competency ratings
 
 ### 2. **User Profiles & Community Hub**
 - **Customizable User Profiles**: Users can share their accessibility needs (privately) to get better recommendations.
 - **Friend System & Messaging**: Opt-in ability to connect with other users and share recommendations.
 - **Community Forums**: Moderated forums for discussion on topics related to accessibility and LGBTQ+ life.
+- **Business Communication Hub**: 
+  - Secure in-app messaging with businesses
+  - Group chat for event coordination
+  - Auto-translation for multilingual communication
+  - Voice messaging option for accessibility
 
 ### 3. **Gamification & Rewards**
 - **Badges**: Earn badges for reviewing businesses, attending events, and contributing to the community.
