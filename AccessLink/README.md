@@ -16,6 +16,7 @@ AccessLink LGBTQ+ is designed with accessibility as the primary focus, ensuring 
 - **Comprehensive Accessibility Filters**: Physical, sensory, and cognitive accessibility features
 - **LGBTQ+ Business Verification**: Verified LGBTQ+-owned and friendly businesses  
 - **Accessibility-First Design**: Built with WCAG 2.2 AA/AAA compliance
+- **Business Contact Integration**: Direct access to phone, email, and website links
 - **Community Events**: Accessible events with detailed accommodation information
 - **User Reviews**: Both general and accessibility-specific ratings
 - **Screen Reader Optimized**: Full VoiceOver and TalkBack support

@@ -38,6 +38,11 @@ Successfully updated all domain references from various old domains to your new 
 
 ## 📱 **App Features Using Your Domain**
 
+### Business Contact Integration:
+- **Website Links**: All business website links properly handle your domain and deep linking
+- **Contact Information**: Email and phone links follow mobile deep linking best practices
+- **Accessibility**: All links include proper accessibility roles and labels
+
 Your new domain will be used for:
 - **Deep Linking**: Users can open app content via `https://accesslinklgbtq.app/business/123`
 - **Web Fallback**: Non-app users can browse content on your website

@@ -21,7 +21,11 @@ To create an inclusive digital space where disabled LGBTQ+ individuals can easil
 - Detailed accessibility feature listings
 - Community ratings and reviews
 - Photo galleries showing accessibility features
-- Contact information and hours of operation
+- Comprehensive contact information display
+  - Direct phone number access
+  - Email contact options
+  - Interactive website links
+- Business hours and operation details
 
 ### Community Events
 - Accessible LGBTQ+ events and gatherings

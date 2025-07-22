@@ -5,6 +5,17 @@ All notable changes to the AccessLink LGBTQ+ project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-07-22
+
+### Added
+- Added direct contact information display to BusinessDetailScreen (by GitHub Copilot)
+  - Phone number display with proper formatting
+  - Email address display
+  - Clickable website link with proper accessibility attributes
+  - Styled contact information container with visual separation
+  - Type-safe implementation with proper null checks
+  - Added loading state for data fetching
+
 ## [1.0.0] - 2025-07-22 - PRODUCTION READY 🚀
 
 ### 🎉 Major Release - All Critical Issues Resolved
