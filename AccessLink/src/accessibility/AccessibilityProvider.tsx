@@ -23,6 +23,7 @@ export interface AccessibilityPreferences {
   highContrast: boolean;
   largeText: boolean;
   reduceMotion: boolean;
+  voiceAnnouncements: boolean;
   screenReaderEnabled: boolean;
   voiceControl: boolean;
 }
@@ -50,6 +51,7 @@ const defaultPreferences: AccessibilityPreferences = {
   highContrast: false,
   largeText: false,
   reduceMotion: false,
+  voiceAnnouncements: false,
   screenReaderEnabled: false,
   voiceControl: false,
 };

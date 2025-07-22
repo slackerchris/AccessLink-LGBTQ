@@ -28,7 +28,12 @@ export const HomeScreen = () => {
           Find LGBTQ+ friendly and accessible businesses near you
         </Text>
 
-        <Card style={styles.card} accessibilityLabel="Search businesses">
+        <Card 
+          style={styles.card} 
+          accessibilityLabel="Search businesses"
+          accessibilityRole="button"
+          onPress={() => {/* Navigate to search */}}
+        >
           <PaperCard.Content>
             <Text variant="titleMedium">Find Businesses</Text>
             <Text variant="bodyMedium">
@@ -37,7 +42,12 @@ export const HomeScreen = () => {
           </PaperCard.Content>
         </Card>
 
-        <Card style={styles.card} accessibilityLabel="Community events">
+        <Card 
+          style={styles.card} 
+          accessibilityLabel="Community events"
+          accessibilityRole="button"
+          onPress={() => {/* Navigate to events */}}
+        >
           <PaperCard.Content>
             <Text variant="titleMedium">Community Events</Text>
             <Text variant="bodyMedium">
@@ -46,7 +56,12 @@ export const HomeScreen = () => {
           </PaperCard.Content>
         </Card>
 
-        <Card style={styles.card} accessibilityLabel="Resources">
+        <Card 
+          style={styles.card} 
+          accessibilityLabel="Resources"
+          accessibilityRole="button"
+          onPress={() => {/* Navigate to resources */}}
+        >
           <PaperCard.Content>
             <Text variant="titleMedium">Resources</Text>
             <Text variant="bodyMedium">

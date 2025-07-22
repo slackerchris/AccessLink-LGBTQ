@@ -21,7 +21,7 @@
         "NSPhotoLibraryUsageDescription": "AccessLink accesses your photo library to upload accessibility feature photos.",
         "UIAccessibilityTraits": "button"
       },
-      "associatedDomains": ["applinks:accesslink-lgbtq.com"]
+      "associatedDomains": ["applinks:accesslinklgbtq.app"]
     },
     "android": {
       "package": "com.accesslink.lgbtq",
@@ -38,7 +38,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "accesslink-lgbtq.com"
+              "host": "accesslinklgbtq.app"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
@@ -60,7 +60,13 @@
     "extra": {
       "eas": {
         "projectId": "your-project-id-here"
-      }
+      },
+      "firebaseApiKey": "@FIREBASE_API_KEY",
+      "firebaseAuthDomain": "@FIREBASE_AUTH_DOMAIN",
+      "firebaseProjectId": "@FIREBASE_PROJECT_ID",
+      "firebaseStorageBucket": "@FIREBASE_STORAGE_BUCKET",
+      "firebaseMessagingSenderId": "@FIREBASE_MESSAGING_SENDER_ID",
+      "firebaseAppId": "@FIREBASE_APP_ID"
     }
   }
 }

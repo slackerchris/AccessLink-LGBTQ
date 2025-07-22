@@ -45,10 +45,15 @@
     "react-native-screens": "~3.22.0",
     "react-native-vector-icons": "^10.0.0",
     "react-query": "^3.39.0",
-    "zustand": "^4.4.0"
+    "zustand": "^4.4.0",
+    "react-native-web": "~0.19.6",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.2.0",
+    "@types/jest": "^30.0.0",
     "@types/react": "~18.2.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
@@ -69,5 +74,20 @@
     "mobile-app",
     "react-native",
     "inclusive-design"
-  ]
+  ],
+  "jest": {
+    "preset": "jest-expo",
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-native/extend-expect"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/**/__tests__/**"
+    ]
+  }
 }

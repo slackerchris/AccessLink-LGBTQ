@@ -21,7 +21,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { signOut } = useFirebaseAuth();
+  const { signOut: firebaseSignOut } = useFirebaseAuth();
 
   useEffect(() => {
     // TODO: Check for existing auth state on app start
@@ -58,7 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      // TODO: Implement Firebase sign out
+      // Use Firebase sign out when properly configured
+      await firebaseSignOut();
       setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);

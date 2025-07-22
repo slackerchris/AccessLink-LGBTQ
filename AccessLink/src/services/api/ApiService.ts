@@ -181,8 +181,12 @@ export class ApiService {
 
   static async updateUserProfile(userId: string, updates: Partial<User>): Promise<User | null> {
     await new Promise(resolve => setTimeout(resolve, 800));
+    const existingUser = await ApiService.getUserProfile(userId);
+    if (!existingUser) {
+      return null;
+    }
     return {
-      ...await ApiService.getUserProfile(userId),
+      ...existingUser,
       ...updates,
       updatedAt: new Date()
     };
