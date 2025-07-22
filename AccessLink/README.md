@@ -13,6 +13,12 @@ AccessLink LGBTQ+ is designed with accessibility as the primary focus, ensuring 
 
 ## ✨ Key Features
 
+### 🔐 Security & Authentication
+- **Enhanced Password Security**: Real-time strength validation with visual feedback
+- **Email Verification**: Automated verification system with resend options
+- **Secure Profile Management**: Type-safe profile updates with Firebase integration
+
+### 🌈 Core Features
 - **Comprehensive Accessibility Filters**: Physical, sensory, and cognitive accessibility features
 - **LGBTQ+ Business Verification**: Verified LGBTQ+-owned and friendly businesses  
 - **Accessibility-First Design**: Built with WCAG 2.2 AA/AAA compliance
