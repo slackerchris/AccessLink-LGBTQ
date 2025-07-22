@@ -1,5 +1,5 @@
 // API service for business and event data
-import { Business, Event, User, BusinessCategory, EventCategory, Address, Coordinates } from '../../types';
+import { Business, Event, User, BusinessCategory, EventCategory } from '../../types';
 
 // Mock data for development - replace with actual API calls
 const mockBusinesses: Business[] = [
@@ -167,13 +167,13 @@ export class ApiService {
   }
 
   // User-related methods (for future implementation)
-  static async getUserProfile(userId: string): Promise<User | null> {
+  static async getUserProfile(_userId: string): Promise<User | null> {
     await new Promise(resolve => setTimeout(resolve, 500));
     // Return mock user or implement actual API call
     return null;
   }
 
-  static async updateUserProfile(userId: string, updates: Partial<User>): Promise<User | null> {
+  static async updateUserProfile(_userId: string, _updates: Partial<User>): Promise<User | null> {
     await new Promise(resolve => setTimeout(resolve, 800));
     // Implement actual API call
     return null;

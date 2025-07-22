@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { SafeAreaView, Card, FAB } from '../components/AccessibleComponents';
+import { Card as PaperCard } from 'react-native-paper';
 
 export const HomeScreen = () => {
   const theme = useTheme();
@@ -28,30 +29,30 @@ export const HomeScreen = () => {
         </Text>
 
         <Card style={styles.card} accessibilityLabel="Search businesses">
-          <Card.Content>
+          <PaperCard.Content>
             <Text variant="titleMedium">Find Businesses</Text>
             <Text variant="bodyMedium">
               Discover businesses that welcome everyone and prioritize accessibility
             </Text>
-          </Card.Content>
+          </PaperCard.Content>
         </Card>
 
         <Card style={styles.card} accessibilityLabel="Community events">
-          <Card.Content>
+          <PaperCard.Content>
             <Text variant="titleMedium">Community Events</Text>
             <Text variant="bodyMedium">
               Join accessible LGBTQ+ events and gatherings in your area
             </Text>
-          </Card.Content>
+          </PaperCard.Content>
         </Card>
 
         <Card style={styles.card} accessibilityLabel="Resources">
-          <Card.Content>
+          <PaperCard.Content>
             <Text variant="titleMedium">Resources</Text>
             <Text variant="bodyMedium">
               Access helpful resources and support for the LGBTQ+ community
             </Text>
-          </Card.Content>
+          </PaperCard.Content>
         </Card>
       </ScrollView>
 
@@ -67,28 +68,28 @@ export const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  card: {
+    marginBottom: 16,
+  },
   container: {
     flex: 1,
+  },
+  fab: {
+    bottom: 0,
+    margin: 16,
+    position: 'absolute',
+    right: 0,
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 100,
   },
-  title: {
-    marginBottom: 8,
-    textAlign: 'center',
-  },
   subtitle: {
     marginBottom: 24,
     textAlign: 'center',
   },
-  card: {
-    marginBottom: 16,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
+  title: {
+    marginBottom: 8,
+    textAlign: 'center',
   },
 });

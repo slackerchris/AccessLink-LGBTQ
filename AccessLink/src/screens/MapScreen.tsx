@@ -54,19 +54,19 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
   },
-  title: {
-    marginBottom: 16,
-    textAlign: 'center',
+  mapPlaceholder: {
+    alignItems: 'center',
+    borderRadius: 8,
+    flex: 1,
+    justifyContent: 'center',
+    margin: 16,
+    padding: 20,
   },
   searchbar: {
     marginBottom: 16,
   },
-  mapPlaceholder: {
-    flex: 1,
-    margin: 16,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  title: {
+    marginBottom: 16,
+    textAlign: 'center',
   },
 });

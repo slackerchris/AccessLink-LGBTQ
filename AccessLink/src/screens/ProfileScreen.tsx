@@ -103,7 +103,7 @@ export const ProfileScreen = () => {
             style={styles.button}
             accessibilityLabel="Edit profile information"
           >
-            Edit Profile
+            <Text>Edit Profile</Text>
           </Button>
 
           <Button 
@@ -112,7 +112,7 @@ export const ProfileScreen = () => {
             style={styles.button}
             accessibilityLabel="Sign out of your account"
           >
-            Sign Out
+            <Text>Sign Out</Text>
           </Button>
         </View>
       </ScrollView>
@@ -121,15 +121,14 @@ export const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  button: {
+    marginVertical: 8,
+  },
   container: {
     flex: 1,
   },
   scrollContent: {
     padding: 16,
-  },
-  title: {
-    marginBottom: 24,
-    textAlign: 'center',
   },
   section: {
     marginBottom: 24,
@@ -137,7 +136,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: 16,
   },
-  button: {
-    marginVertical: 8,
+  title: {
+    marginBottom: 24,
+    textAlign: 'center',
   },
 });

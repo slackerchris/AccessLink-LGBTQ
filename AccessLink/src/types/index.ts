@@ -33,6 +33,7 @@ export interface AccessibilityPreferences {
   highContrast: boolean;
   largeText: boolean;
   reduceMotion: boolean;
+  voiceAnnouncements: boolean;
 }
 
 export interface LGBTQIdentity {

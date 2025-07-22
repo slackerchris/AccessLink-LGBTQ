@@ -96,14 +96,6 @@ function MainTabNavigator() {
             {...props}
             accessible={true}
             accessibilityRole="tab"
-            accessibilityState={{ selected: props.accessibilityState?.selected }}
-            style={[
-              props.style,
-              {
-                minHeight: 44, // Minimum touch target
-                minWidth: 44,
-              },
-            ]}
           />
         ),
       })}

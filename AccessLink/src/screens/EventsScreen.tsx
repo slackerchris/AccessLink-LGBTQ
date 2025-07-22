@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text, useTheme, Card as PaperCard } from 'react-native-paper';
 import { SafeAreaView, Card, Chip } from '../components/AccessibleComponents';
 
 export const EventsScreen = () => {
@@ -41,7 +41,7 @@ export const EventsScreen = () => {
 
         {mockEvents.map((event) => (
           <Card key={event.id} style={styles.eventCard} accessibilityLabel={`Event: ${event.title}`}>
-            <Card.Content>
+            <PaperCard.Content>
               <Text variant="titleLarge" style={styles.eventTitle}>
                 {event.title}
               </Text>
@@ -71,7 +71,7 @@ export const EventsScreen = () => {
                   ))}
                 </View>
               </View>
-            </Card.Content>
+            </PaperCard.Content>
           </Card>
         ))}
       </ScrollView>
@@ -80,8 +80,29 @@ export const EventsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  accessibilityChips: {
+    marginTop: 12,
+  },
+  chip: {
+    marginBottom: 4,
+    marginRight: 8,
+  },
+  chipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
   container: {
     flex: 1,
+  },
+  eventCard: {
+    marginBottom: 16,
+  },
+  eventDetail: {
+    marginBottom: 4,
+  },
+  eventTitle: {
+    marginBottom: 8,
   },
   scrollContent: {
     padding: 16,
@@ -89,26 +110,5 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 20,
     textAlign: 'center',
-  },
-  eventCard: {
-    marginBottom: 16,
-  },
-  eventTitle: {
-    marginBottom: 8,
-  },
-  eventDetail: {
-    marginBottom: 4,
-  },
-  accessibilityChips: {
-    marginTop: 12,
-  },
-  chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 4,
-  },
-  chip: {
-    marginRight: 8,
-    marginBottom: 4,
   },
 });
