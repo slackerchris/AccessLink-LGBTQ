@@ -6,16 +6,16 @@ const WelcomeScreen = ({ navigation }: any) => (
   <View style={styles.container}>
     <Text style={styles.title}>Welcome to AccessLink</Text>
     <Button mode="contained" onPress={() => navigation.navigate('Onboarding')}>
-      Get Started
+      <Text>Get Started</Text>
     </Button>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   title: {
     fontSize: 24,

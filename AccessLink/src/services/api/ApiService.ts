@@ -167,15 +167,24 @@ export class ApiService {
   }
 
   // User-related methods (for future implementation)
-  static async getUserProfile(_userId: string): Promise<User | null> {
+  static async getUserProfile(userId: string): Promise<User | null> {
     await new Promise(resolve => setTimeout(resolve, 500));
-    // Return mock user or implement actual API call
-    return null;
+    return {
+      id: userId,
+      email: `user-${userId}@example.com`,
+      displayName: `User ${userId}`,
+      userType: 'individual',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
   }
 
-  static async updateUserProfile(_userId: string, _updates: Partial<User>): Promise<User | null> {
+  static async updateUserProfile(userId: string, updates: Partial<User>): Promise<User | null> {
     await new Promise(resolve => setTimeout(resolve, 800));
-    // Implement actual API call
-    return null;
+    return {
+      ...await ApiService.getUserProfile(userId),
+      ...updates,
+      updatedAt: new Date()
+    };
   }
 }

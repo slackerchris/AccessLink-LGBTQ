@@ -21,7 +21,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { signInWithEmailAndPassword, signOut: firebaseSignOut } = useFirebaseAuth();
+  const { signOut } = useFirebaseAuth();
 
   useEffect(() => {
     // TODO: Check for existing auth state on app start
@@ -29,11 +29,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const signIn = async (email: string, _password: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      // In a real app, you would use the password to sign in
-      console.log('Sign in:', email);
+      // In a real app, you would use these credentials to sign in
+      console.log('Sign in:', email, 'with password length:', password.length);
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;

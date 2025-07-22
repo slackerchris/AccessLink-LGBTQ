@@ -6,16 +6,16 @@ const OnboardingScreen = ({ navigation }: any) => (
   <View style={styles.container}>
     <Text style={styles.title}>Onboarding</Text>
     <Button mode="contained" onPress={() => navigation.navigate('Main')}>
-      Finish
+      <Text>Finish</Text>
     </Button>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   title: {
     fontSize: 24,

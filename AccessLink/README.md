@@ -15,7 +15,17 @@ AccessLink LGBTQ+ is designed with accessibility as the primary focus, ensuring 
 - **User Reviews**: Both general and accessibility-specific ratings
 - **Screen Reader Optimized**: Full VoiceOver and TalkBack support
 
-## 🛠 Technology Stack
+## � Changelog
+
+### July 22, 2025
+- Fixed ESLint issues across all screen components
+  - Corrected style property ordering (alignItems, flex, justifyContent)
+  - Added proper Text wrapping in button components
+  - Removed unused imports
+  - Implemented proper error handling
+  - Fixed variable naming and usage in auth and API services
+
+## �🛠 Technology Stack
 
 - **Frontend**: React Native with Expo
 - **Navigation**: React Navigation v6
