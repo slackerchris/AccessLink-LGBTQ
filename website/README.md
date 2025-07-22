@@ -112,6 +112,33 @@ The site will be available at:
 - **Temporary**: https://slackerchris.github.io/handipride
 - **Custom Domain**: https://accesslinklgbtq.app (after DNS setup)
 
+#### DNS Configuration for Custom Domain
+
+To point `accesslinklgbtq.app` to GitHub Pages, add these DNS records at your domain registrar:
+
+**A Records (for apex domain):**
+```
+Type: A    Name: @    Value: 185.199.108.153
+Type: A    Name: @    Value: 185.199.109.153
+Type: A    Name: @    Value: 185.199.110.153
+Type: A    Name: @    Value: 185.199.111.153
+```
+
+**CNAME Record (for www subdomain):**
+```
+Type: CNAME    Name: www    Value: slackerchris.github.io
+```
+
+**GitHub's Name Servers (if using GitHub DNS):**
+```
+ns-1.github.com
+ns-2.github.com
+ns-3.github.com
+ns-4.github.com
+```
+
+**Note**: Most domain registrars allow you to just add the A and CNAME records without changing name servers. Only change NS records if you want GitHub to fully manage your domain's DNS.
+
 ## ♿ Accessibility Features
 
 ### Built-in Controls

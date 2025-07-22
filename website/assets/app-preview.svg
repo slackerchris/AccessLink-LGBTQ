@@ -1,0 +1,113 @@
+<!-- AccessLink LGBTQ+ App Screenshot Mockup -->
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Phone Frame -->
+  <rect width="300" height="600" rx="30" fill="#1F2937"/>
+  <rect x="10" y="10" width="280" height="580" rx="25" fill="#000000"/>
+  
+  <!-- Screen Content -->
+  <rect x="20" y="20" width="260" height="560" rx="20" fill="#FFFFFF"/>
+  
+  <!-- Status Bar -->
+  <rect x="20" y="20" width="260" height="40" rx="20" fill="#6366F1"/>
+  <text x="35" y="45" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="white">9:41</text>
+  <circle cx="250" cy="40" r="3" fill="white"/>
+  <circle cx="240" cy="40" r="3" fill="white"/>
+  <circle cx="230" cy="40" r="3" fill="white"/>
+  <rect x="255" y="35" width="15" height="8" rx="2" fill="white"/>
+  
+  <!-- Header -->
+  <rect x="20" y="60" width="260" height="60" fill="#FFFFFF"/>
+  <text x="35" y="85" font-family="Inter, sans-serif" font-size="24" font-weight="700" fill="#111827">AccessLink</text>
+  <text x="35" y="105" font-family="Inter, sans-serif" font-size="14" fill="#6B7280">Find accessible LGBTQ+ spaces</text>
+  
+  <!-- Search Bar -->
+  <rect x="35" y="130" width="230" height="40" rx="20" fill="#F3F4F6" stroke="#E5E7EB"/>
+  <text x="50" y="152" font-family="Inter, sans-serif" font-size="14" fill="#9CA3AF">🔍 Search businesses...</text>
+  
+  <!-- Filter Pills -->
+  <rect x="35" y="185" width="60" height="25" rx="12" fill="#6366F1"/>
+  <text x="50" y="200" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="white">♿ Physical</text>
+  
+  <rect x="105" y="185" width="50" height="25" rx="12" fill="#EC4899"/>
+  <text x="118" y="200" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="white">👁️ Visual</text>
+  
+  <rect x="165" y="185" width="55" height="25" rx="12" fill="#10B981"/>
+  <text x="178" y="200" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="white">🧠 Cognitive</text>
+  
+  <!-- Business Card 1 -->
+  <rect x="35" y="225" width="230" height="80" rx="12" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+  <circle cx="55" cy="245" r="10" fill="#6366F1"/>
+  <text x="50" y="250" font-family="Inter, sans-serif" font-size="12" fill="white">🏪</text>
+  
+  <text x="75" y="245" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#111827">Rainbow Café</text>
+  <text x="75" y="260" font-family="Inter, sans-serif" font-size="12" fill="#6B7280">Accessible coffee shop • 0.3 mi</text>
+  
+  <!-- Accessibility Icons -->
+  <text x="75" y="280" font-family="Inter, sans-serif" font-size="12" fill="#10B981">♿ 🏳️‍🌈 👁️ 🧠</text>
+  <text x="75" y="295" font-family="Inter, sans-serif" font-size="10" fill="#059669">4.8★ • LGBTQ+ Verified</text>
+  
+  <!-- Business Card 2 -->
+  <rect x="35" y="315" width="230" height="80" rx="12" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+  <circle cx="55" cy="335" r="10" fill="#EC4899"/>
+  <text x="50" y="340" font-family="Inter, sans-serif" font-size="12" fill="white">🍽️</text>
+  
+  <text x="75" y="335" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#111827">Pride Bistro</text>
+  <text x="75" y="350" font-family="Inter, sans-serif" font-size="12" fill="#6B7280">Inclusive restaurant • 0.7 mi</text>
+  
+  <text x="75" y="370" font-family="Inter, sans-serif" font-size="12" fill="#10B981">♿ 🏳️‍🌈 🎧 📱</text>
+  <text x="75" y="385" font-family="Inter, sans-serif" font-size="10" fill="#059669">4.9★ • Hearing Accessible</text>
+  
+  <!-- Business Card 3 -->
+  <rect x="35" y="405" width="230" height="80" rx="12" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+  <circle cx="55" cy="425" r="10" fill="#10B981"/>
+  <text x="50" y="430" font-family="Inter, sans-serif" font-size="12" fill="white">💪</text>
+  
+  <text x="75" y="425" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#111827">Inclusive Fitness</text>
+  <text x="75" y="440" font-family="Inter, sans-serif" font-size="12" fill="#6B7280">Adaptive gym • 1.2 mi</text>
+  
+  <text x="75" y="460" font-family="Inter, sans-serif" font-size="12" fill="#10B981">♿ 🏳️‍🌈 🧠 💬</text>
+  <text x="75" y="475" font-family="Inter, sans-serif" font-size="10" fill="#059669">4.7★ • Neurodivergent Friendly</text>
+  
+  <!-- Bottom Navigation -->
+  <rect x="20" y="500" width="260" height="80" fill="#FFFFFF"/>
+  <line x1="20" y1="500" x2="280" y2="500" stroke="#E5E7EB" stroke-width="1"/>
+  
+  <!-- Nav Icons -->
+  <g transform="translate(45, 515)">
+    <circle cx="10" cy="10" r="8" fill="#6366F1"/>
+    <text x="5" y="15" font-family="Inter, sans-serif" font-size="10" fill="white">🏠</text>
+    <text x="0" y="35" font-family="Inter, sans-serif" font-size="8" font-weight="500" fill="#6366F1">Home</text>
+  </g>
+  
+  <g transform="translate(95, 515)">
+    <circle cx="10" cy="10" r="8" fill="#E5E7EB"/>
+    <text x="5" y="15" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">🗺️</text>
+    <text x="2" y="35" font-family="Inter, sans-serif" font-size="8" fill="#6B7280">Map</text>
+  </g>
+  
+  <g transform="translate(145, 515)">
+    <circle cx="10" cy="10" r="8" fill="#E5E7EB"/>
+    <text x="5" y="15" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">📅</text>
+    <text x="0" y="35" font-family="Inter, sans-serif" font-size="8" fill="#6B7280">Events</text>
+  </g>
+  
+  <g transform="translate(195, 515)">
+    <circle cx="10" cy="10" r="8" fill="#E5E7EB"/>
+    <text x="5" y="15" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">❤️</text>
+    <text x="-5" y="35" font-family="Inter, sans-serif" font-size="8" fill="#6B7280">Favorites</text>
+  </g>
+  
+  <g transform="translate(245, 515)">
+    <circle cx="10" cy="10" r="8" fill="#E5E7EB"/>
+    <text x="5" y="15" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">👤</text>
+    <text x="-2" y="35" font-family="Inter, sans-serif" font-size="8" fill="#6B7280">Profile</text>
+  </g>
+  
+  <!-- Accessibility Indicator -->
+  <rect x="220" y="130" width="45" height="20" rx="10" fill="#10B981"/>
+  <text x="228" y="142" font-family="Inter, sans-serif" font-size="8" font-weight="600" fill="white">♿ WCAG</text>
+  
+  <!-- Floating Action Button -->
+  <circle cx="240" cy="460" r="20" fill="#6366F1" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+  <text x="235" y="465" font-family="Inter, sans-serif" font-size="16" fill="white">🔍</text>
+</svg>
