@@ -35,8 +35,16 @@ This tier would be a subscription-based service for businesses wanting to enhanc
 
 ### 4. **Analytics Dashboard**
 - **Profile Views**: See how many users have viewed their profile.
-- **User Engagement**: Track clicks on their website, phone number, and directions.
+- **User Engagement**: 
+  - Track clicks on contact information (phone, email, website)
+  - Monitor outbound link engagement
+  - Analyze user interaction patterns
+  - Track navigation to/from business profile
 - **Search Appearances**: Data on how often their business appears in search results.
+- **Contact Analytics**:
+  - Most used contact methods
+  - Peak contact hours
+  - Contact success rates
 - **Demographic Insights**: Anonymized and aggregated data about the users interacting with their profile to help them better serve the community.
 
 ---
