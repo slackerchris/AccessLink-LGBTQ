@@ -1,86 +1,34 @@
-# AccessLink LGBTQ+ - Mobile App
+# AccessLink LGBTQ+ - Developer Guide
 
-AccessLink is an accessibility-first mobile application designed to connect disabled LGBTQ+ individuals with inclusive businesses and community events. The app prioritizes universal design principles and ensures that accessibility is built into every feature from the ground up.
+This document provides technical information for developers working on the AccessLink LGBTQ+ mobile application. For general project information, see the main [README.md](./README.md).
 
-## 🌈 Mission
-
-To create an inclusive digital space where disabled LGBTQ+ individuals can easily discover, connect with, and support businesses and events that welcome and accommodate their diverse needs.
-
-## ✨ Key Features
-
-### Accessibility-First Design
-- **WCAG 2.2 AA/AAA compliance** throughout the application
-- **Screen reader optimization** with comprehensive accessibility labels
-- **High contrast mode** for users with visual impairments
-- **Large text options** and scalable typography
-- **Reduced motion** settings for users with vestibular sensitivities
-- **Voice announcements** for navigation and important updates
-
-### Security & Authentication
-- **Enhanced Password Security**
-  - Real-time password strength validation
-  - Visual strength indicator
-  - Complex password enforcement
-  - Password reuse prevention
-- **Email Verification System**
-  - Automated verification emails
-  - Resend verification option
-  - Verification status indicators
-- **Profile Management**
-  - Secure profile updates
-  - Firebase Authentication integration
-  - Type-safe implementation
-
-### Business Directory
-- Verified LGBTQ+ friendly businesses
-- Detailed accessibility feature listings
-- Community ratings and reviews
-- Photo galleries showing accessibility features
-- Comprehensive contact information display
-  - Direct phone number access
-  - Email contact options
-  - Interactive website links
-- Business hours and operation details
-
-### Community Events
-- Accessible LGBTQ+ events and gatherings
-- Detailed accessibility accommodations
-- Registration and ticketing integration
-- Community calendar and reminders
-
-### User Features
-- Personalized accessibility preferences
-- Favorites and bookmarks
-- Community reviews and ratings
-- Event RSVP and management
-
-## 🛠 Tech Stack
-
-- **Framework**: React Native with Expo
-- **Navigation**: React Navigation v6
-- **UI Components**: React Native Paper + Custom Accessible Components
-- **Backend**: Firebase (Auth, Firestore, Storage)
-- **State Management**: Zustand + React Query
-- **Language**: TypeScript
-- **Testing**: Jest + React Native Testing Library
-- **Linting**: ESLint with accessibility rules
-
-## 🚀 Getting Started
+## 🛠️ Development Setup
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- npm or yarn
-- Expo CLI (`npm install -g @expo/cli`)
-- For iOS development: Xcode
-- For Android development: Android Studio
+1. **Development Environment**
+   - Node.js v18+ 
+   - npm or yarn
+   - Git
 
-### Installation
+2. **IDE Setup**
+   - VSCode recommended with these extensions:
+     - ESLint
+     - Prettier
+     - React Native Tools
+     - TypeScript React code snippets
+
+3. **Mobile Development Tools**
+   - Expo CLI: `npm install -g expo-cli`
+   - For iOS: Xcode (Mac only)
+   - For Android: Android Studio with emulator configured
+
+### First-Time Setup
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd AccessLink
+   git clone https://github.com/yourusername/AccessLink-LGBTQ.git
+   cd AccessLink-LGBTQ
    ```
 
 2. **Install dependencies**
@@ -94,67 +42,202 @@ To create an inclusive digital space where disabled LGBTQ+ individuals can easil
    # Edit .env with your Firebase configuration
    ```
 
-4. **Configure Firebase**
-   - Create a Firebase project at https://console.firebase.google.com/
-   - Add your React Native app to the project
-   - Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-   - Update `src/services/firebase.ts` with your configuration
+4. **Firebase setup**
+   - Create a Firebase project at [firebase.google.com](https://firebase.google.com)
+   - Enable Authentication (email/password)
+   - Create Firestore database
+   - Add your Firebase config to .env file
 
-5. **Start the development server**
+### Development Workflow
+
+1. **Running the App**
    ```bash
-   npx expo start
+   npm start
+   ```
+   Then press:
+   - `i` for iOS simulator
+   - `a` for Android emulator
+   - `w` for web browser
+   - Scan QR code with Expo Go for physical device testing
+
+2. **Development Process**
+   - Create feature branches from `main`
+   - Follow TypeScript best practices
+   - Ensure accessibility for all components
+   - Write tests for new functionality
+   - Submit PR with detailed description
+
+## 🛠 Architecture
+
+### Technology Stack
+- **Frontend**: React Native with Expo
+- **Type System**: TypeScript for type safety
+- **Navigation**: React Navigation with accessibility optimizations
+- **UI Components**: Custom accessible components
+- **Backend**: Firebase (Auth, Firestore, Storage)
+- **Maps**: React Native Maps integration
+- **Testing**: Jest + React Native Testing Library
+- **Linting**: ESLint with accessibility rules
+
+### Directory Structure
+```
+/
+├── assets/                # App assets (images, fonts)
+├── src/                   # Source code
+│   ├── accessibility/     # Accessibility utilities
+│   ├── components/        # Reusable UI components
+│   ├── hooks/             # Custom React hooks
+│   ├── navigation/        # Navigation configuration
+│   ├── screens/           # Screen components
+│   ├── services/          # API services and data layer
+│   ├── theme/             # Design system and styling
+│   └── types/             # TypeScript type definitions
+├── App.tsx                # Main app component
+├── app.json               # Expo configuration
+└── index.js               # Entry point
+```
+
+## � Core Development Concepts
+
+### State Management
+
+The app uses a combination of React's Context API and local state:
+
+1. **AuthContext**: Manages user authentication state
+2. **AccessibilityContext**: Manages accessibility preferences
+3. **Local Screen State**: Component-specific state using hooks
+
+### Navigation Structure
+
+```
+AppNavigator (Main container)
+├── AuthStack (When not authenticated)
+│   ├── WelcomeScreen
+│   ├── LoginScreen
+│   └── RegistrationScreen
+└── MainTabs (When authenticated)
+    ├── HomeStack
+    │   ├── HomeScreen
+    │   └── BusinessDetailScreen
+    ├── DiscoverStack
+    │   ├── DiscoverScreen
+    │   └── SearchResultsScreen
+    └── ProfileStack
+        ├── ProfileScreen
+        └── SettingsScreen
+```
+
+### Firebase Integration
+
+1. **Authentication**: User sign-up, login, and profile management
+2. **Firestore**: Database for businesses, events, and user data
+3. **Storage**: Image storage for business photos and accessibility features
+
+### Accessibility Implementation
+
+1. **AccessibilityProvider**: Context for app-wide accessibility preferences
+2. **Accessible Components**: Enhanced with proper ARIA roles and attributes
+3. **Screen Reader Support**: All elements properly labeled for VoiceOver/TalkBack
+
+## � Development Guidelines
+
+### Code Style
+
+1. **TypeScript Best Practices**
+   - Use explicit types rather than `any`
+   - Prefer interfaces for object shapes
+   - Use type guards for runtime type checking
+
+2. **Component Structure**
+   ```tsx
+   // Component template
+   import React from 'react';
+   import { View, Text } from 'react-native';
+   
+   interface MyComponentProps {
+     title: string;
+     accessibilityLabel?: string;
+   }
+   
+   export const MyComponent: React.FC<MyComponentProps> = ({ 
+     title, 
+     accessibilityLabel 
+   }) => {
+     return (
+       <View>
+         <Text accessibilityLabel={accessibilityLabel || title}>
+           {title}
+         </Text>
+       </View>
+     );
+   };
    ```
 
-6. **Run on device/emulator**
-   - Press `i` for iOS simulator
-   - Press `a` for Android emulator
-   - Scan QR code with Expo Go app for physical device
+3. **File Naming Conventions**
+   - React components: `PascalCase.tsx`
+   - Utility functions: `camelCase.ts`
+   - Test files: `ComponentName.test.tsx`
 
-## 📱 Development
+### Accessibility Requirements
 
-### Project Structure
+1. **All interactive elements must have**:
+   - `accessibilityLabel`
+   - `accessibilityRole`
+   - Minimum touch target of 44×44dp
 
-```
-src/
-├── accessibility/          # Accessibility services and providers
-├── components/             # Reusable UI components
-├── navigation/             # Navigation configuration
-├── screens/               # Screen components
-├── services/              # API and Firebase services
-├── theme/                 # Design system and theming
-├── types/                 # TypeScript type definitions
-└── App.tsx               # Main application component
-```
+2. **All images must have**:
+   - `accessibilityLabel` describing the image content
+   - Decorative images marked appropriately
 
-### Available Scripts
+## 🧪 Testing Guidelines
 
-- `npm start` - Start the Expo development server
-- `npm run android` - Start on Android emulator
-- `npm run ios` - Start on iOS simulator
-- `npm run web` - Start web version
-- `npm run test` - Run tests
-- `npm run lint` - Run ESLint
-- `npm run build` - Build for production
+### Automated Testing
 
-### Accessibility Testing
+1. **Component Tests**
+   ```tsx
+   import React from 'react';
+   import { render, fireEvent } from '@testing-library/react-native';
+   import { MyButton } from './MyButton';
+   
+   describe('MyButton', () => {
+     it('renders correctly', () => {
+       const { getByText } = render(<MyButton title="Press Me" />);
+       expect(getByText("Press Me")).toBeTruthy();
+     });
+     
+     it('handles press events', () => {
+       const onPressMock = jest.fn();
+       const { getByText } = render(
+         <MyButton title="Press Me" onPress={onPressMock} />
+       );
+       
+       fireEvent.press(getByText("Press Me"));
+       expect(onPressMock).toHaveBeenCalledTimes(1);
+     });
+   });
+   ```
 
-This app includes comprehensive accessibility testing tools:
+2. **Accessibility Testing**
+   ```tsx
+   import { axe } from 'jest-axe';
+   
+   it('has no accessibility violations', async () => {
+     const { container } = render(<MyComponent />);
+     const results = await axe(container);
+     expect(results).toHaveNoViolations();
+   });
+   ```
 
-- **Screen Reader Testing**: Test with TalkBack (Android) and VoiceOver (iOS)
-- **Accessibility Scanner**: Use Google's Accessibility Scanner on Android
-- **Color Contrast**: All colors meet WCAG contrast requirements
-- **Focus Management**: Proper focus order and keyboard navigation
-- **Voice Announcements**: Test voice feedback for all interactions
+### Manual Testing
 
-## 🎨 Design System
+1. **Screen Reader Testing**:
+   - Test all screens with VoiceOver (iOS) and TalkBack (Android)
+   - Verify proper reading order and descriptions
 
-The app uses a carefully crafted design system that prioritizes accessibility:
-
-- **Colors**: High contrast ratios, colorblind-friendly palette
-- **Typography**: Scalable text with large text support
-- **Spacing**: Touch-friendly spacing (minimum 44px touch targets)
-- **Icons**: Clear, recognizable icons with text labels
-- **Motion**: Respectful of reduced motion preferences
+2. **Visual Testing**:
+   - Test with font scaling (up to 200%)
+   - Test with device color inversion
+   - Test with reduced motion settings enabled
 
 ## 🔧 Configuration
 
