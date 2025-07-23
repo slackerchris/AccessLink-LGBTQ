@@ -5,13 +5,13 @@ import { SafeAreaView } from '../components/AccessibleComponents';
 import { useAuth } from '../services/auth/AuthProvider';
 
 export const BusinessDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Business Dashboard</Text>
-        <Button mode="text" onPress={logout}>
+        <Button mode="text" onPress={signOut}>
           Logout
         </Button>
       </View>

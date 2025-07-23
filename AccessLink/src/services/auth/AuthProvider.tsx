@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthUser } from '../../types/auth';
 import { useFirebaseAuth } from '../../hooks/useFirebaseAuth';
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword, updateProfile as firebaseUpdateProfile } from 'firebase/auth';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -74,11 +76,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password: string, displayName: string) => {
     try {
       setError(null);
-      const { user: newUser } = await createUser(email, password);
+      const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
       
       // Update the user's display name
       if (newUser) {
-        await updateProfile(newUser, { displayName });
+        await firebaseUpdateProfile(newUser, { displayName });
         
         // Send verification email
         await sendEmailVerification(newUser);
@@ -114,7 +116,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateProfile = async (updates: Partial<User>): Promise<void> => {
+  const updateProfile = async (updates: Partial<AuthUser>): Promise<void> => {
     if (!user) return;
     
     try {

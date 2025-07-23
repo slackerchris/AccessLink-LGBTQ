@@ -9,13 +9,13 @@ export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, error } = useAuth();
+  const { signIn, error } = useAuth();
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
       const credentials: LoginCredentials = { email, password };
-      await login(credentials);
+      await signIn(credentials.email, credentials.password);
     } catch (err) {
       // Error is handled by AuthProvider
     } finally {

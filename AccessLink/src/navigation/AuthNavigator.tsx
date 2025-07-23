@@ -8,12 +8,11 @@ import LoginScreen from '../screens/LoginScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
 
 // User Screens
-import HomeScreen from '../screens/HomeScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import { HomeScreen } from '../screens/HomeScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 
 // Business Screens
-import BusinessDashboard from '../screens/BusinessDashboard';
-import BusinessProfileEdit from '../screens/BusinessProfileEdit';
+import { BusinessDashboard } from '../screens/BusinessDashboard';
 
 // Admin Screens
 import AdminDashboard from '../screens/AdminDashboard';
@@ -22,9 +21,9 @@ import UserManagement from '../screens/UserManagement';
 const Stack = createStackNavigator();
 
 export const AppNavigator = () => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return null; // Or a loading screen
   }
 
@@ -41,7 +40,8 @@ export const AppNavigator = () => {
           // Business Stack
           <>
             <Stack.Screen name="BusinessDashboard" component={BusinessDashboard} />
-            <Stack.Screen name="BusinessProfileEdit" component={BusinessProfileEdit} />
+            {/* TODO: Implement BusinessProfileEdit screen */}
+            {/* <Stack.Screen name="BusinessProfileEdit" component={BusinessProfileEdit} /> */}
           </>
         ) : user.role === 'admin' ? (
           // Admin Stack

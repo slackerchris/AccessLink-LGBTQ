@@ -93,7 +93,7 @@ export const RegistrationScreen = () => {
         role: formData.role,
         acceptedTerms: formData.acceptedTerms,
       };
-      await register(registrationData);
+      await signUp(registrationData.email, registrationData.password, registrationData.displayName);
     } catch (err) {
       // Error is handled by AuthProvider
     } finally {
