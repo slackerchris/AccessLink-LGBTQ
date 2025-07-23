@@ -26,6 +26,9 @@ We have successfully migrated the AccessLink LGBTQ+ website to a Docker-hosted s
 - ✅ **Website accessible at http://localhost:3000**
 - ✅ **Health check endpoint working at /health**
 - ✅ **All static assets loading correctly**
+- ✅ **Successfully merged from dev to main branch**
+- ✅ **GitHub-based Docker builds implemented**
+- ✅ **Production-ready deployment scripts created**
 
 ### 🔧 Features Implemented
 
@@ -97,5 +100,18 @@ docker-compose up -d
 
 The AccessLink LGBTQ+ website is now successfully containerized and running in Docker. The setup is production-ready with security best practices, performance optimizations, and comprehensive monitoring capabilities.
 
+**🔄 Successfully merged all Docker improvements from dev to main branch!**  
+**✅ Both branches now contain the complete Docker-hosted website solution.**
+
 **Live Website**: http://localhost:3000  
 **Health Check**: http://localhost:3000/health
+
+### 📦 GitHub-Based Docker Builds
+The website can now be built directly from GitHub without cloning:
+```bash
+# Build from GitHub repository
+./build-from-git.sh
+
+# Build locally
+./build-local.sh
+```
