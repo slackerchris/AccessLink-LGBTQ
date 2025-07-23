@@ -21,7 +21,9 @@
         "NSPhotoLibraryUsageDescription": "AccessLink accesses your photo library to upload accessibility feature photos.",
         "UIAccessibilityTraits": "button"
       },
-      "associatedDomains": ["applinks:accesslinklgbtq.app"]
+      "associatedDomains": [
+        "applinks:accesslinklgbtq.app"
+      ]
     },
     "android": {
       "package": "com.accesslink.lgbtq",
@@ -30,7 +32,9 @@
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "intentFilters": [
         {
@@ -41,7 +45,10 @@
               "host": "accesslinklgbtq.app"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -58,15 +65,16 @@
       ]
     ],
     "extra": {
-      "eas": {
-        "projectId": "your-project-id-here"
-      },
       "firebaseApiKey": "@FIREBASE_API_KEY",
       "firebaseAuthDomain": "@FIREBASE_AUTH_DOMAIN",
       "firebaseProjectId": "@FIREBASE_PROJECT_ID",
       "firebaseStorageBucket": "@FIREBASE_STORAGE_BUCKET",
       "firebaseMessagingSenderId": "@FIREBASE_MESSAGING_SENDER_ID",
-      "firebaseAppId": "@FIREBASE_APP_ID"
-    }
+      "firebaseAppId": "@FIREBASE_APP_ID",
+      "eas": {
+        "projectId": "351daa17-f3ee-470c-9936-54eb17100775"
+      }
+    },
+    "owner": "chriseckman"
   }
 }
