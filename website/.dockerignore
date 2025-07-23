@@ -1,7 +1,6 @@
 # Docker files
 Dockerfile
 docker-compose.yml
-nginx.conf
 
 # Development files
 *.log
