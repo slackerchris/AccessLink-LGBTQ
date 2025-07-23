@@ -1,0 +1,33 @@
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Define a linear gradient for the rainbow effect -->
+                <linearGradient id="rainbowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" /> <!-- Red -->
+                    <stop offset="20%" style="stop-color:#FFD166;stop-opacity:1" /> <!-- Orange -->
+                    <stop offset="40%" style="stop-color:#06D6A0;stop-opacity:1" /> <!-- Green -->
+                    <stop offset="60%" style="stop-color:#118AB2;stop-opacity:1" /> <!-- Blue -->
+                    <stop offset="80%" style="stop-color:#073B4C;stop-opacity:1" /> <!-- Indigo -->
+                    <stop offset="100%" style="stop-color:#6A0572;stop-opacity:1" /> <!-- Violet -->
+                </linearGradient>
+
+                <!-- Define a subtle teal/blue gradient for the 'A' base if not fully rainbow -->
+                <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+
+            <!-- Base 'A' shape - forming a path/bridge -->
+            <!-- This path represents the main structure of the 'A' and the "path" idea -->
+            <path d="M 20 80 L 35 20 L 65 20 L 80 80 H 65 L 50 35 L 35 80 H 20 Z" fill="url(#blueGradient)" opacity="0.9"></path>
+
+            <!-- Intertwined Heart Element - using the rainbow gradient -->
+            <!-- This heart is designed to appear integrated with the 'A' structure,
+                 as if it's forming the connection or the "link" within the 'A'.
+                 The coordinates are carefully chosen to overlap and blend. -->
+            <path d="M 50 35 C 40 15, 20 25, 20 45 C 20 65, 40 85, 50 90 C 60 85, 80 65, 80 45 C 80 25, 60 15, 50 35 Z" fill="url(#rainbowGradient)" opacity="0.9"></path>
+
+            <!-- A subtle 'link' or connection line within the 'A' that also outlines the heart -->
+            <path d="M 35 80 L 50 35 L 65 80" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"></path>
+
+        </svg>

@@ -1,0 +1,5 @@
+# Placeholder for app icon
+# This is a 1024x1024 placeholder icon for AccessLink LGBTQ+
+# TODO: Replace with actual designed icon
+# Icon should represent accessibility and LGBTQ+ inclusivity
+# Colors should meet WCAG contrast requirements
