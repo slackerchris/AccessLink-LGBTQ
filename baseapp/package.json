@@ -1,0 +1,30 @@
+{
+  "name": "baseapp",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --root-dir .",
+    "android": "expo start --android --root-dir .",
+    "ios": "expo start --ios --root-dir .",
+    "web": "expo start --web --root-dir ."
+  },
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.4.2",
+    "@react-navigation/native": "^7.1.14",
+    "@react-navigation/native-stack": "^7.3.21",
+    "expo": "~53.0.20",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-screens": "^4.13.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "babel-preset-expo": "^13.2.3",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}

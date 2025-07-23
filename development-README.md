@@ -239,108 +239,139 @@ AppNavigator (Main container)
    - Test with device color inversion
    - Test with reduced motion settings enabled
 
-## 🔧 Configuration
+## � API Services
 
-### Accessibility Features
+### Firebase Services
 
-The app includes several configurable accessibility features:
+The app uses Firebase for its backend services:
+
+1. **Authentication**
+   ```typescript
+   // Example of authentication usage
+   import { auth } from '../services/firebase';
+   
+   const signIn = async (email: string, password: string) => {
+     try {
+       const userCredential = await auth.signInWithEmailAndPassword(email, password);
+       return userCredential.user;
+     } catch (error) {
+       console.error('Authentication error:', error);
+       throw error;
+     }
+   };
+   ```
+
+2. **Firestore**
+   ```typescript
+   // Example of Firestore usage
+   import { firestore } from '../services/firebase';
+   
+   const getBusinesses = async () => {
+     try {
+       const snapshot = await firestore.collection('businesses').get();
+       return snapshot.docs.map(doc => ({
+         id: doc.id,
+         ...doc.data()
+       }));
+     } catch (error) {
+       console.error('Firestore error:', error);
+       throw error;
+     }
+   };
+   ```
+
+### API Service Layer
+
+The app includes an API service layer that abstracts backend operations:
 
 ```typescript
-interface AccessibilityPreferences {
-  highContrast: boolean;
-  largeText: boolean;
-  reduceMotion: boolean;
-  voiceAnnouncements: boolean;
+// src/services/api/ApiService.ts
+export class ApiService {
+  static async getBusinesses(filters?: BusinessFilters) {
+    // Implementation using Firebase or other backend
+  }
+  
+  static async getBusinessById(id: string) {
+    // Implementation
+  }
+  
+  static async updateUserProfile(userId: string, data: UserProfile) {
+    // Implementation
+  }
 }
 ```
 
-### LGBTQ+ Verification
+## 🚀 Deployment Guide
 
-Businesses can be verified through multiple methods:
-- Document verification
-- Certification programs
-- Community verification
-- Self-reporting
+### Environment Configuration
 
-## 🧪 Testing
+The app uses environment-specific configuration:
 
-### Running Tests
+1. **Development**
+   - Local Firebase emulators
+   - Mock data for testing
+   - Debug logging enabled
 
-```bash
-# Run all tests
-npm test
+2. **Staging**
+   - Test Firebase project
+   - Sample data for QA
+   - Limited logging
 
-# Run tests in watch mode
-npm run test:watch
+3. **Production**
+   - Production Firebase instance
+   - No debug features
+   - Performance optimization
 
-# Run tests with coverage
-npm run test:coverage
-
-# Run accessibility tests
-npm run test:a11y
-```
-
-### Test Coverage
-
-The app maintains comprehensive test coverage for:
-- Accessibility compliance
-- User interactions
-- Navigation flows
-- API integration
-- Error handling
-
-## 🚀 Deployment
-
-### Building for Production
+### Build Process
 
 ```bash
-# Build for production
-npx expo build:android
-npx expo build:ios
+# Install EAS CLI
+npm install -g eas-cli
 
-# Or using EAS Build
-npx eas build --platform all
+# Login to your Expo account
+eas login
+
+# Configure EAS Build
+eas build:configure
+
+# Build for iOS
+eas build --platform ios --profile production
+
+# Build for Android
+eas build --platform android --profile production
+
+# Submit to App Store
+eas submit --platform ios
+
+# Submit to Google Play
+eas submit --platform android
 ```
 
-### App Store Guidelines
+## 🔍 Performance Considerations
 
-The app follows accessibility guidelines for both app stores:
-- iOS: VoiceOver compatibility and accessibility labels
-- Android: TalkBack support and content descriptions
+1. **Image Optimization**
+   - Use appropriate image resolutions
+   - Implement lazy loading for images
+   - Consider using WebP format
 
-## 🤝 Contributing
+2. **State Management**
+   - Avoid unnecessary re-renders
+   - Memoize expensive calculations
+   - Use proper React hooks dependencies
 
-We welcome contributions that improve accessibility and inclusivity:
+3. **Firebase Usage**
+   - Implement pagination for large data sets
+   - Use efficient queries with proper indexes
+   - Cache data when appropriate
 
-1. **Accessibility First**: All features must meet WCAG 2.2 AA standards
-2. **Inclusive Language**: Use inclusive, respectful language
-3. **Testing**: Include accessibility tests for new features
-4. **Documentation**: Document accessibility considerations
+## 📚 Learning Resources
 
-### Code Style
-
-- Use TypeScript for type safety
-- Follow React Native and accessibility best practices
-- Include comprehensive accessibility labels
-- Test with screen readers
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support or questions:
-- Create an issue in this repository
-- Email: support@accesslink.example.com
-- Community Discord: [Link]
-
-## 🙏 Acknowledgments
-
-- The LGBTQ+ community for inspiration and feedback
-- Accessibility advocates for guidance and best practices
-- Contributors who make this project possible
+- [React Native Documentation](https://reactnative.dev/docs/getting-started)
+- [Expo Documentation](https://docs.expo.dev/)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [WCAG 2.2 Guidelines](https://www.w3.org/TR/WCAG22/)
+- [React Navigation Documentation](https://reactnavigation.org/docs/getting-started)
 
 ---
 
-**AccessLink** - Building bridges to inclusive communities 🌈✨
+**AccessLink LGBTQ+** - Creating accessible connections for all 🏳️‍🌈♿
