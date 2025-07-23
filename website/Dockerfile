@@ -2,10 +2,10 @@
 FROM nginx:alpine
 
 # Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY website/nginx.conf /etc/nginx/nginx.conf
 
 # Copy website files to nginx html directory
-COPY . /usr/share/nginx/html/
+COPY website/ /usr/share/nginx/html/
 
 # Remove Dockerfile and other non-web files from the html directory
 RUN rm -f /usr/share/nginx/html/Dockerfile \

@@ -1,53 +1,159 @@
 # AccessLink LGBTQ+ Website - Docker Setup
 
-This directory contains the Docker configuration for the AccessLink LGBTQ+ website, a static site served using nginx.
+This directory contains a Docker-based setup for hosting the AccessLink LGBTQ+ website using nginx.
 
-## 🐳 Docker Architecture
+## Quick Start
 
-- **Base Image**: `nginx:alpine` - Lightweight and secure
-- **Web Server**: nginx with custom configuration
-- **Port**: 8080 (internal), mapped to 3000 (development) or 80 (production)
-- **Security**: Runs as non-root user, includes security headers
-- **Health Checks**: Built-in health monitoring
-
-## 🚀 Quick Start
-
-### Development Mode
+### Option 1: Using Build Scripts (Recommended)
 
 ```bash
-# Start the website in development mode
-./start-dev.sh
+# Build locally
+./build-local.sh
 
-# Or manually:
-docker-compose up --build -d
-
-# View at: http://localhost:3000
+# Build from GitHub (requires public repo or authentication)
+./build-from-git.sh
 ```
 
-### Production Mode
+### Option 2: Manual Docker Commands
 
 ```bash
-# Deploy to production
-./deploy-prod.sh
+# Build the image
+docker build -f website/Dockerfile -t accesslink-website .
 
-# Or manually:
-docker-compose -f docker-compose.prod.yml up --build -d
-
-# View at: http://localhost (port 80)
+# Run the container
+docker run -p 3000:80 accesslink-website
 ```
 
-## 📁 File Structure
+### Option 3: Using Docker Compose
 
+```bash
+# Development
+docker-compose up -d
+
+# Production
+docker-compose -f docker-compose.prod.yml up -d
 ```
-website/
-├── Dockerfile              # Docker image configuration
-├── docker-compose.yml      # Development Docker Compose
-├── docker-compose.prod.yml # Production Docker Compose
-├── nginx.conf              # Custom nginx configuration
-├── .dockerignore           # Files to exclude from Docker build
-├── start-dev.sh           # Development startup script
-├── deploy-prod.sh         # Production deployment script
-├── index.html             # Main website file
+
+## Files Description
+
+- **`Dockerfile`** - Multi-stage build configuration for production-ready nginx container
+- **`nginx.conf`** - Custom nginx configuration with security headers and performance optimization
+- **`docker-compose.yml`** - Development environment configuration
+- **`docker-compose.prod.yml`** - Production environment with resource limits and logging
+- **`build-local.sh`** - Script to build Docker image from local repository
+- **`build-from-git.sh`** - Script to build Docker image directly from GitHub
+- **`.dockerignore`** - Excludes unnecessary files from Docker build context
+
+## Configuration Features
+
+### Security
+- Content Security Policy (CSP) headers
+- X-Frame-Options and X-Content-Type-Options headers
+- Runs as non-root user (nextjs:nodejs)
+- Security-hardened nginx configuration
+
+### Performance
+- Gzip compression for text assets
+- Browser caching with appropriate headers
+- Optimized nginx worker processes
+- Health check endpoint at `/health`
+
+### Docker Features
+- Multi-stage build for minimal image size (~52MB)
+- Non-root user execution
+- Health checks
+- Resource limits in production
+- Proper logging configuration
+
+## Environment Options
+
+### Development
+```bash
+docker-compose up -d
+```
+- Port: 3000
+- Basic logging
+- Development-friendly settings
+
+### Production
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+- Port: 80
+- Resource limits (512MB RAM, 0.5 CPU)
+- JSON logging for monitoring
+- Restart policy: unless-stopped
+
+## Repository Access
+
+### For GitHub-based builds
+
+If the repository is private, you have these options:
+
+1. **Make Repository Public** (Recommended for open source)
+   - Go to GitHub repository settings
+   - Change visibility to public
+
+2. **Use SSH Authentication**
+   - Configure SSH key: `ssh -T git@github.com`
+   - Update script to use SSH URL
+
+3. **Use Personal Access Token**
+   - Create token at https://github.com/settings/tokens
+   - Use: `https://token@github.com/owner/repo.git`
+
+## Health Monitoring
+
+The nginx configuration includes a health endpoint:
+
+```bash
+# Check health
+curl http://localhost:3000/health
+# Should return: OK
+
+# Docker health check
+docker ps
+# STATUS should show "(healthy)"
+```
+
+## Troubleshooting
+
+### Build Issues
+- Ensure Docker is running: `docker --version`
+- Check that you're in the repository root
+- Verify files exist: `ls -la website/`
+
+### Runtime Issues
+- Check logs: `docker logs <container-id>`
+- Verify port availability: `lsof -i :3000`
+- Test health endpoint: `curl http://localhost:3000/health`
+
+### Performance
+- The build context is optimized with `.dockerignore`
+- Build time should be ~5 seconds for local builds
+- Image size is optimized to ~52MB
+
+## Commands Reference
+
+```bash
+# Build image
+docker build -f website/Dockerfile -t accesslink-website .
+
+# Run container
+docker run -p 3000:80 accesslink-website
+
+# View logs
+docker logs <container-id>
+
+# Execute shell in container
+docker exec -it <container-id> /bin/sh
+
+# Remove container
+docker rm -f <container-id>
+
+# Remove image
+docker rmi accesslink-website
+```
 ├── css/                   # Stylesheets
 ├── js/                    # JavaScript files
 ├── assets/                # Images, icons, fonts
