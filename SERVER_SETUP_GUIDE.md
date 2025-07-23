@@ -41,13 +41,92 @@ Firebase is the primary backend service for AccessLink, providing authentication
      ✅ Email/Password
      ✅ Google (optional, for social login)
      ✅ Apple (iOS only, optional)
+     ✅ Phone Number (optional, for SMS verification)
      ```
-
+   - For Email/Password:
+     - Enable "Email link (passwordless sign-in)" if you want passwordless login
+     - Set minimum password length (recommended: 8+ characters)
+   
 2. **Configure Email Templates**
    - Go to Authentication → Templates
    - Customize email verification template
+     - Set up custom logo and brand colors
+     - Use friendly, inclusive language
+     - Include support contact information
    - Set up password reset email template
+     - Personalize with user's name if possible
+     - Include clear reset instructions
    - Configure sender name: "AccessLink LGBTQ+"
+   - Set sender email (recommended: noreply@yourdomain.com)
+
+3. **Configure Authentication Settings**
+   - Go to Authentication → Settings
+   - User actions:
+     - Enable email verification (recommended)
+     - Set password policy (special characters, numbers, etc.)
+   - Security:
+     - Set session duration (default: 1 hour)
+     - Enable "block functions on security rules" (recommended)
+
+4. **Setup Multi-Factor Authentication (MFA)**
+   - Go to Authentication → MFA
+   - Enable SMS verification as second factor
+   - Configure MFA settings for admin accounts
+
+5. **Social Authentication Configuration**
+   - For Google Auth:
+     - Create OAuth Client ID in Google Cloud Console
+     - Configure authorized domains
+     - Add your app's bundle ID/package name
+   - For Apple Auth:
+     - Create App ID in Apple Developer Portal
+     - Configure Sign in with Apple capability
+     - Generate and configure Service ID
+
+6. **Firebase Auth SDK Implementation**
+   ```javascript
+   // Example code for React Native implementation
+   import auth from '@react-native-firebase/auth';
+
+   // Email/Password Sign Up
+   const signUp = async (email, password) => {
+     try {
+       const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+       await userCredential.user.sendEmailVerification();
+       return userCredential.user;
+     } catch (error) {
+       console.error('Error signing up:', error.message);
+       throw error;
+     }
+   };
+
+   // Email/Password Sign In
+   const signIn = async (email, password) => {
+     try {
+       const userCredential = await auth().signInWithEmailAndPassword(email, password);
+       return userCredential.user;
+     } catch (error) {
+       console.error('Error signing in:', error.message);
+       throw error;
+     }
+   };
+
+   // Google Sign In
+   const googleSignIn = async () => {
+     // Implementation depends on Expo or React Native setup
+   };
+   ```
+
+7. **User Profile and Permissions**
+   - Create a "users" collection in Firestore
+   - Store extended user profile information
+   - Set up custom claims for role-based access:
+     ```javascript
+     // Admin function example
+     const setAdminRole = async (uid) => {
+       await admin.auth().setCustomUserClaims(uid, { admin: true });
+     };
+     ```
 
 #### Firestore Database Setup
 
