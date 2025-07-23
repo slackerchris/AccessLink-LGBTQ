@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  accesslink-website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: accesslink-lgbtq-website-prod
+    restart: unless-stopped
+    ports:
+      - "80:8080"
+      - "443:8080"  # If you add SSL/TLS later
+    environment:
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+      - NODE_ENV=production
+    networks:
+      - accesslink-prod-network
+    labels:
+      - "com.docker.compose.service=accesslink-website"
+      - "description=AccessLink LGBTQ+ Website - Production"
+      - "traefik.enable=true"
+      - "traefik.http.routers.accesslink-website.rule=Host(`accesslinklgbtq.app`)"
+      - "traefik.http.routers.accesslink-website.entrypoints=websecure"
+      - "traefik.http.routers.accesslink-website.tls.certresolver=letsencrypt"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  accesslink-prod-network:
+    driver: bridge
+    name: accesslink-prod-network
+
+volumes:
+  nginx_logs:
+    driver: local

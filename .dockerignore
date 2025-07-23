@@ -1,0 +1,30 @@
+# Ignore everything except the website folder
+*
+!website/
+
+# But ignore these specific items in website/
+website/.git
+website/node_modules
+website/build
+website/dist
+website/*.log
+
+# System files
+.DS_Store
+.git
+.gitignore
+README.md
+
+# Development files
+*.log
+*.tmp
+*.temp
+
+# AccessLink React Native app (large folder)
+AccessLink/
+
+# Other project files
+business plan for AccessLink LGBTQ+
+FUTURE_FEATURES.md
+LICENSE
+package.json

@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { auth } from '../services/firebase';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { 
+  User, 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword as firebaseSignIn,
+  sendEmailVerification as firebaseSendEmailVerification,
+  updateProfile as firebaseUpdateProfile,
+  signOut as firebaseSignOut
+} from 'firebase/auth';
 
 export const useFirebaseAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -15,16 +23,38 @@ export const useFirebaseAuth = () => {
     return unsubscribe;
   }, []);
 
-  const signInWithEmailAndPassword = async (email: string, pass: string) => {
-    // This is a mock implementation
-    console.log(email, pass);
-    return { user: { email } };
+  const signInWithEmailAndPassword = async (email: string, password: string) => {
+    const userCredential = await firebaseSignIn(auth, email, password);
+    return userCredential;
+  };
+
+  const createUser = async (email: string, password: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    return userCredential;
+  };
+
+  const sendEmailVerification = async (user: User) => {
+    await firebaseSendEmailVerification(user);
+  };
+
+  const updateProfile = async (user: User, updates: { displayName?: string; photoURL?: string }) => {
+    await firebaseUpdateProfile(user, updates);
   };
 
   const signOut = async () => {
-    // This is a mock implementation
-    setUser(null);
+    await firebaseSignOut(auth);
   };
 
-  return { user, isLoading, signInWithEmailAndPassword, signOut };
+  const getCurrentUser = () => auth.currentUser;
+
+  return { 
+    user, 
+    isLoading, 
+    signInWithEmailAndPassword, 
+    createUser,
+    sendEmailVerification,
+    updateProfile,
+    signOut,
+    getCurrentUser
+  };
 };

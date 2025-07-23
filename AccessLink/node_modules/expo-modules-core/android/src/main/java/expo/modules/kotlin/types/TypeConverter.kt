@@ -4,6 +4,7 @@ import com.facebook.react.bridge.Dynamic
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.NullArgumentException
 import expo.modules.kotlin.exception.UnsupportedClass
+import expo.modules.kotlin.jni.CppType
 import expo.modules.kotlin.jni.ExpectedType
 
 /**
@@ -22,7 +23,7 @@ abstract class TypeConverter<Type : Any> {
    * For instance js object can be pass as [Map] or [expo.modules.kotlin.jni.JavaScriptObject].
    * This value tells us which one we should choose.
    */
-  open fun getCppRequiredTypes(): ExpectedType = ExpectedType.forAny()
+  open fun getCppRequiredTypes(): ExpectedType = ExpectedType(CppType.ANY)
 
   /**
    * Checks if the current converter is a trivial one.
@@ -63,13 +64,13 @@ abstract class NullAwareTypeConverter<Type : Any>(
 abstract class DynamicAwareTypeConverters<T : Any>(isOptional: Boolean) : NullAwareTypeConverter<T>(isOptional) {
   override fun convertNonOptional(value: Any, context: AppContext?): T =
     if (value is Dynamic) {
-      convertFromDynamic(value)
+      convertFromDynamic(value, context)
     } else {
-      convertFromAny(value)
+      convertFromAny(value, context)
     }
 
-  abstract fun convertFromDynamic(value: Dynamic): T
-  abstract fun convertFromAny(value: Any): T
+  abstract fun convertFromDynamic(value: Dynamic, context: AppContext?): T
+  abstract fun convertFromAny(value: Any, context: AppContext?): T
 }
 
 inline fun <reified T : Any> createTrivialTypeConverter(
@@ -78,10 +79,14 @@ inline fun <reified T : Any> createTrivialTypeConverter(
   crossinline dynamicFallback: (Dynamic) -> T = { throw UnsupportedClass(T::class) }
 ): TypeConverter<T> {
   return object : DynamicAwareTypeConverters<T>(isOptional) {
-    override fun convertFromDynamic(value: Dynamic): T = dynamicFallback(value)
-    override fun getCppRequiredTypes(): ExpectedType = cppRequireType
+    override fun convertFromDynamic(value: Dynamic, context: AppContext?): T {
+      return dynamicFallback(value)
+    }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun convertFromAny(value: Any): T = value as T
+    override fun convertFromAny(value: Any, context: AppContext?): T {
+      return value as T
+    }
+
+    override fun getCppRequiredTypes(): ExpectedType = cppRequireType
   }
 }

@@ -1,0 +1,21 @@
+# Docker files
+Dockerfile
+docker-compose.yml
+
+# Development files
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation that shouldn't be served
+README.md
