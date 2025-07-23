@@ -1,44 +1,41 @@
 # AccessLink LGBTQ+ Mobile App 🏳️‍🌈♿
 
-> **Status**: 🚀 **PRODUCTION READY** - All critical issues resolved!
+> **Status**: 🚀 **PRODUCTION READY** - Ready for deployment
 
-An accessibility-first mobile application connecting disabled LGBTQ+ individuals with inclusive, accessible businesses and community events.
+An accessibility-first mobile application connecting LGBTQ+ individuals with inclusive, accessible businesses and community events.
 
-**Website**: [accesslinklgbtq.app](https://accesslinklgbtq.app)  
-**API**: [api.accesslinklgbtq.app](https://api.accesslinklgbtq.app)
+![AccessLink App](https://via.placeholder.com/800x400?text=AccessLink+App)
 
 ## 🌈 Project Overview
 
-AccessLink LGBTQ+ is designed with accessibility as the primary focus, ensuring that disabled LGBTQ+ individuals can easily discover and connect with businesses and events that meet their specific accessibility needs while being affirming of their identities.
+AccessLink LGBTQ+ is a mobile application designed to bridge the gap between the LGBTQ+ community and accessible, inclusive businesses and events. With accessibility as the primary focus, the app ensures that all users, regardless of ability, can easily discover and connect with spaces that meet their specific needs while being affirming of their identities.
 
 ## ✨ Key Features
 
-### 🔐 Security & Authentication
-- **Enhanced Password Security**: Real-time strength validation with visual feedback
-- **Email Verification**: Automated verification system with resend options
-- **Secure Profile Management**: Type-safe profile updates with Firebase integration
+### 🔐 User Experience
+- **Enhanced Authentication**: Secure login with email verification and password strength validation
+- **Personalized Profiles**: Customizable user profiles with accessibility preferences
+- **Intuitive Navigation**: Simplified, accessible interface with consistent design patterns
 
-### 🌈 Core Features
-- **Comprehensive Accessibility Filters**: Physical, sensory, and cognitive accessibility features
-- **LGBTQ+ Business Verification**: Verified LGBTQ+-owned and friendly businesses  
-- **Accessibility-First Design**: Built with WCAG 2.2 AA/AAA compliance
-- **Business Contact Integration**: Direct access to phone, email, and website links
-- **Community Events**: Accessible events with detailed accommodation information
-- **User Reviews**: Both general and accessibility-specific ratings
-- **Screen Reader Optimized**: Full VoiceOver and TalkBack support
-- **Domain Integration**: Fully branded with accesslinklgbtq.app domain
+### 🌈 Core Functionality
+- **Comprehensive Accessibility Filters**: Find places with physical, sensory, and cognitive accommodations
+- **LGBTQ+ Business Directory**: Discover and support inclusive, verified businesses
+- **Community Events**: Find accessible LGBTQ+ events with detailed accommodation information
+- **Interactive Maps**: Location-based services to find nearby inclusive spaces
+- **Detailed Reviews**: Community ratings with accessibility-specific feedback
+- **Business Details**: Complete information including contacts, hours, and accessibility features
 
 ## 🛠 Technology Stack
 
-- **Frontend**: React Native with Expo SDK 49
-- **Navigation**: React Navigation v6 with accessibility optimizations
-- **UI Library**: React Native Paper + Custom Accessible Components
-- **State Management**: Zustand + React Query
-- **Backend**: Firebase (Auth, Firestore, Storage) with environment configuration
-- **Maps**: React Native Maps (configured)
-- **Accessibility**: Custom accessibility service layer with WCAG 2.2 AA compliance
-- **Testing**: Jest + React Native Testing Library
-- **Deployment**: EAS Build for iOS/Android, Web support included
+- **Frontend**: React Native with Expo
+- **Navigation**: React Navigation with accessibility optimizations
+- **UI Components**: Custom accessible components following WCAG guidelines
+- **State Management**: React Context API with TypeScript integration
+- **Backend**: Firebase (Authentication, Firestore, Storage)
+- **Maps**: React Native Maps with accessibility features
+- **Accessibility**: WCAG 2.2 AA/AAA compliance throughout
+- **Testing**: Jest with React Native Testing Library
+- **CI/CD**: GitHub Actions workflow for automated testing and building
 
 ## 🚀 Quick Start
 
@@ -46,15 +43,16 @@ AccessLink LGBTQ+ is designed with accessibility as the primary focus, ensuring 
 
 - Node.js (v18 or higher)
 - npm or yarn
-- Expo CLI
-- iOS Simulator (for iOS development)
-- Android Studio (for Android development)
+- Expo CLI (`npm install -g expo-cli`)
+- For iOS development: macOS with Xcode
+- For Android development: Android Studio with emulator
 
 ### Installation
 
-1. **Clone and navigate to the project:**
+1. **Clone the repository:**
    ```bash
-   cd AccessLink
+   git clone https://github.com/yourusername/AccessLink-LGBTQ.git
+   cd AccessLink-LGBTQ
    ```
 
 2. **Install dependencies:**
@@ -75,9 +73,9 @@ AccessLink LGBTQ+ is designed with accessibility as the primary focus, ensuring 
 
 5. **Run on device/simulator:**
    - Press `i` for iOS simulator
-   - Press `a` for Android emulator  
+   - Press `a` for Android emulator
    - Press `w` for web browser
-   - Scan QR code with Expo Go app on physical device
+   - Scan QR code with Expo Go app for physical device testing
 
 ## 🏗️ Project Status
 
@@ -158,31 +156,38 @@ The app is configured with:
 ### Project Structure
 
 ```
-src/
-├── accessibility/          # Accessibility utilities and providers
-│   ├── AccessibilityProvider.tsx    # Context provider for accessibility state
-│   └── AccessibilityService.ts      # Core accessibility service functions
-├── components/            # Reusable UI components
-│   └── AccessibleComponents.tsx     # WCAG-compliant component wrappers
-├── hooks/                 # Custom React hooks
-│   └── useFirebaseAuth.ts          # Firebase authentication hook
-├── navigation/           # Navigation configuration
-│   └── AppNavigator.tsx            # Main navigation structure
-├── screens/             # Screen components
-│   ├── HomeScreen.tsx              # Landing screen with accessibility focus
-│   ├── ProfileScreen.tsx           # User profile and accessibility preferences
-│   ├── BusinessDetailScreen.tsx    # Business accessibility details
-│   ├── EventsScreen.tsx            # Accessible community events
-│   └── [other screens...]         # Additional app screens
-├── services/           # API services and data layer
-│   ├── firebase.ts                # Firebase configuration with env support
-│   ├── api/ApiService.ts          # Main API service with mock data
-│   └── auth/AuthProvider.tsx      # Authentication context provider
-├── theme/             # Design system and styling
-│   └── theme.ts                   # Accessible color scheme and typography
-├── types/            # TypeScript type definitions
-│   └── index.ts                   # Shared type definitions
-└── App.tsx         # Main app component with providers
+/
+├── assets/                 # App assets (images, fonts)
+├── src/                    # Source code
+│   ├── accessibility/      # Accessibility utilities
+│   │   ├── AccessibilityProvider.tsx   # Context provider for accessibility features
+│   │   └── AccessibilityService.ts     # Core accessibility functions
+│   ├── components/         # Reusable UI components
+│   │   └── Button.tsx      # Accessible button component
+│   │   └── Card.tsx        # Accessible card component
+│   ├── hooks/              # Custom React hooks
+│   │   └── useFirebaseAuth.ts         # Authentication hook
+│   ├── navigation/         # Navigation configuration
+│   │   ├── AppNavigator.tsx           # Main navigation structure
+│   │   └── AuthNavigator.tsx          # Authentication flow navigation
+│   ├── screens/            # Screen components
+│   │   ├── HomeScreen.tsx             # Main landing screen
+│   │   ├── DiscoverScreen.tsx         # Resource discovery screen
+│   │   ├── BusinessDetailScreen.tsx   # Business details screen
+│   │   ├── EventsScreen.tsx           # Community events screen
+│   │   ├── ProfileScreen.tsx          # User profile screen
+│   │   └── SettingsScreen.tsx         # App settings screen
+│   ├── services/           # API and data services
+│   │   ├── firebase.ts                # Firebase configuration
+│   │   ├── api/ApiService.ts          # API service with data handling
+│   │   └── auth/AuthProvider.tsx      # Authentication provider
+│   ├── theme/              # Styling and design system
+│   │   └── theme.ts                   # Theme configuration
+│   └── types/              # TypeScript definitions
+│       └── index.ts                   # Type declarations
+├── App.tsx                 # Main app component
+├── app.json                # Expo configuration
+└── index.js                # Entry point
 ```
 
 ## 🔧 Configuration
@@ -237,126 +242,105 @@ EXPO_PUBLIC_APP_ENV=development
 
 ## 🎨 Design System & Accessibility
 
-### Accessibility Guidelines
+### Accessibility Features
 
-This project follows strict accessibility guidelines:
+AccessLink is built with accessibility as the core principle:
 
-- **WCAG 2.2 AA minimum**, AAA where possible
-- **Minimum touch targets**: 44x44 dp
-- **Color contrast**: 4.5:1 for normal text, 3:1 for large text
-- **Screen reader support**: All components properly labeled with accessibility roles
-- **High contrast mode**: Available for low vision users
-- **Reduced motion**: Respects user preferences and system settings
-- **Voice announcements**: Context-aware screen reader announcements
+- **WCAG 2.2 Compliance**: Meeting AA standard with many AAA features
+- **Screen Reader Optimization**: Complete VoiceOver and TalkBack support
+- **Appropriate Touch Targets**: Minimum 44×44dp for all interactive elements
+- **Color Contrast**: 4.5:1 ratio for normal text, 3:1 for large text
+- **Reduced Motion**: Option to minimize animations for vestibular disorders
+- **Text Scaling**: Support for system text size changes up to 200%
+- **Voice Control**: Compatible with voice navigation systems
+- **Focus Management**: Clear visual indicators for keyboard/switch device users
 
-### Design System Features
+### Inclusive Design
 
-The app uses a comprehensive design system with:
+The app incorporates inclusive design principles:
 
-- **LGBTQ+ inclusive color palette** with WCAG compliant contrast ratios
-- **Scalable typography** that adapts to user accessibility preferences
-- **Consistent spacing** and layout patterns
-- **Accessible icons** with proper labeling and touch targets
-- **High contrast mode** for enhanced visibility
-- **Pride-themed branding** with accessibility symbol integration
+- **LGBTQ+ Inclusive Language**: Throughout the app and documentation
+- **Gender-Inclusive Options**: Non-binary and custom gender options in profiles
+- **Cultural Sensitivity**: Inclusive imagery and representation
+- **Plain Language**: Clear, straightforward content writing
+- **Disability Representation**: Authentic imagery and descriptions
 
-### Accessibility Testing
+### Testing Protocols
 
-✅ **Completed Testing:**
-- Screen reader navigation (VoiceOver/TalkBack compatible)
-- Color contrast verification (meets WCAG 2.2 AA standards)
-- Touch target sizing (44x44 dp minimum)
-- Keyboard navigation support
-- Dynamic type scaling support
-- Reduced motion preference handling
+The app undergoes comprehensive accessibility testing:
 
-## 📊 Data Models
+- **Automated Tests**: Using accessibility linting tools
+- **Manual Testing**: With screen readers and other assistive technology
+- **User Testing**: With members of both LGBTQ+ and disability communities
+- **Compliance Checking**: Regular WCAG conformance reviews
 
-The app uses comprehensive data models for:
+## � Feature Details
 
-- **Users**: With detailed accessibility preferences and LGBTQ+ identity options
-- **Businesses**: With comprehensive accessibility features and LGBTQ+ verification status
-- **Events**: With detailed accessibility accommodations and community focus
-- **Reviews**: Both general ratings and accessibility-specific feedback
+### Business Directory
+- **Comprehensive Filters**: Search by accessibility features, LGBTQ+ affirmation, services
+- **Detailed Listings**: Complete accessibility information with photos
+- **Contact Integration**: One-tap access to phone, email, website
+- **Reviews & Ratings**: Community feedback with accessibility-specific ratings
+- **Verified Listings**: LGBTQ+-owned and friendly business verification
 
-See `src/types/index.ts` for complete TypeScript type definitions.
+### Accessibility Categories
 
-## ♿ Accessibility Features Implemented
-
-### Physical Accessibility
-- Wheelchair accessibility indicators
+#### Physical Accessibility
+- Wheelchair accessible entrances and spaces
+- Accessible parking
+- Elevator availability
+- Accessible restrooms
 - Mobility aid accommodations
-- Accessible parking availability
-- Entrance accessibility details
 
-### Sensory Accessibility  
-- Low vision and blindness support
-- Hard of hearing and deaf accommodations
-- Sensory processing considerations
-- Visual and audio accessibility features
+#### Sensory Accessibility
+- Quiet spaces
+- Lighting options
+- Audio accommodations
+- Visual accessibility features
+- Sensory-friendly environments
 
-### Cognitive/Neurological Support
-- Neurodivergent-friendly environments
-- Cognitive support availability
-- Quiet environment options
-- Clear, simple navigation patterns
+#### Service Accessibility
+- ASL interpretation availability
+- Trained staff for various needs
+- Support for service animals
+- Communication aids
+- Inclusive practices
 
-### App-Specific Features
-- High contrast mode toggle
-- Large text size options
-- Motion reduction controls
-- Voice announcements
-- Screen reader optimization
-- Voice control support
+## 📄 Additional Documentation
 
-## 📄 Documentation
-
-- **[BUG_REPORT.md](./BUG_REPORT.md)** - All issues resolved ✅
-- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Complete fix summary
-- **[DOMAIN_UPDATE_SUMMARY.md](./DOMAIN_UPDATE_SUMMARY.md)** - Domain configuration details
-- **[CHANGELOG.md](./CHANGELOG.md)** - Detailed version history
-
-## 🌍 Community Guidelines
-
-This project is built for and by the disabled LGBTQ+ community. We are committed to:
-
-- **Inclusive language** in all code and documentation
-- **Authentic representation** in design and imagery  
-- **Community feedback** in development decisions
-- **Open source accessibility** improvements
-- **Nothing about us, without us** - community-driven development
-
-## 📄 License
-
-This project is licensed under the GPL v3 License - see the [LICENSE](../LICENSE) file for details.
+For more detailed information, see:
+- [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) - Implementation details
+- [FUTURE_FEATURES.md](./FUTURE_FEATURES.md) - Upcoming features
+- [SERVER_SETUP_GUIDE.md](./SERVER_SETUP_GUIDE.md) - Backend configuration
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our community guidelines:
+We welcome contributions that align with our mission of creating accessible, inclusive spaces for the LGBTQ+ community. Please:
 
-- **Code standards**: Follow accessibility requirements and inclusive practices
-- **Testing procedures**: All PRs must include accessibility testing
-- **Community guidelines**: Respectful, inclusive communication
-- **Issue reporting**: Use provided templates for bugs and features
+1. **Follow accessibility best practices** in all contributions
+2. **Test with screen readers** and other assistive technologies
+3. **Use inclusive language** in code, comments, and documentation
+4. **Respect the community** this application serves
 
-## 📞 Support & Contact
+## 📄 License
 
-For support or questions:
+This project is licensed under the GPL v3 License - see the [LICENSE](./LICENSE) file for details.
 
-- **Issues**: Create an issue in this repository
-- **Email**: [contact@accesslinklgbtq.app](mailto:contact@accesslinklgbtq.app)
-- **Website**: [accesslinklgbtq.app](https://accesslinklgbtq.app)
+## 📞 Support
+
+For questions or support:
+- Open an issue in this repository
+- Contact the development team via email
 
 ## 🙏 Acknowledgments
 
-This project is inspired by and developed with the disabled LGBTQ+ community. Special thanks to:
+This project exists thanks to the LGBTQ+ community and accessibility advocates who have shared their expertise, experiences, and guidance. We're particularly grateful to:
 
-- Accessibility advocates who provided guidance and testing
-- LGBTQ+ organizations who shared their expertise
-- The broader disabled community for their feedback and support
-- Open source contributors who made this project possible
+- LGBTQ+ organizations providing expertise and testing
+- Accessibility specialists ensuring universal design
+- Open-source contributors making inclusive technology possible
+- Community members providing valuable feedback
 
 ---
 
-**Built with ❤️ for the disabled LGBTQ+ community**  
-**Ready for production deployment at [accesslinklgbtq.app](https://accesslinklgbtq.app)** 🚀
+**Built with ❤️ for the LGBTQ+ community**
