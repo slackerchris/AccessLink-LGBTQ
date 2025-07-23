@@ -1,0 +1,9 @@
+{
+  "name": "accesslink-lgbtq",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "baseapp",
+    "AccessLink"
+  ]
+}
