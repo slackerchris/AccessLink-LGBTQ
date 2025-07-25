@@ -205,52 +205,52 @@ export const RegistrationScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  button: {
+    marginBottom: 10,
+    marginTop: 10,
+  },
   container: {
-    flex: 1,
     backgroundColor: '#fff',
+    flex: 1,
   },
   content: {
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+  error: {
+    color: '#f13a59',
+    fontSize: 12,
+    marginBottom: 10,
+  },
+  feedback: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 4,
   },
   input: {
     marginBottom: 15,
   },
-  button: {
-    marginTop: 10,
-    marginBottom: 10,
-  },
   link: {
     color: '#2196F3',
-    textAlign: 'center',
     marginTop: 15,
-  },
-  error: {
-    color: '#f13a59',
-    marginBottom: 10,
-    fontSize: 12,
+    textAlign: 'center',
   },
   passwordStrength: {
     marginVertical: 8,
   },
   strengthBar: {
-    height: 4,
     borderRadius: 2,
+    height: 4,
   },
   strengthText: {
     fontSize: 12,
     marginTop: 4,
     textAlign: 'center',
   },
-  feedback: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
   },
 });
 

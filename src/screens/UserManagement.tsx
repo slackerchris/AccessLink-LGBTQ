@@ -91,50 +91,50 @@ export const UserManagement = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    flex: 1,
   },
   content: {
     flex: 1,
     padding: 16,
   },
-  searchBar: {
-    marginBottom: 16,
+  header: {
+    borderBottomColor: '#e0e0e0',
+    borderBottomWidth: 1,
+    padding: 16,
   },
   list: {
     paddingBottom: 16,
   },
-  userItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+  searchBar: {
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  userEmail: {
+    color: '#666',
+    fontSize: 14,
   },
   userInfo: {
     flex: 1,
+  },
+  userItem: {
+    alignItems: 'center',
+    borderBottomColor: '#e0e0e0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
   },
   userName: {
     fontSize: 16,
     fontWeight: 'bold',
   },
-  userEmail: {
-    fontSize: 14,
-    color: '#666',
-  },
   userRole: {
-    fontSize: 14,
     color: '#666',
+    fontSize: 14,
     fontStyle: 'italic',
   },
 });

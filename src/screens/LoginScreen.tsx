@@ -83,32 +83,32 @@ export const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  button: {
+    marginBottom: 16,
+    marginTop: 8,
+  },
   container: {
-    flex: 1,
     backgroundColor: '#fff',
+    flex: 1,
   },
   content: {
     padding: 24,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
+  error: {
+    color: '#B00020',
+    marginBottom: 16,
     textAlign: 'center',
   },
   input: {
     marginBottom: 16,
   },
-  button: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
   link: {
     marginVertical: 8,
   },
-  error: {
-    color: '#B00020',
-    marginBottom: 16,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
     textAlign: 'center',
   },
 });

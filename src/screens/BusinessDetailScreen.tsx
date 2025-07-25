@@ -54,40 +54,40 @@ const BusinessDetailScreen = () => {
 
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 16,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
   contactContainer: {
-    marginTop: 16,
-    padding: 16,
     backgroundColor: '#f3f3f3',
     borderRadius: 8,
+    marginTop: 16,
+    padding: 16,
+  },
+  contactItem: {
+    fontSize: 16,
+    marginBottom: 4,
   },
   contactTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  contactItem: {
+  container: {
+    backgroundColor: '#fff',
+    flex: 1,
+    padding: 24,
+  },
+  description: {
     fontSize: 16,
-    marginBottom: 4,
+    marginBottom: 16,
+    textAlign: 'center',
   },
   link: {
     color: '#6366F1',
     textDecorationLine: 'underline',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
   },
 });
 

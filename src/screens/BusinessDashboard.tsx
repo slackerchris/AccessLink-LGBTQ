@@ -65,48 +65,48 @@ export const BusinessDashboard = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  actionButton: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  content: {
-    padding: 24,
-  },
-  welcomeText: {
-    fontSize: 20,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  quickActions: {
-    marginBottom: 32,
+    minWidth: '45%',
   },
   buttonGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
   },
-  actionButton: {
+  container: {
+    backgroundColor: '#fff',
     flex: 1,
-    minWidth: '45%',
+  },
+  content: {
+    padding: 24,
+  },
+  header: {
+    alignItems: 'center',
+    borderBottomColor: '#e0e0e0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  quickActions: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
   stats: {
     // Add statistics styling
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  welcomeText: {
+    fontSize: 20,
+    marginBottom: 24,
   },
 });
 
