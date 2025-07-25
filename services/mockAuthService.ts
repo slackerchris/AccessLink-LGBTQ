@@ -44,6 +44,19 @@ const mockUsers = {
     createdAt: new Date(),
     updatedAt: new Date()
   },
+  'admin': {
+    uid: 'mock-admin-789',
+    email: 'admin',
+    displayName: 'Administrator',
+    role: 'admin' as const,
+    profile: {
+      firstName: 'System',
+      lastName: 'Administrator',
+      bio: 'Primary admin account for AccessLink LGBTQ+'
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
   'user@example.com': {
     uid: 'mock-user-456',
     email: 'user@example.com',
@@ -114,6 +127,17 @@ class MockAuthService {
 
     const mockUser = mockUsers[email as keyof typeof mockUsers];
     if (!mockUser) {
+      throw new Error('Invalid email or password');
+    }
+
+    // Password validation for demo accounts
+    const validPasswords: { [key: string]: string } = {
+      'admin@accesslinklgbtq.app': 'admin123',
+      'admin': 'accesslink1234',
+      'user@example.com': 'password123'
+    };
+
+    if (password !== validPasswords[email]) {
       throw new Error('Invalid email or password');
     }
 
