@@ -34,8 +34,8 @@ console.log('   - adaptive-icon.png: ✅\n');
 
 // Test 5: Domain integration
 console.log('✅ Test 5: Domain Integration');
-console.log('   - Base URL: https://accesslink.app/');
-console.log('   - Support Email: support@accesslink.app');
+console.log('   - Base URL: https://accesslinklgbtq.app/');
+console.log('   - Support Email: support@accesslinklgbtq.app');
 console.log('   - Deep linking scheme: accesslink://');
 console.log('   - Universal links configured\n');
 

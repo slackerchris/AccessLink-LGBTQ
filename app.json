@@ -16,7 +16,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.accesslink.lgbtq"
+      "bundleIdentifier": "com.accesslinklgbtq.lgbtq"
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +31,7 @@
     "scheme": "accesslink",
     "extra": {
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "0a1b2c3d-4e5f-6789-abcd-ef0123456789"
       }
     },
     "owner": "slackerchris",
