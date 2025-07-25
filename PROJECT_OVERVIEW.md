@@ -13,10 +13,12 @@ All project documentation has been moved to the [`docs/`](docs/) folder:
 
 ## 🚀 Quick Start
 
-1. **Install dependencies**: `npm install`
-2. **Start development server**: `npx expo start`
-3. **View in browser**: http://localhost:8082
-4. **Test with Expo Go**: Scan QR code from terminal
+1. **Clone repository**: `git clone https://github.com/slackerchris/AccessLink-LGBTQ.git`
+2. **Switch to dev branch**: `git checkout dev`
+3. **Install dependencies**: `npm install`
+4. **Start development server**: `npx expo start`
+5. **View in browser**: http://localhost:8082
+6. **Test with Expo Go**: Scan QR code from terminal
 
 ## ✅ Current Status
 
