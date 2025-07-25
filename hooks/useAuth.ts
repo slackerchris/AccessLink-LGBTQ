@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { authService, AuthState, UserProfile } from '../services/authService';
+import { authService, AuthState, UserProfile } from '../services/mockAuthService';
 
 // Hook for authentication state
 export const useAuth = () => {
@@ -32,7 +32,7 @@ export const useAuthActions = () => {
     setLoading(true);
     setError(null);
     try {
-      await authService.registerUser(email, password, displayName, additionalInfo);
+      await authService.signUp(email, password, displayName, additionalInfo);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -86,7 +86,7 @@ export const useAuthActions = () => {
     try {
       const currentState = authService.getCurrentAuthState();
       if (currentState.user) {
-        await authService.updateUserProfile(currentState.user.uid, updates);
+        await authService.updateProfile(updates);
       } else {
         throw new Error('No user logged in');
       }
@@ -119,11 +119,11 @@ export const usePermissions = () => {
   const { userProfile } = useAuth();
 
   const isAdmin = useCallback(() => {
-    return authService.isAdmin(userProfile);
+    return userProfile?.role === 'admin';
   }, [userProfile]);
 
   const isBusinessOwner = useCallback(() => {
-    return authService.isBusinessOwner(userProfile);
+    return userProfile?.role === 'business_owner';
   }, [userProfile]);
 
   const canManageBusinesses = useCallback(() => {

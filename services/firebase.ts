@@ -6,17 +6,17 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Firebase configuration
+// Temporary Firebase configuration for development
+// TODO: Replace with actual Firebase project config
 const firebaseConfig = {
-  apiKey: "AIzaSyC7JlbYrHmblNfE7kBa_7Pb9NqOjFjR2u8", // You'll need to replace this with your actual config
-  authDomain: "accesslinklgbtq.firebaseapp.com",
-  projectId: "accesslinklgbtq-app",
-  storageBucket: "accesslinklgbtq-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef123456789012abcd",
-  measurementId: "G-ABCDEFGHIJ"
+  apiKey: "demo-api-key",
+  authDomain: "accesslinklgbtq-demo.firebaseapp.com",
+  projectId: "accesslinklgbtq-demo",
+  storageBucket: "accesslinklgbtq-demo.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:demo",
+  measurementId: "G-DEMO"
 };
 
 // Initialize Firebase
