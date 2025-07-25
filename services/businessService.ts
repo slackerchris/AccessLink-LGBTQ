@@ -1,0 +1,467 @@
+/**
+ * Business Service for AccessLink LGBTQ+
+ * Handles business listings, reviews, and admin functions
+ */
+
+import {
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  serverTimestamp,
+  DocumentSnapshot,
+  QueryConstraint
+} from 'firebase/firestore';
+import { db } from './firebase';
+import { UserProfile } from './authService';
+
+export interface BusinessListing {
+  id?: string;
+  name: string;
+  description: string;
+  category: BusinessCategory;
+  location: {
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  contact: {
+    phone?: string;
+    email?: string;
+    website?: string;
+    socialMedia?: {
+      facebook?: string;
+      instagram?: string;
+      twitter?: string;
+      linkedin?: string;
+    };
+  };
+  hours: {
+    [key: string]: {
+      open: string;
+      close: string;
+      closed: boolean;
+    };
+  };
+  lgbtqFriendly: {
+    verified: boolean;
+    certifications: string[];
+    inclusivityFeatures: string[];
+  };
+  accessibility: {
+    wheelchairAccessible: boolean;
+    brailleMenus: boolean;
+    signLanguageSupport: boolean;
+    quietSpaces: boolean;
+    accessibilityNotes: string;
+  };
+  ownerId: string;
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  featured: boolean;
+  images: string[];
+  tags: string[];
+  averageRating: number;
+  totalReviews: number;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface BusinessReview {
+  id?: string;
+  businessId: string;
+  userId: string;
+  userName: string;
+  rating: number; // 1-5 stars
+  title: string;
+  content: string;
+  lgbtqFriendliness: number; // 1-5 rating
+  accessibility: number; // 1-5 rating
+  anonymous: boolean;
+  helpful: number; // count of helpful votes
+  reported: boolean;
+  status: 'active' | 'hidden' | 'removed';
+  createdAt: any;
+  updatedAt: any;
+}
+
+export type BusinessCategory = 
+  | 'restaurant'
+  | 'healthcare'
+  | 'beauty'
+  | 'fitness'
+  | 'retail'
+  | 'professional_services'
+  | 'entertainment'
+  | 'education'
+  | 'nonprofit'
+  | 'other';
+
+export interface BusinessFilters {
+  category?: BusinessCategory;
+  city?: string;
+  state?: string;
+  lgbtqVerified?: boolean;
+  wheelchairAccessible?: boolean;
+  minRating?: number;
+  featured?: boolean;
+  searchTerm?: string;
+}
+
+class BusinessService {
+  private businessCollection = 'businesses';
+  private reviewsCollection = 'reviews';
+
+  // Create Business Listing
+  public async createBusiness(
+    businessData: Omit<BusinessListing, 'id' | 'createdAt' | 'updatedAt' | 'averageRating' | 'totalReviews'>,
+    userProfile: UserProfile
+  ): Promise<string> {
+    try {
+      // Check if user is business owner or admin
+      if (userProfile.role !== 'business_owner' && userProfile.role !== 'admin') {
+        throw new Error('Only business owners and admins can create listings');
+      }
+
+      const newBusiness: Omit<BusinessListing, 'id'> = {
+        ...businessData,
+        ownerId: userProfile.uid,
+        status: userProfile.role === 'admin' ? 'approved' : 'pending',
+        featured: false,
+        averageRating: 0,
+        totalReviews: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      const docRef = await addDoc(collection(db, this.businessCollection), newBusiness);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating business:', error);
+      throw error;
+    }
+  }
+
+  // Get Business by ID
+  public async getBusiness(businessId: string): Promise<BusinessListing | null> {
+    try {
+      const docRef = doc(db, this.businessCollection, businessId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as BusinessListing;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting business:', error);
+      throw error;
+    }
+  }
+
+  // Get Businesses with Filters and Pagination
+  public async getBusinesses(
+    filters: BusinessFilters = {},
+    pageLimit: number = 20,
+    lastDoc?: DocumentSnapshot
+  ): Promise<{ businesses: BusinessListing[]; lastDoc: DocumentSnapshot | null }> {
+    try {
+      const constraints: QueryConstraint[] = [];
+
+      // Apply filters
+      if (filters.category) {
+        constraints.push(where('category', '==', filters.category));
+      }
+      if (filters.city) {
+        constraints.push(where('location.city', '==', filters.city));
+      }
+      if (filters.state) {
+        constraints.push(where('location.state', '==', filters.state));
+      }
+      if (filters.lgbtqVerified) {
+        constraints.push(where('lgbtqFriendly.verified', '==', true));
+      }
+      if (filters.wheelchairAccessible) {
+        constraints.push(where('accessibility.wheelchairAccessible', '==', true));
+      }
+      if (filters.minRating) {
+        constraints.push(where('averageRating', '>=', filters.minRating));
+      }
+      if (filters.featured) {
+        constraints.push(where('featured', '==', true));
+      }
+
+      // Only show approved businesses to regular users
+      constraints.push(where('status', '==', 'approved'));
+
+      // Add ordering
+      constraints.push(orderBy('featured', 'desc'));
+      constraints.push(orderBy('averageRating', 'desc'));
+      constraints.push(orderBy('createdAt', 'desc'));
+
+      // Add pagination
+      constraints.push(limit(pageLimit));
+      if (lastDoc) {
+        constraints.push(startAfter(lastDoc));
+      }
+
+      const q = query(collection(db, this.businessCollection), ...constraints);
+      const querySnapshot = await getDocs(q);
+
+      const businesses: BusinessListing[] = [];
+      let newLastDoc: DocumentSnapshot | null = null;
+
+      querySnapshot.forEach((doc) => {
+        businesses.push({ id: doc.id, ...doc.data() } as BusinessListing);
+        newLastDoc = doc;
+      });
+
+      // Apply text search filter (Firestore doesn't support full-text search natively)
+      let filteredBusinesses = businesses;
+      if (filters.searchTerm) {
+        const searchTerm = filters.searchTerm.toLowerCase();
+        filteredBusinesses = businesses.filter(business =>
+          business.name.toLowerCase().includes(searchTerm) ||
+          business.description.toLowerCase().includes(searchTerm) ||
+          business.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      return {
+        businesses: filteredBusinesses,
+        lastDoc: filteredBusinesses.length > 0 ? newLastDoc : null
+      };
+    } catch (error) {
+      console.error('Error getting businesses:', error);
+      throw error;
+    }
+  }
+
+  // Update Business
+  public async updateBusiness(
+    businessId: string,
+    updates: Partial<BusinessListing>,
+    userProfile: UserProfile
+  ): Promise<void> {
+    try {
+      const business = await this.getBusiness(businessId);
+      if (!business) {
+        throw new Error('Business not found');
+      }
+
+      // Check permissions
+      if (userProfile.role !== 'admin' && business.ownerId !== userProfile.uid) {
+        throw new Error('You can only update your own business listings');
+      }
+
+      const docRef = doc(db, this.businessCollection, businessId);
+      await updateDoc(docRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating business:', error);
+      throw error;
+    }
+  }
+
+  // Delete Business (Admin only)
+  public async deleteBusiness(businessId: string, userProfile: UserProfile): Promise<void> {
+    try {
+      if (userProfile.role !== 'admin') {
+        throw new Error('Only admins can delete business listings');
+      }
+
+      const docRef = doc(db, this.businessCollection, businessId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error('Error deleting business:', error);
+      throw error;
+    }
+  }
+
+  // Approve Business (Admin only)
+  public async approveBusiness(businessId: string, userProfile: UserProfile): Promise<void> {
+    try {
+      if (userProfile.role !== 'admin') {
+        throw new Error('Only admins can approve business listings');
+      }
+
+      await this.updateBusiness(businessId, { status: 'approved' }, userProfile);
+    } catch (error) {
+      console.error('Error approving business:', error);
+      throw error;
+    }
+  }
+
+  // Reject Business (Admin only)
+  public async rejectBusiness(businessId: string, userProfile: UserProfile): Promise<void> {
+    try {
+      if (userProfile.role !== 'admin') {
+        throw new Error('Only admins can reject business listings');
+      }
+
+      await this.updateBusiness(businessId, { status: 'rejected' }, userProfile);
+    } catch (error) {
+      console.error('Error rejecting business:', error);
+      throw error;
+    }
+  }
+
+  // Feature Business (Admin only)
+  public async featureBusiness(businessId: string, featured: boolean, userProfile: UserProfile): Promise<void> {
+    try {
+      if (userProfile.role !== 'admin') {
+        throw new Error('Only admins can feature business listings');
+      }
+
+      await this.updateBusiness(businessId, { featured }, userProfile);
+    } catch (error) {
+      console.error('Error featuring business:', error);
+      throw error;
+    }
+  }
+
+  // Add Review
+  public async addReview(
+    reviewData: Omit<BusinessReview, 'id' | 'createdAt' | 'updatedAt' | 'helpful' | 'reported' | 'status'>,
+    userProfile: UserProfile
+  ): Promise<string> {
+    try {
+      const newReview: Omit<BusinessReview, 'id'> = {
+        ...reviewData,
+        userId: userProfile.uid,
+        userName: reviewData.anonymous ? 'Anonymous' : userProfile.displayName,
+        helpful: 0,
+        reported: false,
+        status: 'active',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      const docRef = await addDoc(collection(db, this.reviewsCollection), newReview);
+
+      // Update business rating
+      await this.updateBusinessRating(reviewData.businessId);
+
+      return docRef.id;
+    } catch (error) {
+      console.error('Error adding review:', error);
+      throw error;
+    }
+  }
+
+  // Get Reviews for Business
+  public async getBusinessReviews(businessId: string, pageLimit: number = 10): Promise<BusinessReview[]> {
+    try {
+      const q = query(
+        collection(db, this.reviewsCollection),
+        where('businessId', '==', businessId),
+        where('status', '==', 'active'),
+        orderBy('createdAt', 'desc'),
+        limit(pageLimit)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const reviews: BusinessReview[] = [];
+
+      querySnapshot.forEach((doc) => {
+        reviews.push({ id: doc.id, ...doc.data() } as BusinessReview);
+      });
+
+      return reviews;
+    } catch (error) {
+      console.error('Error getting reviews:', error);
+      throw error;
+    }
+  }
+
+  // Update Business Rating (internal method)
+  private async updateBusinessRating(businessId: string): Promise<void> {
+    try {
+      const reviews = await this.getBusinessReviews(businessId, 1000); // Get all reviews
+      
+      if (reviews.length === 0) {
+        return;
+      }
+
+      const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+      const averageRating = totalRating / reviews.length;
+
+      const docRef = doc(db, this.businessCollection, businessId);
+      await updateDoc(docRef, {
+        averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+        totalReviews: reviews.length,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating business rating:', error);
+      throw error;
+    }
+  }
+
+  // Get Pending Businesses (Admin only)
+  public async getPendingBusinesses(userProfile: UserProfile): Promise<BusinessListing[]> {
+    try {
+      if (userProfile.role !== 'admin') {
+        throw new Error('Only admins can view pending businesses');
+      }
+
+      const q = query(
+        collection(db, this.businessCollection),
+        where('status', '==', 'pending'),
+        orderBy('createdAt', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+      const businesses: BusinessListing[] = [];
+
+      querySnapshot.forEach((doc) => {
+        businesses.push({ id: doc.id, ...doc.data() } as BusinessListing);
+      });
+
+      return businesses;
+    } catch (error) {
+      console.error('Error getting pending businesses:', error);
+      throw error;
+    }
+  }
+
+  // Get User's Businesses
+  public async getUserBusinesses(userProfile: UserProfile): Promise<BusinessListing[]> {
+    try {
+      const q = query(
+        collection(db, this.businessCollection),
+        where('ownerId', '==', userProfile.uid),
+        orderBy('createdAt', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+      const businesses: BusinessListing[] = [];
+
+      querySnapshot.forEach((doc) => {
+        businesses.push({ id: doc.id, ...doc.data() } as BusinessListing);
+      });
+
+      return businesses;
+    } catch (error) {
+      console.error('Error getting user businesses:', error);
+      throw error;
+    }
+  }
+}
+
+// Export singleton instance
+export const businessService = new BusinessService();
+export default businessService;
