@@ -2,6 +2,7 @@
   "name": "accesslink-lgbtq",
   "version": "1.0.0",
   "description": "Accessible LGBTQ+ business directory and community platform",
+  "homepage": "https://accesslink.app/",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
@@ -39,5 +40,14 @@
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "typescript": "^5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slackerchris/AccessLink-LGBTQ.git"
+  },
+  "author": "slackerchris",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/slackerchris/AccessLink-LGBTQ/issues"
   }
 }
