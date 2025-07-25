@@ -39,6 +39,6 @@ export const DOMAIN_CONFIG = {
     PWA_ENABLED: true,
     OFFLINE_SUPPORT: true,
   }
-} as const;
+};
 
 export default DOMAIN_CONFIG;
