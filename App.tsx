@@ -1,134 +1,242 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function App() {
-  const handlePress = () => {
-    Alert.alert('Success!', 'AccessLink LGBTQ+ app is working!');
-  };
+// Auth Components
+import { LoginScreen } from './components/auth/LoginScreen';
+import { SignUpScreen } from './components/auth/SignUpScreen';
 
+// Business Components  
+import { BusinessListScreen } from './components/business/BusinessListScreen';
+
+// Admin Components
+import { AdminDashboard } from './components/admin/AdminDashboard';
+
+// Hooks
+import { useAuth, useAuthActions } from './hooks/useAuth';
+
+// Auth Stack Navigator
+const AuthStack = createStackNavigator();
+function AuthNavigator() {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>🏳️‍🌈 AccessLink LGBTQ+</Text>
-      <Text style={styles.subtitle}>Demo Version - Available Accounts</Text>
-      
-      <TouchableOpacity style={styles.button} onPress={handlePress}>
-        <Text style={styles.buttonText}>Test Button</Text>
-      </TouchableOpacity>
-      
-      <View style={styles.accountsContainer}>
-        <Text style={styles.accountsTitle}>Demo Login Accounts:</Text>
-        
-        <View style={styles.accountCard}>
-          <Text style={styles.accountRole}>👑 PRIMARY ADMIN</Text>
-          <Text style={styles.accountEmail}>Username: admin</Text>
-          <Text style={styles.accountPassword}>Password: accesslink1234</Text>
-          <Text style={styles.accountDesc}>Full admin access to all features</Text>
-        </View>
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="SignUp" component={SignUpScreen} />
+    </AuthStack.Navigator>
+  );
+}
 
-        <View style={styles.accountCard}>
-          <Text style={styles.accountRole}>👑 ADMIN</Text>
-          <Text style={styles.accountEmail}>Email: admin@accesslinklgbtq.app</Text>
-          <Text style={styles.accountPassword}>Password: admin123</Text>
-          <Text style={styles.accountDesc}>System administrator account</Text>
-        </View>
+// Main Tab Navigator
+const Tab = createBottomTabNavigator();
+function MainTabNavigator() {
+  const { userProfile } = useAuth();
+  
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+          
+          if (route.name === 'Businesses') {
+            iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Admin') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          } else {
+            iconName = 'help-outline';
+          }
+          
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#6366f1',
+        tabBarInactiveTintColor: 'gray',
+        headerStyle: {
+          backgroundColor: '#6366f1',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      })}
+    >
+      <Tab.Screen 
+        name="Businesses" 
+        component={BusinessListScreen}
+        options={{ title: 'LGBTQ+ Businesses' }}
+      />
+      
+      {userProfile?.role === 'admin' && (
+        <Tab.Screen 
+          name="Admin" 
+          component={AdminDashboard}
+          options={{ title: 'Admin Dashboard' }}
+        />
+      )}
+      
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{ title: 'Profile' }}
+      />
+    </Tab.Navigator>
+  );
+}
 
-        <View style={styles.accountCard}>
-          <Text style={styles.accountRole}>👤 USER</Text>
-          <Text style={styles.accountEmail}>Email: user@example.com</Text>
-          <Text style={styles.accountPassword}>Password: password123</Text>
-          <Text style={styles.accountDesc}>Regular community member</Text>
-        </View>
+// Profile Screen Component
+function ProfileScreen() {
+  const { userProfile } = useAuth();
+  const { signOut } = useAuthActions();
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error: any) {
+      Alert.alert('Sign Out Error', error.message);
+    }
+  };
+  
+  const handleWebsite = () => {
+    Alert.alert('Website', 'Opening https://accesslinklgbtq.app/');
+  };
+  
+  const handleSupport = () => {
+    Alert.alert('Support', 'Contact: support@accesslinklgbtq.app');
+  };
+  
+  return (
+    <View style={styles.container}>
+      <View style={styles.profileHeader}>
+        <Ionicons name="person-circle" size={80} color="#6366f1" />
+        <Text style={styles.profileName}>
+          {userProfile?.displayName || userProfile?.email || 'User'}
+        </Text>
+        <Text style={styles.profileRole}>
+          {userProfile?.role === 'admin' ? '👑 Admin' : 
+           userProfile?.role === 'business_owner' ? '🏢 Business Owner' : '👤 User'}
+        </Text>
       </View>
       
-      <Text style={styles.info}>
-        This is a basic test to ensure the app loads properly.{'\n'}
-        If you can see this, React Native is working!{'\n\n'}
-        Ready to implement the full authentication system with these accounts.
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleWebsite}>
+          <Ionicons name="globe-outline" size={24} color="#fff" />
+          <Text style={styles.buttonText}>Visit Website</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.button} onPress={handleSupport}>
+          <Ionicons name="mail-outline" size={24} color="#fff" />
+          <Text style={styles.buttonText}>Contact Support</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <Text style={styles.buttonText}>Sign Out</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <Text style={styles.footer}>
+        AccessLink LGBTQ+ © 2025{'\n'}
+        Connecting our community with inclusive businesses
       </Text>
-    </ScrollView>
+    </View>
+  );
+}
+
+// Main App Component
+export default function App() {
+  const { user, loading } = useAuth();
+  
+  // Show loading screen while checking auth state
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+        <Ionicons name="heart" size={60} color="#6366f1" />
+        <Text style={styles.loadingText}>AccessLink LGBTQ+</Text>
+        <Text style={styles.subtitle}>Loading...</Text>
+      </View>
+    );
+  }
+  
+  return (
+    <NavigationContainer>
+      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+      {user ? <MainTabNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
   },
-  title: {
-    fontSize: 28,
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#6366f1',
-    marginBottom: 10,
+    marginTop: 20,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#666',
-    marginBottom: 40,
+    marginTop: 10,
     textAlign: 'center',
+  },
+  profileHeader: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    backgroundColor: '#f8fafc',
+  },
+  profileName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginTop: 15,
+  },
+  profileRole: {
+    fontSize: 16,
+    color: '#6366f1',
+    marginTop: 5,
+    fontWeight: '600',
+  },
+  buttonContainer: {
+    padding: 20,
+    gap: 15,
   },
   button: {
     backgroundColor: '#6366f1',
-    paddingHorizontal: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 15,
-    borderRadius: 25,
-    marginBottom: 30,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    gap: 10,
+  },
+  signOutButton: {
+    backgroundColor: '#ef4444',
+    marginTop: 20,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
-  accountsContainer: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  accountsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 15,
+  footer: {
     textAlign: 'center',
-  },
-  accountCard: {
-    backgroundColor: '#f8fafc',
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#6366f1',
-    width: '100%',
-  },
-  accountRole: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6366f1',
-    marginBottom: 5,
-  },
-  accountEmail: {
-    fontSize: 14,
-    color: '#374151',
-    fontFamily: 'monospace',
-    marginBottom: 3,
-  },
-  accountPassword: {
-    fontSize: 14,
-    color: '#374151',
-    fontFamily: 'monospace',
-    marginBottom: 5,
-  },
-  accountDesc: {
-    fontSize: 12,
-    color: '#6b7280',
-    fontStyle: 'italic',
-  },
-  info: {
-    fontSize: 16,
     color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
+    fontSize: 14,
+    marginTop: 'auto',
+    paddingBottom: 40,
+    paddingHorizontal: 20,
   },
 });

@@ -1,6 +1,6 @@
 /**
  * Login Screen Component
- * User authentication login form with demo accounts
+ * User authentication login form
  */
 
 import React, { useState } from 'react';
@@ -25,7 +25,7 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, loading, error } = useAuthActions();
+  const { signIn, loading, error, clearError } = useAuthActions();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -46,6 +46,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setEmail(demoEmail);
     setPassword(demoPassword);
   };
+    setEmail('');
+    setPassword('');
+    clearError();
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -54,44 +58,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-          <Ionicons name="heart" size={60} color="#6366f1" />
-          <Text style={styles.title}>🏳️‍🌈 AccessLink LGBTQ+</Text>
-          <Text style={styles.subtitle}>Sign in to connect with inclusive businesses</Text>
-        </View>
-
-        {/* Demo Accounts Section */}
-        <View style={styles.demoSection}>
-          <Text style={styles.demoTitle}>Quick Demo Login:</Text>
-          <View style={styles.demoButtons}>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.adminButton]} 
-              onPress={() => quickLogin('admin', 'accesslink1234')}
-            >
-              <Text style={styles.demoButtonText}>👑 Admin Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.userButton]} 
-              onPress={() => quickLogin('user@example.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>👤 User Login</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
+          <Text style={styles.title}>🏳️‍🌈 Welcome Back!</Text>
+          <Text style={styles.subtitle}>Sign in to AccessLink LGBTQ+</Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email or Username</Text>
+            <Text style={styles.label}>Email Address</Text>
             <TextInput
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter email or username"
+              placeholder="Enter your email"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -128,24 +106,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               {loading ? 'Signing In...' : 'Sign In'}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={onNavigateToForgotPassword}
+            disabled={loading}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account?</Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate('SignUp')}
+            onPress={() => {
+              clearForm();
+              onNavigateToSignUp();
+            }}
             disabled={loading}
           >
             <Text style={styles.signUpText}>Sign Up</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Demo Credentials Info */}
-        <View style={styles.credentialsInfo}>
-          <Text style={styles.credentialsTitle}>Demo Credentials:</Text>
-          <Text style={styles.credentialsText}>Admin: admin / accesslink1234</Text>
-          <Text style={styles.credentialsText}>Admin2: admin@accesslinklgbtq.app / admin123</Text>
-          <Text style={styles.credentialsText}>User: user@example.com / password123</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -164,70 +145,32 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 40,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1f2937',
-    marginTop: 15,
-    textAlign: 'center',
+    color: '#333',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
-    marginTop: 8,
+    color: '#666',
     textAlign: 'center',
-  },
-  demoSection: {
-    marginBottom: 25,
-  },
-  demoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  demoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  demoButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  adminButton: {
-    backgroundColor: '#6366f1',
-  },
-  userButton: {
-    backgroundColor: '#10b981',
-  },
-  demoButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 25,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#d1d5db',
-  },
-  dividerText: {
-    color: '#6b7280',
-    paddingHorizontal: 15,
-    fontSize: 14,
   },
   form: {
-    marginBottom: 30,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   inputGroup: {
     marginBottom: 20,
@@ -235,80 +178,63 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: '#333',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#1f2937',
-  },
-  errorContainer: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fecaca',
+    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
-    marginBottom: 20,
+    fontSize: 16,
+    backgroundColor: '#f8f9fa',
+  },
+  errorContainer: {
+    backgroundColor: '#fee',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
   },
   errorText: {
-    color: '#dc2626',
+    color: '#d32f2f',
     fontSize: 14,
     textAlign: 'center',
   },
   loginButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#6c5ce7',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   disabledButton: {
-    backgroundColor: '#9ca3af',
+    backgroundColor: '#ccc',
   },
   loginButtonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  forgotPasswordButton: {
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    color: '#6c5ce7',
+    fontSize: 14,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
   },
   footerText: {
-    color: '#6b7280',
-    fontSize: 16,
-    marginRight: 5,
+    color: '#666',
+    fontSize: 14,
+    marginRight: 8,
   },
   signUpText: {
-    color: '#6366f1',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  credentialsInfo: {
-    backgroundColor: '#f3f4f6',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  credentialsTitle: {
+    color: '#6c5ce7',
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  credentialsText: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center',
-    fontFamily: 'monospace',
-    marginBottom: 2,
   },
 });
