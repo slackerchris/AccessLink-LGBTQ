@@ -2,14 +2,14 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { AppNavigator } from './navigation/AppNavigator';
-import { AccessibilityProvider } from './accessibility/AccessibilityProvider';
-import { AuthProvider } from './services/auth/AuthProvider';
-import { theme } from './theme/theme';
-import { AccessibilityService } from './accessibility/AccessibilityService';
+import { AppNavigator } from './src/navigation/AppNavigator';
+import { AccessibilityProvider } from './src/accessibility/AccessibilityProvider';
+import { AuthProvider } from './src/services/auth/AuthProvider';
+import { theme } from './src/theme/theme';
+import { AccessibilityService } from './src/accessibility/AccessibilityService';
 
 // Initialize React Query client
 const queryClient = new QueryClient({
