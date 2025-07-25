@@ -9,6 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LoginScreen } from './components/auth/LoginScreen';
 import { SignUpScreen } from './components/auth/SignUpScreen';
 
+// Home Screen Components
+import { AdminHomeScreen } from './components/admin/AdminHomeScreen';
+import { UserHomeScreen } from './components/user/UserHomeScreen';
+
 // Business Components  
 import { BusinessListScreen } from './components/business/BusinessListScreen';
 
@@ -34,13 +38,19 @@ const Tab = createBottomTabNavigator();
 function MainTabNavigator() {
   const { userProfile } = useAuth();
   
+  // Determine home screen based on user role
+  const HomeScreen = userProfile?.role === 'admin' ? AdminHomeScreen : UserHomeScreen;
+  const homeTitle = userProfile?.role === 'admin' ? 'Admin Dashboard' : 'Home';
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
           
-          if (route.name === 'Businesses') {
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Businesses') {
             iconName = focused ? 'business' : 'business-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
@@ -64,16 +74,25 @@ function MainTabNavigator() {
       })}
     >
       <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{ 
+          title: homeTitle,
+          headerShown: false // Hide header since each screen has its own
+        }}
+      />
+      
+      <Tab.Screen 
         name="Businesses" 
         component={BusinessListScreen}
-        options={{ title: 'LGBTQ+ Businesses' }}
+        options={{ title: 'Directory' }}
       />
       
       {userProfile?.role === 'admin' && (
         <Tab.Screen 
           name="Admin" 
           component={AdminDashboard}
-          options={{ title: 'Admin Dashboard' }}
+          options={{ title: 'Manage' }}
         />
       )}
       
