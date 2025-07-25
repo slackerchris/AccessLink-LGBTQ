@@ -319,4 +319,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
   },
+  adminBanner: {
+    backgroundColor: '#dc2626',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: '#991b1b',
+  },
+  adminBannerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  adminBannerSubtext: {
+    fontSize: 16,
+    color: '#fecaca',
+    textAlign: 'center',
+    marginTop: 5,
+  },
 });

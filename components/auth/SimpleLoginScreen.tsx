@@ -1,6 +1,6 @@
 /**
- * Login Screen Component
- * User authentication login form with demo accounts
+ * Simple Login Screen Component
+ * Clean login form with backend-driven redirection
  */
 
 import React, { useState } from 'react';
@@ -18,11 +18,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthActions } from '../../hooks/useAuth';
 
-interface LoginScreenProps {
+interface SimpleLoginScreenProps {
   navigation: any;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { signIn, loading, error } = useAuthActions();
@@ -35,16 +35,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     try {
       await signIn(email.trim(), password);
-      // Navigation will be handled automatically by the App component
-    } catch (err) {
-      // Error is handled by the hook
-      Alert.alert('Login Failed', error || 'An error occurred during login');
+      // Backend handles redirection based on user role
+    } catch (error: any) {
+      console.error('Login error:', error);
+      Alert.alert('Login Failed', error.message || 'Invalid credentials');
     }
-  };
-
-  const quickLogin = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
   };
 
   return (
@@ -57,31 +52,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <Ionicons name="heart" size={60} color="#6366f1" />
           <Text style={styles.title}>AccessLink LGBTQ+</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
-        </View>
-
-        {/* Demo Accounts Section */}
-        <View style={styles.demoSection}>
-          <Text style={styles.demoTitle}>Quick Demo Login:</Text>
-          <View style={styles.demoButtons}>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.adminButton]} 
-              onPress={() => quickLogin('admin', 'accesslink1234')}
-            >
-              <Text style={styles.demoButtonText}>�️ ADMIN DASHBOARD</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.userButton]} 
-              onPress={() => quickLogin('user@example.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>🏳️‍🌈 USER EXPERIENCE</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
         </View>
 
         <View style={styles.form}>
@@ -140,12 +110,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Demo Credentials Info */}
+        {/* Simple test credentials note */}
         <View style={styles.credentialsInfo}>
-          <Text style={styles.credentialsTitle}>Demo Credentials:</Text>
-          <Text style={styles.credentialsText}>Admin: admin / accesslink1234</Text>
-          <Text style={styles.credentialsText}>Admin2: admin@accesslinklgbtq.app / admin123</Text>
-          <Text style={styles.credentialsText}>User: user@example.com / password123</Text>
+          <Text style={styles.credentialsTitle}>Test Credentials:</Text>
+          <Text style={styles.credentialsText}>admin / accesslink1234 (Admin)</Text>
+          <Text style={styles.credentialsText}>user@example.com / password123 (User)</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -155,80 +124,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 40,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginTop: 15,
+    marginTop: 20,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
+    textAlign: 'center',
     marginTop: 8,
-    textAlign: 'center',
-  },
-  demoSection: {
-    marginBottom: 25,
-  },
-  demoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  demoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  demoButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  adminButton: {
-    backgroundColor: '#dc2626',
-    borderWidth: 2,
-    borderColor: '#991b1b',
-  },
-  userButton: {
-    backgroundColor: '#8b5cf6',
-    borderWidth: 2,
-    borderColor: '#7c3aed',
-  },
-  demoButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 25,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#d1d5db',
-  },
-  dividerText: {
-    color: '#6b7280',
-    paddingHorizontal: 15,
-    fontSize: 14,
   },
   form: {
     marginBottom: 30,
@@ -237,7 +156,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#374151',
     marginBottom: 8,
@@ -246,30 +165,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
-    padding: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 16,
     backgroundColor: '#fff',
-    color: '#1f2937',
   },
   errorContainer: {
     backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    borderRadius: 8,
     padding: 12,
-    marginBottom: 20,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ef4444',
   },
   errorText: {
     color: '#dc2626',
     fontSize: 14,
-    textAlign: 'center',
   },
   loginButton: {
     backgroundColor: '#6366f1',
+    paddingVertical: 14,
     borderRadius: 8,
-    padding: 16,
     alignItems: 'center',
-    marginBottom: 15,
+    marginTop: 10,
   },
   disabledButton: {
     backgroundColor: '#9ca3af',
@@ -283,28 +201,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    gap: 8,
   },
   footerText: {
+    fontSize: 14,
     color: '#6b7280',
-    fontSize: 16,
-    marginRight: 5,
   },
   signUpText: {
+    fontSize: 14,
     color: '#6366f1',
-    fontSize: 16,
     fontWeight: '600',
   },
   credentialsInfo: {
-    backgroundColor: '#f3f4f6',
-    padding: 15,
+    marginTop: 40,
+    padding: 16,
+    backgroundColor: '#f9fafb',
     borderRadius: 8,
-    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   credentialsTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
+    color: '#6b7280',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -312,7 +231,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
     textAlign: 'center',
-    fontFamily: 'monospace',
     marginBottom: 2,
   },
 });

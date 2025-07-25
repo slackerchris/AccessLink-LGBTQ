@@ -6,12 +6,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 
 // Auth Components
-import { LoginScreen } from './components/auth/LoginScreen';
+import { SimpleLoginScreen } from './components/auth/SimpleLoginScreen';
 import { SignUpScreen } from './components/auth/SignUpScreen';
 
 // Home Screen Components
 import { AdminHomeScreen } from './components/admin/AdminHomeScreen';
 import { UserHomeScreen } from './components/user/UserHomeScreen';
+import { SavedPlacesScreen } from './components/user/SavedPlacesScreen';
 
 // Business Components  
 import { BusinessListScreen } from './components/business/BusinessListScreen';
@@ -27,35 +28,29 @@ const AuthStack = createStackNavigator();
 function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Login" component={SimpleLoginScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
     </AuthStack.Navigator>
   );
 }
 
-// Main Tab Navigator
-const Tab = createBottomTabNavigator();
-function MainTabNavigator() {
-  const { userProfile } = useAuth();
-  
-  // Determine home screen based on user role
-  const HomeScreen = userProfile?.role === 'admin' ? AdminHomeScreen : UserHomeScreen;
-  const homeTitle = userProfile?.role === 'admin' ? 'Admin Dashboard' : 'Home';
-  
+// Admin Tab Navigator
+const AdminTab = createBottomTabNavigator();
+function AdminTabNavigator() {
   return (
-    <Tab.Navigator
+    <AdminTab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
           
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
+          if (route.name === 'Dashboard') {
+            iconName = focused ? 'speedometer' : 'speedometer-outline';
           } else if (route.name === 'Businesses') {
             iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'Manage') {
+            iconName = focused ? 'settings' : 'settings-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'Admin') {
-            iconName = focused ? 'settings' : 'settings-outline';
           } else {
             iconName = 'help-outline';
           }
@@ -73,35 +68,97 @@ function MainTabNavigator() {
         },
       })}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
+      <AdminTab.Screen 
+        name="Dashboard" 
+        component={AdminHomeScreen}
         options={{ 
-          title: homeTitle,
-          headerShown: false // Hide header since each screen has its own
+          title: 'Admin Dashboard',
+          headerShown: false
         }}
       />
       
-      <Tab.Screen 
+      <AdminTab.Screen 
         name="Businesses" 
         component={BusinessListScreen}
         options={{ title: 'Directory' }}
       />
       
-      {userProfile?.role === 'admin' && (
-        <Tab.Screen 
-          name="Admin" 
-          component={AdminDashboard}
-          options={{ title: 'Manage' }}
-        />
-      )}
+      <AdminTab.Screen 
+        name="Manage" 
+        component={AdminDashboard}
+        options={{ title: 'Manage' }}
+      />
       
-      <Tab.Screen 
+      <AdminTab.Screen 
         name="Profile" 
         component={ProfileScreen}
         options={{ title: 'Profile' }}
       />
-    </Tab.Navigator>
+    </AdminTab.Navigator>
+  );
+}
+
+// User Tab Navigator
+const UserTab = createBottomTabNavigator();
+function UserTabNavigator() {
+  return (
+    <UserTab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+          
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Directory') {
+            iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'Saved') {
+            iconName = focused ? 'bookmark' : 'bookmark-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else {
+            iconName = 'help-outline';
+          }
+          
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#6366f1',
+        tabBarInactiveTintColor: 'gray',
+        headerStyle: {
+          backgroundColor: '#6366f1',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      })}
+    >
+      <UserTab.Screen 
+        name="Home" 
+        component={UserHomeScreen}
+        options={{ 
+          title: 'Home',
+          headerShown: false
+        }}
+      />
+      
+      <UserTab.Screen 
+        name="Directory" 
+        component={BusinessListScreen}
+        options={{ title: 'Directory' }}
+      />
+      
+      <UserTab.Screen 
+        name="Saved" 
+        component={SavedPlacesScreen}
+        options={{ title: 'Saved Places' }}
+      />
+      
+      <UserTab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{ title: 'Profile' }}
+      />
+    </UserTab.Navigator>
   );
 }
 
@@ -166,7 +223,7 @@ function ProfileScreen() {
 
 // Main App Component
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   
   // Show loading screen while checking auth state
   if (loading) {
@@ -179,11 +236,24 @@ export default function App() {
       </View>
     );
   }
+
+  // If user is not logged in, show auth screens
+  if (!user) {
+    return (
+      <NavigationContainer>
+        <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+        <AuthNavigator />
+      </NavigationContainer>
+    );
+  }
+
+  // Backend-driven redirect: Admin gets AdminTabNavigator, Users get UserTabNavigator
+  const MainNavigator = userProfile?.role === 'admin' ? AdminTabNavigator : UserTabNavigator;
   
   return (
     <NavigationContainer>
       <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
-      {user ? <MainTabNavigator /> : <AuthNavigator />}
+      <MainNavigator />
     </NavigationContainer>
   );
 }

@@ -400,4 +400,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  userBanner: {
+    backgroundColor: '#8b5cf6',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: '#7c3aed',
+  },
+  userBannerText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  userBannerSubtext: {
+    fontSize: 16,
+    color: '#ddd6fe',
+    textAlign: 'center',
+    marginTop: 5,
+  },
 });
