@@ -460,6 +460,85 @@ class BusinessService {
       throw error;
     }
   }
+
+  // Search and filter functions
+  public async searchBusinesses(searchQuery: string, filters: BusinessFilters = {}, pageLimit: number = 20): Promise<{ businesses: BusinessListing[], lastDoc: DocumentSnapshot | null }> {
+    try {
+      const businessesRef = collection(db, 'businesses');
+      let q = query(
+        businessesRef,
+        where('approved', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(pageLimit)
+      );
+
+      const snapshot = await getDocs(q);
+      let businesses: BusinessListing[] = [];
+      
+      snapshot.forEach((doc) => {
+        const business = { id: doc.id, ...doc.data() } as BusinessListing;
+        
+        // Filter by search query (case-insensitive)
+        const searchLower = searchQuery.toLowerCase();
+        const matchesSearch = 
+          business.name.toLowerCase().includes(searchLower) ||
+          business.description.toLowerCase().includes(searchLower) ||
+          business.tags?.some(tag => tag.toLowerCase().includes(searchLower)) ||
+          business.location.city.toLowerCase().includes(searchLower);
+        
+        if (matchesSearch) {
+          businesses.push(business);
+        }
+      });
+
+      // Apply additional filters
+      if (filters.category) {
+        businesses = businesses.filter(b => b.category === filters.category);
+      }
+      if (filters.city) {
+        businesses = businesses.filter(b => b.location.city.toLowerCase() === filters.city.toLowerCase());
+      }
+      if (filters.state) {
+        businesses = businesses.filter(b => b.location.state.toLowerCase() === filters.state.toLowerCase());
+      }
+
+      return {
+        businesses,
+        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null
+      };
+    } catch (error) {
+      console.error('Error searching businesses:', error);
+      throw error;
+    }
+  }
+
+  public async getBusinessesByCategory(category: BusinessCategory, pageLimit: number = 20): Promise<{ businesses: BusinessListing[], lastDoc: DocumentSnapshot | null }> {
+    try {
+      const businessesRef = collection(db, 'businesses');
+      const q = query(
+        businessesRef,
+        where('approved', '==', true),
+        where('category', '==', category),
+        orderBy('createdAt', 'desc'),
+        limit(pageLimit)
+      );
+
+      const snapshot = await getDocs(q);
+      const businesses: BusinessListing[] = [];
+      
+      snapshot.forEach((doc) => {
+        businesses.push({ id: doc.id, ...doc.data() } as BusinessListing);
+      });
+
+      return {
+        businesses,
+        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null
+      };
+    } catch (error) {
+      console.error('Error getting businesses by category:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

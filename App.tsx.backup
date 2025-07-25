@@ -1,0 +1,333 @@
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+
+// Authentication components
+import { LoginScreen } from './components/auth/LoginScreen';
+import { SignUpScreen } from './components/auth/SignUpScreen';
+
+// Business components
+import { BusinessListScreen } from './components/business/BusinessListScreen';
+
+// Admin components
+import { AdminDashboard } from './components/admin/AdminDashboard';
+
+// Hooks
+import { useAuth, useAuthActions, usePermissions } from './hooks/useAuth';
+
+// Services
+import { BusinessListing } from './services/businessService';
+
+type Screen = 'login' | 'signup' | 'businessList' | 'admin' | 'businessDetails' | 'addBusiness';
+
+export default function App() {
+  const { user, userProfile, loading } = useAuth();
+  const { signOut } = useAuthActions();
+  const { isAdmin, canManageBusinesses } = usePermissions();
+  const [currentScreen, setCurrentScreen] = useState<Screen>('businessList');
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessListing | null>(null);
+
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingTitle}>🏳️‍🌈 AccessLink LGBTQ+</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Show authentication screens if user is not logged in
+  if (!user || !userProfile) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="light" />
+        {currentScreen === 'login' ? (
+          <LoginScreen
+            onNavigateToSignUp={() => setCurrentScreen('signup')}
+            onLoginSuccess={() => setCurrentScreen('businessList')}
+          />
+        ) : (
+          <SignUpScreen
+            onNavigateToLogin={() => setCurrentScreen('login')}
+            onSignUpSuccess={() => setCurrentScreen('businessList')}
+          />
+        )}
+      </View>
+    );
+  }
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              setCurrentScreen('login');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Navigation handlers
+  const handleNavigateToBusinessList = () => setCurrentScreen('businessList');
+  const handleNavigateToAdmin = () => setCurrentScreen('admin');
+  const handleNavigateToAddBusiness = () => setCurrentScreen('addBusiness');
+  const handleNavigateToUserManagement = () => {
+    Alert.alert('Coming Soon', 'User management features will be available in the next update');
+  };
+  
+  const handleNavigateToBusinessDetails = (business: BusinessListing) => {
+    setSelectedBusiness(business);
+    setCurrentScreen('businessDetails');
+  };
+
+  // Render main app content
+  const renderMainContent = () => {
+    switch (currentScreen) {
+      case 'admin':
+        return (
+          <AdminDashboard
+            onNavigateToBusinessList={handleNavigateToBusinessList}
+            onNavigateToUserManagement={handleNavigateToUserManagement}
+          />
+        );
+      
+      case 'businessDetails':
+        return (
+          <View style={styles.comingSoon}>
+            <Text style={styles.comingSoonTitle}>� Business Details</Text>
+            <Text style={styles.comingSoonText}>
+              {selectedBusiness?.name} details coming soon!
+            </Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleNavigateToBusinessList}
+            >
+              <Text style={styles.backButtonText}>← Back to Businesses</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      
+      case 'addBusiness':
+        return (
+          <View style={styles.comingSoon}>
+            <Text style={styles.comingSoonTitle}>🏪 Add Business</Text>
+            <Text style={styles.comingSoonText}>
+              Business submission form coming soon!
+            </Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleNavigateToBusinessList}
+            >
+              <Text style={styles.backButtonText}>← Back to Businesses</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      
+      case 'businessList':
+      default:
+        return (
+          <BusinessListScreen
+            onNavigateToAddBusiness={handleNavigateToAddBusiness}
+            onNavigateToBusinessDetails={handleNavigateToBusinessDetails}
+          />
+        );
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      
+      {/* Main Content */}
+      {renderMainContent()}
+      
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            currentScreen === 'businessList' && styles.navButtonActive
+          ]}
+          onPress={handleNavigateToBusinessList}
+        >
+          <Text style={[
+            styles.navButtonText,
+            currentScreen === 'businessList' && styles.navButtonTextActive
+          ]}>
+            🏢 Businesses
+          </Text>
+        </TouchableOpacity>
+
+        {isAdmin() && (
+          <TouchableOpacity
+            style={[
+              styles.navButton,
+              currentScreen === 'admin' && styles.navButtonActive
+            ]}
+            onPress={handleNavigateToAdmin}
+          >
+            <Text style={[
+              styles.navButtonText,
+              currentScreen === 'admin' && styles.navButtonTextActive
+            ]}>
+              🔧 Admin
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={handleSignOut}
+        >
+          <Text style={styles.navButtonText}>👋 Sign Out</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.buttonSecondary} onPress={handleSupportEmail}>
+              <Text style={styles.buttonSecondaryText}>Contact Support</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              This is a fresh start! The app is now running cleanly without technical debt.
+            </Text>
+            <Text style={styles.footerTextSmall}>
+              Ready for accessibility-first development 🚀
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9ff',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 50,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#6b46c1',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#4b5563',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  domain: {
+    fontSize: 16,
+    color: '#059669',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+  },
+  welcomeText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#374151',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  features: {
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  feature: {
+    fontSize: 16,
+    color: '#4b5563',
+    marginBottom: 8,
+    paddingLeft: 10,
+  },
+  actions: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  button: {
+    backgroundColor: '#6b46c1',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  buttonSecondary: {
+    borderWidth: 2,
+    borderColor: '#6b46c1',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+  },
+  buttonSecondaryText: {
+    color: '#6b46c1',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#059669',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  footerTextSmall: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+});

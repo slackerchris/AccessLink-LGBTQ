@@ -70,7 +70,27 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
     error,
     hasMore,
     loadMore,
-    refresh
+    refresh,
+    search: async (query: string) => {
+      try {
+        const result = await businessService.searchBusinesses(query, filters, pageLimit);
+        setBusinesses(result.businesses);
+        setLastDoc(result.lastDoc);
+        setHasMore(result.businesses.length === pageLimit);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    },
+    filterByCategory: async (category: BusinessCategory) => {
+      try {
+        const result = await businessService.getBusinessesByCategory(category, pageLimit);
+        setBusinesses(result.businesses);
+        setLastDoc(result.lastDoc);
+        setHasMore(result.businesses.length === pageLimit);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
   };
 };
 
