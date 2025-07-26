@@ -164,6 +164,8 @@ class MockAuthService {
     const validPasswords: { [key: string]: string } = {
       'admin@accesslinklgbtq.app': 'admin123',
       'admin': 'accesslink1234',
+      'business@example.com': 'password123',
+      'owner@pridehealth.com': 'password123',
       'user@example.com': 'password123'
     };
 

@@ -13,6 +13,7 @@ import { SignUpScreen } from './components/auth/SignUpScreen';
 import { AdminHomeScreen } from './components/admin/AdminHomeScreen';
 import { UserHomeScreen } from './components/user/UserHomeScreen';
 import { SavedPlacesScreen } from './components/user/SavedPlacesScreen';
+import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 
 // Business Components  
 import { BusinessListScreen } from './components/business/BusinessListScreen';
@@ -162,6 +163,70 @@ function UserTabNavigator() {
   );
 }
 
+// Business Owner Tab Navigator
+const BusinessTab = createBottomTabNavigator();
+function BusinessTabNavigator() {
+  return (
+    <BusinessTab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+          
+          if (route.name === 'Dashboard') {
+            iconName = focused ? 'analytics' : 'analytics-outline';
+          } else if (route.name === 'Directory') {
+            iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'Reviews') {
+            iconName = focused ? 'star' : 'star-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else {
+            iconName = 'help-outline';
+          }
+          
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#6366f1',
+        tabBarInactiveTintColor: 'gray',
+        headerStyle: {
+          backgroundColor: '#6366f1',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      })}
+    >
+      <BusinessTab.Screen 
+        name="Dashboard" 
+        component={BusinessHomeScreen}
+        options={{ 
+          title: 'My Business',
+          headerShown: false
+        }}
+      />
+      
+      <BusinessTab.Screen 
+        name="Directory" 
+        component={BusinessListScreen}
+        options={{ title: 'Directory' }}
+      />
+      
+      <BusinessTab.Screen 
+        name="Reviews" 
+        component={BusinessHomeScreen}
+        options={{ title: 'Reviews' }}
+      />
+      
+      <BusinessTab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{ title: 'Profile' }}
+      />
+    </BusinessTab.Navigator>
+  );
+}
+
 // Profile Screen Component
 function ProfileScreen() {
   const { userProfile } = useAuth();
@@ -247,8 +312,11 @@ export default function App() {
     );
   }
 
-  // Backend-driven redirect: Admin gets AdminTabNavigator, Users get UserTabNavigator
-  const MainNavigator = userProfile?.role === 'admin' ? AdminTabNavigator : UserTabNavigator;
+  // Backend-driven redirect: Route based on user role
+  const MainNavigator = 
+    userProfile?.role === 'admin' ? AdminTabNavigator :
+    userProfile?.role === 'business_owner' ? BusinessTabNavigator :
+    UserTabNavigator;
   
   return (
     <NavigationContainer>
