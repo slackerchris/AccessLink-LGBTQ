@@ -162,34 +162,34 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#6366f1',
-    paddingTop: 50,
-    paddingBottom: 30,
+    paddingTop: 40,
+    paddingBottom: 20,
     paddingHorizontal: 20,
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   greeting: {
     color: '#e0e7ff',
-    fontSize: 16,
+    fontSize: 14,
   },
   userName: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginTop: 5,
+    marginTop: 2,
   },
   subtitle: {
     color: '#c7d2fe',
-    fontSize: 14,
-    marginTop: 5,
+    fontSize: 12,
+    marginTop: 2,
   },
   profileButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 20,
-    padding: 5,
+    padding: 4,
   },
   searchContainer: {
     padding: 20,
