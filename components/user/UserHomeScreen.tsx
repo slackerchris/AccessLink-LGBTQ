@@ -38,9 +38,11 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
     { icon: 'restaurant', name: 'Dining', color: '#f59e0b' },
     { icon: 'fitness', name: 'Fitness', color: '#10b981' },
     { icon: 'medical', name: 'Healthcare', color: '#ef4444' },
-    { icon: 'cut', name: 'Beauty', color: '#8b5cf6' },
+    { icon: 'cut', name: 'Beauty & Spa', color: '#8b5cf6' },
     { icon: 'storefront', name: 'Shopping', color: '#06b6d4' },
     { icon: 'library', name: 'Education', color: '#f97316' },
+    { icon: 'cafe', name: 'Cafes', color: '#84cc16' },
+    { icon: 'car-sport', name: 'Services', color: '#64748b' },
   ];
 
   const quickActions = [
@@ -112,27 +114,6 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
         </View>
       </View>
 
-      {/* Categories */}
-      <View style={styles.categoriesContainer}>
-        <Text style={styles.sectionTitle}>Browse Categories</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.categoriesRow}>
-            {categories.map((category, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.categoryCard}
-                onPress={() => navigation.navigate('Businesses')}
-              >
-                <View style={[styles.categoryIcon, { backgroundColor: category.color }]}>
-                  <Ionicons name={category.icon as any} size={24} color="#fff" />
-                </View>
-                <Text style={styles.categoryName}>{category.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-
       {/* Featured Businesses */}
       <View style={styles.featuredContainer}>
         <View style={styles.featuredHeader}>
@@ -182,6 +163,25 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
           >
             <Text style={styles.communityButtonText}>Coming Soon</Text>
           </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Categories Section - Bottom */}
+      <View style={styles.bottomCategoriesContainer}>
+        <Text style={styles.sectionTitle}>Browse by Category</Text>
+        <View style={styles.categoriesGrid}>
+          {categories.map((category, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.bottomCategoryCard}
+              onPress={() => navigation.navigate('Directory')}
+            >
+              <View style={[styles.bottomCategoryIcon, { backgroundColor: category.color }]}>
+                <Ionicons name={category.icon as any} size={20} color="#fff" />
+              </View>
+              <Text style={styles.bottomCategoryName}>{category.name}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
     </ScrollView>
@@ -267,30 +267,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   actionSubtitle: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  categoriesContainer: {
-    paddingVertical: 20,
-  },
-  categoriesRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-  },
-  categoryCard: {
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  categoryName: {
     fontSize: 12,
     color: '#6b7280',
     textAlign: 'center',
@@ -419,5 +395,37 @@ const styles = StyleSheet.create({
     color: '#ddd6fe',
     textAlign: 'center',
     marginTop: 5,
+  },
+  bottomCategoriesContainer: {
+    padding: 20,
+    paddingTop: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  bottomCategoryCard: {
+    width: '23%',
+    alignItems: 'center',
+    marginBottom: 20,
+    padding: 10,
+  },
+  bottomCategoryIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bottomCategoryName: {
+    fontSize: 11,
+    color: '#374151',
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
