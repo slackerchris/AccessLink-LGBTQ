@@ -15,6 +15,16 @@ export type BusinessCategory =
   | 'nonprofit' 
   | 'other';
 
+export interface ServiceItem {
+  id: string;
+  name: string;
+  description: string;
+  price?: string;
+  duration?: string;
+  category?: string;
+  available: boolean;
+}
+
 export interface BusinessListing {
   id?: string;
   name: string;
@@ -58,6 +68,7 @@ export interface BusinessListing {
   };
   tags?: string[];
   images?: string[];
+  services?: ServiceItem[];
   ownerId: string;
   approved: boolean;
   featured: boolean;
@@ -109,6 +120,41 @@ const mockBusinesses: BusinessListing[] = [
       notes: 'Hosts weekly LGBTQ+ community events'
     },
     tags: ['coffee', 'organic', 'community', 'safe-space'],
+    services: [
+      {
+        id: 'service-1',
+        name: 'Specialty Coffee',
+        description: 'Organic, fair-trade coffee blends including our signature Rainbow Latte',
+        price: '$4.50 - $6.00',
+        category: 'Beverages',
+        available: true
+      },
+      {
+        id: 'service-2',
+        name: 'Fresh Pastries',
+        description: 'Daily baked pastries, croissants, and muffins made with organic ingredients',
+        price: '$3.00 - $5.50',
+        category: 'Food',
+        available: true
+      },
+      {
+        id: 'service-3',
+        name: 'Community Event Hosting',
+        description: 'Private space rental for LGBTQ+ community events and meetings',
+        price: '$50/hour',
+        duration: '1-4 hours',
+        category: 'Events',
+        available: true
+      },
+      {
+        id: 'service-4',
+        name: 'Catering Services',
+        description: 'Coffee and pastry catering for local events and offices',
+        price: 'Starting at $150',
+        category: 'Catering',
+        available: true
+      }
+    ],
     ownerId: 'mock-business-001',
     approved: true,
     featured: true,
@@ -148,6 +194,44 @@ const mockBusinesses: BusinessListing[] = [
       notes: 'Specialized LGBTQ+ healthcare providers on staff'
     },
     tags: ['healthcare', 'trans-friendly', 'hormone-therapy', 'mental-health'],
+    services: [
+      {
+        id: 'health-service-1',
+        name: 'Primary Care Consultation',
+        description: 'Comprehensive primary care with LGBTQ+ affirming approach',
+        price: '$120 - $180',
+        duration: '30-60 minutes',
+        category: 'Medical',
+        available: true
+      },
+      {
+        id: 'health-service-2',
+        name: 'Hormone Replacement Therapy',
+        description: 'HRT consultation and ongoing care for transgender patients',
+        price: '$200 - $350',
+        duration: '45-90 minutes',
+        category: 'Specialized',
+        available: true
+      },
+      {
+        id: 'health-service-3',
+        name: 'Mental Health Counseling',
+        description: 'LGBTQ+ specialized therapy and counseling services',
+        price: '$100 - $150',
+        duration: '50 minutes',
+        category: 'Mental Health',
+        available: true
+      },
+      {
+        id: 'health-service-4',
+        name: 'Sexual Health Services',
+        description: 'Comprehensive sexual health care and STI testing',
+        price: '$80 - $120',
+        duration: '30 minutes',
+        category: 'Sexual Health',
+        available: true
+      }
+    ],
     ownerId: 'mock-business-002',
     approved: true,
     featured: false,
@@ -415,6 +499,61 @@ class MockBusinessService {
 
     mockBusinesses.push(newBusiness);
     return newBusiness.id!;
+  }
+
+  async updateBusinessServices(businessId: string, services: ServiceItem[]): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business) {
+      business.services = services;
+      business.updatedAt = new Date();
+    }
+  }
+
+  async getBusinessServices(businessId: string): Promise<ServiceItem[]> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    return business?.services || [];
+  }
+
+  async addBusinessService(businessId: string, service: Omit<ServiceItem, 'id'>): Promise<string> {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business) {
+      const newService: ServiceItem = {
+        ...service,
+        id: `service-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      if (!business.services) {
+        business.services = [];
+      }
+      business.services.push(newService);
+      business.updatedAt = new Date();
+      return newService.id;
+    }
+    throw new Error('Business not found');
+  }
+
+  async updateBusinessService(businessId: string, serviceId: string, serviceData: Partial<ServiceItem>): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business && business.services) {
+      const serviceIndex = business.services.findIndex(s => s.id === serviceId);
+      if (serviceIndex !== -1) {
+        business.services[serviceIndex] = { ...business.services[serviceIndex], ...serviceData };
+        business.updatedAt = new Date();
+      }
+    }
+  }
+
+  async deleteBusinessService(businessId: string, serviceId: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business && business.services) {
+      business.services = business.services.filter(s => s.id !== serviceId);
+      business.updatedAt = new Date();
+    }
   }
 }
 

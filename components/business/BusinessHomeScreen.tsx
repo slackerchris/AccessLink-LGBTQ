@@ -84,7 +84,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       icon: 'pricetag',
       title: 'Manage Services',
       subtitle: 'Update services and pricing',
-      onPress: () => Alert.alert('Services', 'Service management coming soon!')
+      onPress: () => navigation.navigate('ServicesManagement')
     },
     {
       icon: 'megaphone',

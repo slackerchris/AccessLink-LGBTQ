@@ -23,6 +23,7 @@ import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 // Business Components  
 import { BusinessListScreen } from './components/business/BusinessListScreen';
 import { BusinessProfileEditScreen } from './components/business/BusinessProfileEditScreen';
+import { ServicesManagementScreen } from './components/business/ServicesManagementScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
@@ -222,6 +223,11 @@ function BusinessDashboardStackNavigator() {
       <BusinessStack.Screen 
         name="BusinessProfileEdit" 
         component={BusinessProfileEditScreen} 
+        options={{ headerShown: false }}
+      />
+      <BusinessStack.Screen 
+        name="ServicesManagement" 
+        component={ServicesManagementScreen} 
         options={{ headerShown: false }}
       />
     </BusinessStack.Navigator>
