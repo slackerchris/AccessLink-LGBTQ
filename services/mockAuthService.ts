@@ -57,6 +57,36 @@ const mockUsers = {
     createdAt: new Date(),
     updatedAt: new Date()
   },
+  'business@example.com': {
+    uid: 'mock-business-001',
+    email: 'business@example.com',
+    displayName: 'Rainbow Cafe Owner',
+    role: 'business_owner' as const,
+    profile: {
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      bio: 'Owner of Rainbow Cafe - creating inclusive spaces since 2020',
+      phone: '(555) 123-4567'
+    },
+    businessId: 'rainbow-cafe-001',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  'owner@pridehealth.com': {
+    uid: 'mock-business-002',
+    email: 'owner@pridehealth.com',
+    displayName: 'Pride Health Center',
+    role: 'business_owner' as const,
+    profile: {
+      firstName: 'Dr. Alex',
+      lastName: 'Martinez',
+      bio: 'Medical Director at Pride Health Center - LGBTQ+ affirming healthcare',
+      phone: '(555) 987-6543'
+    },
+    businessId: 'pride-health-center-002',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
   'user@example.com': {
     uid: 'mock-user-456',
     email: 'user@example.com',
