@@ -22,11 +22,21 @@ All project documentation has been moved to the [`docs/`](docs/) folder:
 
 ## ✅ Current Status
 
-- **✅ Production Ready** - Full backend implemented
-- **✅ Authentication System** - Role-based login (admin/user)
-- **✅ Business Directory** - Complete LGBTQ+ business listings
+- **✅ Production Ready** - Complete Portal system implementation
+- **✅ User Portal** - Comprehensive self-service portal with 6 core features
+- **✅ Authentication System** - Role-based login (admin/business/user)
+- **✅ Business Directory** - Complete LGBTQ+ business listings with accessibility features
 - **✅ Admin Dashboard** - Business management and approval workflow
-- **✅ Mobile Ready** - React Native with Expo
+- **✅ Mobile Ready** - React Native with Expo SDK 52.0.0
+
+## 🎯 Recent Updates (July 2025)
+
+- **🚪 Portal System**: Complete user portal with dedicated navigation
+- **♿ Accessibility**: 6-category accessibility preference management
+- **🏳️‍🌈 Identity Settings**: LGBTQ+ identity management with privacy controls  
+- **⭐ Review System**: Review history with statistics and management features
+- **📍 Saved Places**: Enhanced bookmarking with business card display
+- **🎨 UI/UX**: Professional portal interface with 2x3 card layout
 
 ## 🧪 Test Credentials
 
