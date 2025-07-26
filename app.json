@@ -28,7 +28,7 @@
     "scheme": "accesslink",
     "extra": {
       "eas": {
-        "projectId": "0a1b2c3d-4e5f-6789-abcd-ef0123456789"
+        "projectId": "your-actual-project-id"
       }
     },
     "owner": "slackerchris",
