@@ -18,6 +18,7 @@ import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 
 // Business Components  
 import { BusinessListScreen } from './components/business/BusinessListScreen';
+import { BusinessProfileEditScreen } from './components/business/BusinessProfileEditScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
@@ -187,6 +188,24 @@ function UserTabNavigator() {
 }
 
 // Business Owner Tab Navigator
+const BusinessStack = createStackNavigator();
+function BusinessDashboardStackNavigator() {
+  return (
+    <BusinessStack.Navigator>
+      <BusinessStack.Screen 
+        name="BusinessHome" 
+        component={BusinessHomeScreen} 
+        options={{ headerShown: false }}
+      />
+      <BusinessStack.Screen 
+        name="BusinessProfileEdit" 
+        component={BusinessProfileEditScreen} 
+        options={{ headerShown: false }}
+      />
+    </BusinessStack.Navigator>
+  );
+}
+
 const BusinessTab = createBottomTabNavigator();
 function BusinessTabNavigator() {
   return (
@@ -222,7 +241,7 @@ function BusinessTabNavigator() {
     >
       <BusinessTab.Screen 
         name="Dashboard" 
-        component={BusinessHomeScreen}
+        component={BusinessDashboardStackNavigator}
         options={{ 
           title: 'My Business',
           headerShown: false

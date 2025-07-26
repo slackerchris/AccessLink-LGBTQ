@@ -23,7 +23,7 @@ This document outlines potential future features for the AccessLink LGBTQ+ mobil
 - **Profile Editing Screens**:
   - ✅ User profile edit screen (basic info, email, display name) (Implemented July 2025)
   - Accessibility preferences and identity settings (Coming soon)
-  - Business profile edit dashboard (contact info, hours, accessibility features)
+  - ✅ Business profile edit dashboard (contact info, hours, accessibility features) (Implemented July 2025)
   - Admin profile management tools
 
 ### 5. **Review & Rating System**

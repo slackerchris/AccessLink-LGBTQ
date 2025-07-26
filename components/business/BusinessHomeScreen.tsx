@@ -72,7 +72,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       icon: 'create',
       title: 'Edit Business Profile',
       subtitle: 'Update your business information',
-      onPress: () => Alert.alert('Edit Profile', 'Profile editing coming soon!')
+      onPress: () => navigation.navigate('BusinessProfileEdit')
     },
     {
       icon: 'camera',
