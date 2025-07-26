@@ -24,10 +24,10 @@ interface BusinessProfileEditScreenProps {
 
 export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps> = ({ navigation }) => {
   const { userProfile } = useAuth();
-  const { businesses, updateBusiness } = useBusinesses();
+  const { businesses } = useBusinesses();
   
   // Find the current user's business
-  const userBusiness = businesses.find(b => b.ownerId === userProfile?.uid);
+  const userBusiness = businesses.find(b => b.id === (userProfile as any)?.businessId);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -87,16 +87,16 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
         saturdayHours: '10:00 AM - 4:00 PM',
         sundayHours: 'Closed',
         // Accessibility features
-        wheelchairAccessible: userBusiness.accessibilityFeatures?.includes('wheelchair-accessible') || false,
-        brailleMenus: userBusiness.accessibilityFeatures?.includes('braille-menus') || false,
-        signLanguage: userBusiness.accessibilityFeatures?.includes('sign-language') || false,
-        hearingLoop: userBusiness.accessibilityFeatures?.includes('hearing-loop') || false,
-        accessibleParking: userBusiness.accessibilityFeatures?.includes('accessible-parking') || false,
-        accessibleRestrooms: userBusiness.accessibilityFeatures?.includes('accessible-restrooms') || false,
-        lowCounters: userBusiness.accessibilityFeatures?.includes('low-counters') || false,
-        quietSpaces: userBusiness.accessibilityFeatures?.includes('quiet-spaces') || false,
-        largeprint: userBusiness.accessibilityFeatures?.includes('large-print') || false,
-        sensoryFriendly: userBusiness.accessibilityFeatures?.includes('sensory-friendly') || false
+        wheelchairAccessible: userBusiness.accessibility?.wheelchairAccessible || false,
+        brailleMenus: userBusiness.accessibility?.visuallyImpairedFriendly || false,
+        signLanguage: userBusiness.accessibility?.hearingImpairedFriendly || false,
+        hearingLoop: userBusiness.accessibility?.hearingImpairedFriendly || false,
+        accessibleParking: false, // Not in current interface, defaulting to false
+        accessibleRestrooms: false, // Not in current interface, defaulting to false
+        lowCounters: false, // Not in current interface, defaulting to false
+        quietSpaces: false, // Not in current interface, defaulting to false
+        largeprint: userBusiness.accessibility?.visuallyImpairedFriendly || false,
+        sensoryFriendly: false // Not in current interface, defaulting to false
       });
     }
   }, [userBusiness]);
@@ -104,35 +104,30 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Build accessibility features array
-      const accessibilityFeatures = [];
-      if (formData.wheelchairAccessible) accessibilityFeatures.push('wheelchair-accessible');
-      if (formData.brailleMenus) accessibilityFeatures.push('braille-menus');
-      if (formData.signLanguage) accessibilityFeatures.push('sign-language');
-      if (formData.hearingLoop) accessibilityFeatures.push('hearing-loop');
-      if (formData.accessibleParking) accessibilityFeatures.push('accessible-parking');
-      if (formData.accessibleRestrooms) accessibilityFeatures.push('accessible-restrooms');
-      if (formData.lowCounters) accessibilityFeatures.push('low-counters');
-      if (formData.quietSpaces) accessibilityFeatures.push('quiet-spaces');
-      if (formData.largeprint) accessibilityFeatures.push('large-print');
-      if (formData.sensoryFriendly) accessibilityFeatures.push('sensory-friendly');
+      // Build accessibility object
+      const accessibility = {
+        wheelchairAccessible: formData.wheelchairAccessible,
+        visuallyImpairedFriendly: formData.brailleMenus || formData.largeprint,
+        hearingImpairedFriendly: formData.signLanguage || formData.hearingLoop,
+        notes: 'Updated accessibility features'
+      };
 
       // Build hours object
       const hours = {
-        monday: formData.mondayHours,
-        tuesday: formData.tuesdayHours,
-        wednesday: formData.wednesdayHours,
-        thursday: formData.thursdayHours,
-        friday: formData.fridayHours,
-        saturday: formData.saturdayHours,
-        sunday: formData.sundayHours
+        monday: { open: formData.mondayHours.split(' - ')[0] || '9:00 AM', close: formData.mondayHours.split(' - ')[1] || '5:00 PM', closed: formData.mondayHours === 'Closed' },
+        tuesday: { open: formData.tuesdayHours.split(' - ')[0] || '9:00 AM', close: formData.tuesdayHours.split(' - ')[1] || '5:00 PM', closed: formData.tuesdayHours === 'Closed' },
+        wednesday: { open: formData.wednesdayHours.split(' - ')[0] || '9:00 AM', close: formData.wednesdayHours.split(' - ')[1] || '5:00 PM', closed: formData.wednesdayHours === 'Closed' },
+        thursday: { open: formData.thursdayHours.split(' - ')[0] || '9:00 AM', close: formData.thursdayHours.split(' - ')[1] || '5:00 PM', closed: formData.thursdayHours === 'Closed' },
+        friday: { open: formData.fridayHours.split(' - ')[0] || '9:00 AM', close: formData.fridayHours.split(' - ')[1] || '5:00 PM', closed: formData.fridayHours === 'Closed' },
+        saturday: { open: formData.saturdayHours.split(' - ')[0] || '10:00 AM', close: formData.saturdayHours.split(' - ')[1] || '4:00 PM', closed: formData.saturdayHours === 'Closed' },
+        sunday: { open: formData.sundayHours.split(' - ')[0] || '10:00 AM', close: formData.sundayHours.split(' - ')[1] || '4:00 PM', closed: formData.sundayHours === 'Closed' }
       };
 
       const updatedBusiness = {
         ...userBusiness,
         name: formData.name,
         description: formData.description,
-        category: formData.category,
+        category: formData.category as any,
         contact: {
           phone: formData.phone,
           email: formData.email,
@@ -146,8 +141,8 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
           zipCode: formData.zipCode
         },
         hours,
-        accessibilityFeatures,
-        lastUpdated: new Date().toISOString()
+        accessibility,
+        updatedAt: new Date()
       };
 
       // In a real app, this would save to Firebase
