@@ -15,6 +15,9 @@ import { UserHomeScreen } from './components/user/UserHomeScreen';
 import { SavedPlacesScreen } from './components/user/SavedPlacesScreen';
 import { EventsScreen } from './components/user/EventsScreen';
 import { PortalScreen } from './components/user/PortalScreen';
+import AccessibilityPreferencesScreen from './components/user/AccessibilityPreferencesScreen';
+import LGBTQIdentityScreen from './components/user/LGBTQIdentityScreen';
+import ReviewHistoryScreen from './components/user/ReviewHistoryScreen';
 import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 
 // Business Components  
@@ -38,6 +41,21 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
     </ProfileStack.Navigator>
+  );
+}
+
+// Portal Stack Navigator
+const PortalStack = createStackNavigator();
+function PortalStackNavigator() {
+  return (
+    <PortalStack.Navigator screenOptions={{ headerShown: false }}>
+      <PortalStack.Screen name="PortalMain" component={PortalScreen} />
+      <PortalStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <PortalStack.Screen name="SavedPlaces" component={SavedPlacesScreen} />
+      <PortalStack.Screen name="ReviewHistory" component={ReviewHistoryScreen} />
+      <PortalStack.Screen name="AccessibilityPreferences" component={AccessibilityPreferencesScreen} />
+      <PortalStack.Screen name="LGBTQIdentity" component={LGBTQIdentityScreen} />
+    </PortalStack.Navigator>
   );
 }
 
@@ -181,8 +199,11 @@ function UserTabNavigator() {
       
       <UserTab.Screen 
         name="Portal" 
-        component={PortalScreen}
-        options={{ title: 'Portal' }}
+        component={PortalStackNavigator}
+        options={{ 
+          title: 'Portal',
+          headerShown: false
+        }}
       />
     </UserTab.Navigator>
   );
