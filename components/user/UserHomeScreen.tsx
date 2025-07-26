@@ -51,14 +51,7 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
       title: 'Find Businesses',
       subtitle: 'Discover LGBTQ+ friendly places',
       color: '#6366f1',
-      onPress: () => navigation.navigate('Businesses')
-    },
-    {
-      icon: 'heart',
-      title: 'Saved Places',
-      subtitle: 'Your favorite businesses',
-      color: '#ec4899',
-      onPress: () => Alert.alert('Saved Places', 'Feature coming soon!')
+      onPress: () => navigation.navigate('Directory')
     },
     {
       icon: 'star',
@@ -68,11 +61,11 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
       onPress: () => Alert.alert('Reviews', 'Feature coming soon!')
     },
     {
-      icon: 'calendar',
-      title: 'Events',
-      subtitle: 'Community events near you',
+      icon: 'people',
+      title: 'Community',
+      subtitle: 'Connect with others',
       color: '#10b981',
-      onPress: () => Alert.alert('Events', 'Feature coming soon!')
+      onPress: () => Alert.alert('Community', 'Feature coming soon!')
     }
   ];
 

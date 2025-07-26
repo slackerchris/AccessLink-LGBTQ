@@ -13,6 +13,7 @@ import { SignUpScreen } from './components/auth/SignUpScreen';
 import { AdminHomeScreen } from './components/admin/AdminHomeScreen';
 import { UserHomeScreen } from './components/user/UserHomeScreen';
 import { SavedPlacesScreen } from './components/user/SavedPlacesScreen';
+import { EventsScreen } from './components/user/EventsScreen';
 import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 
 // Business Components  
@@ -128,6 +129,8 @@ function UserTabNavigator() {
             iconName = focused ? 'business' : 'business-outline';
           } else if (route.name === 'Saved') {
             iconName = focused ? 'bookmark' : 'bookmark-outline';
+          } else if (route.name === 'Events') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           } else {
@@ -166,6 +169,12 @@ function UserTabNavigator() {
         name="Saved" 
         component={SavedPlacesScreen}
         options={{ title: 'Saved Places' }}
+      />
+      
+      <UserTab.Screen 
+        name="Events" 
+        component={EventsScreen}
+        options={{ title: 'Events' }}
       />
       
       <UserTab.Screen 
