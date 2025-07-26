@@ -79,8 +79,86 @@ export interface BusinessFilters {
 // Mock business data
 const mockBusinesses: BusinessListing[] = [
   {
-    id: 'mock-business-1',
+    id: 'rainbow-cafe-001',
     name: 'Rainbow Café',
+    description: 'A welcoming café serving organic coffee and pastries. LGBTQ+ owned and operated with a focus on community building.',
+    category: 'restaurant',
+    location: {
+      address: '123 Pride Street',
+      city: 'San Francisco',
+      state: 'CA',
+      zipCode: '94102'
+    },
+    contact: {
+      phone: '(555) 123-4567',
+      email: 'hello@rainbowcafe.com',
+      website: 'https://rainbowcafe.com'
+    },
+    accessibility: {
+      wheelchairAccessible: true,
+      visuallyImpairedFriendly: true,
+      hearingImpairedFriendly: false,
+      notes: 'Wheelchair ramp available, braille menus provided'
+    },
+    lgbtqInfo: {
+      safeSpaceCertified: true,
+      lgbtqOwned: true,
+      supportsPrideEvents: true,
+      lgbtqStaffTraining: true,
+      genderNeutralBathrooms: true,
+      notes: 'Hosts weekly LGBTQ+ community events'
+    },
+    tags: ['coffee', 'organic', 'community', 'safe-space'],
+    ownerId: 'mock-business-001',
+    approved: true,
+    featured: true,
+    averageRating: 4.8,
+    reviewCount: 24,
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-12-01')
+  },
+  {
+    id: 'pride-health-center-002',
+    name: 'Pride Health Center',
+    description: 'Comprehensive healthcare services with LGBTQ+ specialization. Trans-friendly care and hormone therapy available.',
+    category: 'healthcare',
+    location: {
+      address: '456 Wellness Ave',
+      city: 'Portland',
+      state: 'OR',
+      zipCode: '97201'
+    },
+    contact: {
+      phone: '(555) 987-6543',
+      email: 'care@pridehealthcenter.org',
+      website: 'https://pridehealthcenter.org'
+    },
+    accessibility: {
+      wheelchairAccessible: true,
+      visuallyImpairedFriendly: true,
+      hearingImpairedFriendly: true,
+      notes: 'Full accessibility features available'
+    },
+    lgbtqInfo: {
+      safeSpaceCertified: true,
+      lgbtqOwned: false,
+      supportsPrideEvents: true,
+      lgbtqStaffTraining: true,
+      genderNeutralBathrooms: true,
+      notes: 'Specialized LGBTQ+ healthcare providers on staff'
+    },
+    tags: ['healthcare', 'trans-friendly', 'hormone-therapy', 'mental-health'],
+    ownerId: 'mock-business-002',
+    approved: true,
+    featured: false,
+    averageRating: 4.9,
+    reviewCount: 18,
+    createdAt: new Date('2024-02-10'),
+    updatedAt: new Date('2024-11-15')
+  },
+  {
+    id: 'mock-business-1',
+    name: 'Rainbow Café (Legacy)',
     description: 'A welcoming café serving organic coffee and pastries. LGBTQ+ owned and operated with a focus on community building.',
     category: 'restaurant',
     location: {
@@ -111,7 +189,7 @@ const mockBusinesses: BusinessListing[] = [
     tags: ['coffee', 'organic', 'community', 'safe-space'],
     ownerId: 'mock-user-456',
     approved: true,
-    featured: true,
+    featured: false,
     averageRating: 4.8,
     reviewCount: 24,
     createdAt: new Date('2024-01-15'),
@@ -192,6 +270,45 @@ const mockBusinesses: BusinessListing[] = [
     reviewCount: 0,
     createdAt: new Date('2024-12-20'),
     updatedAt: new Date('2024-12-20')
+  },
+  {
+    id: 'inclusive-bookstore-003',
+    name: 'Inclusive Bookstore',
+    description: 'Community bookstore featuring LGBTQ+ literature, diverse authors, and regular community events. Safe space for all.',
+    category: 'retail',
+    location: {
+      address: '321 Literary Lane',
+      city: 'Seattle',
+      state: 'WA',
+      zipCode: '98101'
+    },
+    contact: {
+      phone: '(555) 234-5678',
+      email: 'hello@inclusivebooks.com',
+      website: 'https://inclusivebooks.com'
+    },
+    accessibility: {
+      wheelchairAccessible: true,
+      visuallyImpairedFriendly: true,
+      hearingImpairedFriendly: false,
+      notes: 'Wheelchair accessible, large print books available'
+    },
+    lgbtqInfo: {
+      safeSpaceCertified: true,
+      lgbtqOwned: true,
+      supportsPrideEvents: true,
+      lgbtqStaffTraining: true,
+      genderNeutralBathrooms: true,
+      notes: 'Extensive LGBTQ+ literature collection and community events'
+    },
+    tags: ['bookstore', 'literature', 'community', 'events'],
+    ownerId: 'mock-user-bookstore',
+    approved: true,
+    featured: true,
+    averageRating: 4.9,
+    reviewCount: 15,
+    createdAt: new Date('2024-03-01'),
+    updatedAt: new Date('2024-11-20')
   }
 ];
 

@@ -81,12 +81,6 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       onPress: () => Alert.alert('Photos', 'Photo management coming soon!')
     },
     {
-      icon: 'time',
-      title: 'Update Hours',
-      subtitle: 'Modify operating hours',
-      onPress: () => Alert.alert('Hours', 'Hours management coming soon!')
-    },
-    {
       icon: 'pricetag',
       title: 'Manage Services',
       subtitle: 'Update services and pricing',
