@@ -20,9 +20,6 @@ README.md
 *.tmp
 *.temp
 
-# AccessLink React Native app (large folder)
-AccessLink/
-
 # Other project files
 business plan for AccessLink LGBTQ+
 FUTURE_FEATURES.md
