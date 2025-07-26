@@ -15,7 +15,7 @@ import {
   TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 
 interface UserHomeScreenProps {
@@ -24,17 +24,8 @@ interface UserHomeScreenProps {
 
 export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) => {
   const { userProfile } = useAuth();
-  const { signOut } = useAuthActions();
   const { businesses } = useBusinesses({}, 6); // Get first 6 businesses
   const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error: any) {
-      Alert.alert('Sign Out Error', error.message);
-    }
-  };
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -67,9 +58,6 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
             <Text style={styles.userName}>{firstName}! 🏳️‍🌈</Text>
             <Text style={styles.subtitle}>Find your community</Text>
           </View>
-          <TouchableOpacity onPress={handleSignOut} style={styles.profileButton}>
-            <Ionicons name="person-circle" size={40} color="#fff" />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -116,62 +104,6 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </View>
-
-      {/* User Portal Features */}
-      <View style={styles.portalContainer}>
-        <Text style={styles.sectionTitle}>Your Portal</Text>
-        <View style={styles.portalGrid}>
-          <TouchableOpacity
-            style={styles.portalCard}
-            onPress={() => navigation.navigate('SavedPlaces')}
-          >
-            <View style={styles.portalIconContainer}>
-              <Ionicons name="bookmark" size={24} color="#6366f1" />
-            </View>
-            <Text style={styles.portalCardTitle}>Saved Places</Text>
-            <Text style={styles.portalCardSubtitle}>
-              {userProfile?.profile?.savedBusinesses?.length || 0} saved
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.portalCard}
-            onPress={() => navigation.navigate('ReviewHistory')}
-          >
-            <View style={styles.portalIconContainer}>
-              <Ionicons name="star" size={24} color="#f59e0b" />
-            </View>
-            <Text style={styles.portalCardTitle}>My Reviews</Text>
-            <Text style={styles.portalCardSubtitle}>
-              {userProfile?.profile?.reviews?.length || 0} reviews
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.portalCard}
-            onPress={() => navigation.navigate('AccessibilityPreferences')}
-          >
-            <View style={styles.portalIconContainer}>
-              <Ionicons name="accessibility" size={24} color="#10b981" />
-            </View>
-            <Text style={styles.portalCardTitle}>Accessibility</Text>
-            <Text style={styles.portalCardSubtitle}>Preferences</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.portalCard}
-            onPress={() => navigation.navigate('LGBTQIdentity')}
-          >
-            <View style={styles.portalIconContainer}>
-              <Ionicons name="heart" size={24} color="#ec4899" />
-            </View>
-            <Text style={styles.portalCardTitle}>Identity</Text>
-            <Text style={styles.portalCardSubtitle}>
-              {userProfile?.profile?.lgbtqIdentity?.visible ? 'Public' : 'Private'}
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Featured Businesses */}
@@ -409,51 +341,5 @@ const styles = StyleSheet.create({
     color: '#ddd6fe',
     textAlign: 'center',
     marginTop: 5,
-  },
-  portalContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginBottom: 10,
-  },
-  portalGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  portalCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    width: '48%',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-  },
-  portalIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  portalCardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  portalCardSubtitle: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center',
   },
 });
