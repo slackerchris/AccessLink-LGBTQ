@@ -120,8 +120,33 @@ const mockUsers = {
       firstName: 'Demo',
       lastName: 'User',
       bio: 'Community member',
-      savedBusinesses: [],
-      reviews: [],
+      savedBusinesses: ['rainbow-cafe-001'],
+      reviews: [
+        {
+          id: 'review-1',
+          businessId: 'rainbow-cafe-001',
+          rating: 5,
+          comment: 'Amazing coffee and such a welcoming space! The staff is incredibly friendly and the atmosphere is perfect for both working and socializing. Highly recommend their rainbow latte!',
+          createdAt: '2025-01-15T10:30:00Z',
+          updatedAt: '2025-01-15T10:30:00Z'
+        },
+        {
+          id: 'review-2',
+          businessId: 'pride-health-center-002',
+          rating: 4,
+          comment: 'Great healthcare experience. Dr. Martinez was very knowledgeable and made me feel comfortable throughout my visit. The only downside was the longer wait time.',
+          createdAt: '2025-01-10T14:20:00Z',
+          updatedAt: '2025-01-12T09:15:00Z'
+        },
+        {
+          id: 'review-3',
+          businessId: 'inclusive-bookstore-003',
+          rating: 5,
+          comment: 'Love this bookstore! They have an incredible selection of LGBTQ+ literature and the community events are fantastic. A true gem in the neighborhood.',
+          createdAt: '2025-01-05T16:45:00Z',
+          updatedAt: '2025-01-05T16:45:00Z'
+        }
+      ],
       accessibilityPreferences: {
         wheelchairAccess: false,
         visualImpairment: false,
