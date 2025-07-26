@@ -102,12 +102,54 @@ export const useAuthActions = () => {
     setError(null);
   }, []);
 
+  const saveBusiness = useCallback(async (businessId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.saveBusiness(businessId);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const unsaveBusiness = useCallback(async (businessId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.unsaveBusiness(businessId);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const addReview = useCallback(async (businessId: string, rating: number, comment: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.addReview(businessId, rating, comment);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     signUp,
     signIn,
     signOut,
     resetPassword,
     updateProfile,
+    saveBusiness,
+    unsaveBusiness,
+    addReview,
     clearError,
     loading,
     error

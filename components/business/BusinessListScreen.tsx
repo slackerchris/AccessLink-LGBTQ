@@ -15,8 +15,9 @@ import {
   Alert,
   Modal
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useBusinesses, useBusinessActions } from '../../hooks/useBusiness';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { BusinessListing, BusinessCategory } from '../../services/businessService';
 
 interface BusinessListScreenProps {
@@ -29,6 +30,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   onNavigateToBusinessDetails
 }) => {
   const { userProfile } = useAuth();
+  const { saveBusiness, unsaveBusiness } = useAuthActions();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -63,6 +65,31 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
     await refresh();
     setRefreshing(false);
   }, [refresh]);
+
+  const handleToggleSaved = useCallback(async (businessId: string) => {
+    if (!userProfile) {
+      Alert.alert('Login Required', 'Please login to save businesses');
+      return;
+    }
+
+    const savedBusinesses = userProfile.profile?.savedBusinesses || [];
+    const isSaved = savedBusinesses.includes(businessId);
+
+    try {
+      if (isSaved) {
+        await unsaveBusiness(businessId);
+      } else {
+        await saveBusiness(businessId);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update saved businesses');
+    }
+  }, [userProfile, saveBusiness, unsaveBusiness]);
+
+  const isBusinessSaved = useCallback((businessId: string): boolean => {
+    const savedBusinesses = userProfile?.profile?.savedBusinesses || [];
+    return savedBusinesses.includes(businessId);
+  }, [userProfile]);
 
   const handleSearch = useCallback(async (query: string) => {
     if (query.trim().length > 0) {
@@ -112,10 +139,22 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
       onPress={() => onNavigateToBusinessDetails(item)}
     >
       <View style={styles.businessHeader}>
-        <Text style={styles.businessName}>{item.name}</Text>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{item.category}</Text>
+        <View style={styles.businessTitleSection}>
+          <Text style={styles.businessName}>{item.name}</Text>
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryText}>{item.category}</Text>
+          </View>
         </View>
+        <TouchableOpacity
+          style={styles.bookmarkButton}
+          onPress={() => handleToggleSaved(item.id)}
+        >
+          <Ionicons
+            name={isBusinessSaved(item.id) ? 'bookmark' : 'bookmark-outline'}
+            size={24}
+            color={isBusinessSaved(item.id) ? '#6366f1' : '#9ca3af'}
+          />
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.businessDescription} numberOfLines={2}>
@@ -575,5 +614,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 12,
+  },
+  businessTitleSection: {
+    flex: 1,
+  },
+  bookmarkButton: {
+    padding: 8,
+    marginLeft: 8,
   },
 });

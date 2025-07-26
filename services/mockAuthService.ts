@@ -18,6 +18,29 @@ export interface UserProfile {
     preferredPronouns?: string;
     interests?: string[];
     accessibilityNeeds?: string[];
+    savedBusinesses?: string[];
+    reviews?: {
+      id: string;
+      businessId: string;
+      rating: number;
+      comment: string;
+      createdAt: string;
+      updatedAt: string;
+    }[];
+    accessibilityPreferences?: {
+      wheelchairAccess: boolean;
+      visualImpairment: boolean;
+      hearingImpairment: boolean;
+      cognitiveSupport: boolean;
+      mobilitySupport: boolean;
+      sensoryFriendly: boolean;
+    };
+    lgbtqIdentity?: {
+      visible: boolean;
+      pronouns: string;
+      identities: string[];
+      preferredName: string;
+    };
   };
   businessId?: string; // For business owners
   createdAt: Date;
@@ -96,7 +119,23 @@ const mockUsers = {
     profile: {
       firstName: 'Demo',
       lastName: 'User',
-      bio: 'Community member'
+      bio: 'Community member',
+      savedBusinesses: [],
+      reviews: [],
+      accessibilityPreferences: {
+        wheelchairAccess: false,
+        visualImpairment: false,
+        hearingImpairment: false,
+        cognitiveSupport: false,
+        mobilitySupport: false,
+        sensoryFriendly: false
+      },
+      lgbtqIdentity: {
+        visible: false,
+        pronouns: '',
+        identities: [],
+        preferredName: ''
+      }
     },
     createdAt: new Date(),
     updatedAt: new Date()
@@ -222,6 +261,59 @@ class MockAuthService {
     };
 
     this.notifyListeners();
+  }
+
+  async saveBusiness(businessId: string): Promise<void> {
+    if (!this.currentAuthState.userProfile) {
+      throw new Error('No user logged in');
+    }
+
+    const savedBusinesses = this.currentAuthState.userProfile.profile?.savedBusinesses || [];
+    if (!savedBusinesses.includes(businessId)) {
+      await this.updateProfile({
+        profile: {
+          ...this.currentAuthState.userProfile.profile,
+          savedBusinesses: [...savedBusinesses, businessId]
+        }
+      });
+    }
+  }
+
+  async unsaveBusiness(businessId: string): Promise<void> {
+    if (!this.currentAuthState.userProfile) {
+      throw new Error('No user logged in');
+    }
+
+    const savedBusinesses = this.currentAuthState.userProfile.profile?.savedBusinesses || [];
+    await this.updateProfile({
+      profile: {
+        ...this.currentAuthState.userProfile.profile,
+        savedBusinesses: savedBusinesses.filter(id => id !== businessId)
+      }
+    });
+  }
+
+  async addReview(businessId: string, rating: number, comment: string): Promise<void> {
+    if (!this.currentAuthState.userProfile) {
+      throw new Error('No user logged in');
+    }
+
+    const reviews = this.currentAuthState.userProfile.profile?.reviews || [];
+    const newReview = {
+      id: `review-${Date.now()}`,
+      businessId,
+      rating,
+      comment,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.updateProfile({
+      profile: {
+        ...this.currentAuthState.userProfile.profile,
+        reviews: [...reviews, newReview]
+      }
+    });
   }
 }
 

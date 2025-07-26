@@ -30,6 +30,30 @@ export interface UserProfile {
     lastName?: string;
     phoneNumber?: string;
     location?: string;
+    bio?: string;
+    savedBusinesses?: string[];
+    reviews?: {
+      id: string;
+      businessId: string;
+      rating: number;
+      comment: string;
+      createdAt: string;
+      updatedAt: string;
+    }[];
+    accessibilityPreferences?: {
+      wheelchairAccess: boolean;
+      visualImpairment: boolean;
+      hearingImpairment: boolean;
+      cognitiveSupport: boolean;
+      mobilitySupport: boolean;
+      sensoryFriendly: boolean;
+    };
+    lgbtqIdentity?: {
+      visible: boolean;
+      pronouns: string;
+      identities: string[];
+      preferredName: string;
+    };
     preferences?: {
       notifications: boolean;
       marketingEmails: boolean;
