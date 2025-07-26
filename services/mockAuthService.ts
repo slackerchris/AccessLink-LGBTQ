@@ -19,6 +19,7 @@ export interface UserProfile {
     interests?: string[];
     accessibilityNeeds?: string[];
   };
+  businessId?: string; // For business owners
   createdAt: Date;
   updatedAt: Date;
 }

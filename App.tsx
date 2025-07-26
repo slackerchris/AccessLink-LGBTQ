@@ -18,11 +18,25 @@ import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 // Business Components  
 import { BusinessListScreen } from './components/business/BusinessListScreen';
 
+// Common Components
+import { EditProfileScreen } from './components/common/EditProfileScreen';
+
 // Admin Components
 import { AdminDashboard } from './components/admin/AdminDashboard';
 
 // Hooks
 import { useAuth, useAuthActions } from './hooks/useAuth';
+
+// Profile Stack Navigator
+const ProfileStack = createStackNavigator();
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+    </ProfileStack.Navigator>
+  );
+}
 
 // Auth Stack Navigator
 const AuthStack = createStackNavigator();
@@ -92,7 +106,7 @@ function AdminTabNavigator() {
       
       <AdminTab.Screen 
         name="Profile" 
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{ title: 'Profile' }}
       />
     </AdminTab.Navigator>
@@ -156,7 +170,7 @@ function UserTabNavigator() {
       
       <UserTab.Screen 
         name="Profile" 
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{ title: 'Profile' }}
       />
     </UserTab.Navigator>
@@ -220,7 +234,7 @@ function BusinessTabNavigator() {
       
       <BusinessTab.Screen 
         name="Profile" 
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{ title: 'Profile' }}
       />
     </BusinessTab.Navigator>
@@ -228,7 +242,7 @@ function BusinessTabNavigator() {
 }
 
 // Profile Screen Component
-function ProfileScreen() {
+function ProfileScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
   const { signOut } = useAuthActions();
   
@@ -238,6 +252,10 @@ function ProfileScreen() {
     } catch (error: any) {
       Alert.alert('Sign Out Error', error.message);
     }
+  };
+  
+  const handleEditProfile = () => {
+    navigation.navigate('EditProfile');
   };
   
   const handleWebsite = () => {
@@ -259,9 +277,24 @@ function ProfileScreen() {
           {userProfile?.role === 'admin' ? '👑 Admin' : 
            userProfile?.role === 'business_owner' ? '🏢 Business Owner' : '👤 User'}
         </Text>
+        {userProfile?.profile?.preferredPronouns && (
+          <Text style={styles.pronouns}>
+            {userProfile.profile.preferredPronouns}
+          </Text>
+        )}
+        {userProfile?.profile?.bio && (
+          <Text style={styles.bio}>
+            {userProfile.profile.bio}
+          </Text>
+        )}
       </View>
       
       <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
+          <Ionicons name="create-outline" size={24} color="#fff" />
+          <Text style={styles.buttonText}>Edit Profile</Text>
+        </TouchableOpacity>
+        
         <TouchableOpacity style={styles.button} onPress={handleWebsite}>
           <Ionicons name="globe-outline" size={24} color="#fff" />
           <Text style={styles.buttonText}>Visit Website</Text>
@@ -364,6 +397,20 @@ const styles = StyleSheet.create({
     color: '#6366f1',
     marginTop: 5,
     fontWeight: '600',
+  },
+  pronouns: {
+    fontSize: 14,
+    color: '#8b5cf6',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  bio: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    lineHeight: 20,
   },
   buttonContainer: {
     padding: 20,
