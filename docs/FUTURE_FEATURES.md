@@ -26,6 +26,21 @@ This document outlines potential future features for the AccessLink LGBTQ+ mobil
   - Business profile edit dashboard (contact info, hours, accessibility features)
   - Admin profile management tools
 
+### 5. **Review & Rating System**
+- **User Reviews**:
+  - Write and submit business reviews
+  - Rate businesses on accessibility features
+  - Upload photos with reviews
+  - Tag specific accessibility features
+- **Review Management**:
+  - Edit and delete own reviews
+  - Report inappropriate reviews
+  - Helpful/unhelpful voting system
+- **Business Response System**:
+  - Allow businesses to respond to reviews
+  - Thank users for positive feedback
+  - Address concerns professionally
+
 ### 1. **User Portal**
 - **Personal Profile Management**:
   - Customizable accessibility preferences

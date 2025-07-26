@@ -3,7 +3,7 @@
  * Main dashboard for regular users
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image
+  Image,
+  TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
@@ -25,12 +26,21 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
   const { userProfile } = useAuth();
   const { signOut } = useAuthActions();
   const { businesses } = useBusinesses({}, 6); // Get first 6 businesses
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleSignOut = async () => {
     try {
       await signOut();
     } catch (error: any) {
       Alert.alert('Sign Out Error', error.message);
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigation.navigate('Directory', { searchQuery: searchQuery.trim() });
+    } else {
+      navigation.navigate('Directory');
     }
   };
 
@@ -43,30 +53,6 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
     { icon: 'library', name: 'Education', color: '#f97316' },
     { icon: 'cafe', name: 'Cafes', color: '#84cc16' },
     { icon: 'car-sport', name: 'Services', color: '#64748b' },
-  ];
-
-  const quickActions = [
-    {
-      icon: 'search',
-      title: 'Find Businesses',
-      subtitle: 'Discover LGBTQ+ friendly places',
-      color: '#6366f1',
-      onPress: () => navigation.navigate('Directory')
-    },
-    {
-      icon: 'star',
-      title: 'Write Review',
-      subtitle: 'Share your experience',
-      color: '#fbbf24',
-      onPress: () => Alert.alert('Reviews', 'Feature coming soon!')
-    },
-    {
-      icon: 'people',
-      title: 'Community',
-      subtitle: 'Connect with others',
-      color: '#10b981',
-      onPress: () => Alert.alert('Community', 'Feature coming soon!')
-    }
   ];
 
   const firstName = userProfile?.profile?.firstName || userProfile?.displayName?.split(' ')[0] || 'Friend';
@@ -87,24 +73,49 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
         </View>
       </View>
 
-      {/* Quick Actions */}
-      <View style={styles.actionsContainer}>
-        <Text style={styles.sectionTitle}>What would you like to do?</Text>
-        <View style={styles.actionsGrid}>
-          {quickActions.map((action, index) => (
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Text style={styles.sectionTitle}>Find LGBTQ+ Friendly Businesses</Text>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color="#6b7280" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search for restaurants, cafes, services..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+          <TouchableOpacity 
+            style={styles.searchButton}
+            onPress={handleSearch}
+          >
+            <Text style={styles.searchButtonText}>Search</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Categories Section - Horizontal Scroll */}
+      <View style={styles.categoriesContainer}>
+        <Text style={styles.sectionTitle}>Browse by Category</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalCategoriesContainer}
+        >
+          {categories.map((category, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.actionCard}
-              onPress={action.onPress}
+              style={styles.horizontalCategoryCard}
+              onPress={() => navigation.navigate('Directory')}
             >
-              <View style={[styles.actionIconContainer, { backgroundColor: action.color }]}>
-                <Ionicons name={action.icon as any} size={24} color="#fff" />
+              <View style={[styles.horizontalCategoryIcon, { backgroundColor: category.color }]}>
+                <Ionicons name={category.icon as any} size={24} color="#fff" />
               </View>
-              <Text style={styles.actionTitle}>{action.title}</Text>
-              <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+              <Text style={styles.horizontalCategoryName}>{category.name}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Featured Businesses */}
@@ -139,43 +150,6 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
             <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
           </TouchableOpacity>
         ))}
-      </View>
-
-      {/* Community Section */}
-      <View style={styles.communityContainer}>
-        <Text style={styles.sectionTitle}>Community</Text>
-        <View style={styles.communityCard}>
-          <Ionicons name="people" size={32} color="#6366f1" />
-          <Text style={styles.communityTitle}>Join the Conversation</Text>
-          <Text style={styles.communityText}>
-            Connect with other community members and share your experiences
-          </Text>
-          <TouchableOpacity 
-            style={styles.communityButton}
-            onPress={() => Alert.alert('Community', 'Feature coming soon!')}
-          >
-            <Text style={styles.communityButtonText}>Coming Soon</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Categories Section - Bottom */}
-      <View style={styles.bottomCategoriesContainer}>
-        <Text style={styles.sectionTitle}>Browse by Category</Text>
-        <View style={styles.categoriesGrid}>
-          {categories.map((category, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.bottomCategoryCard}
-              onPress={() => navigation.navigate('Directory')}
-            >
-              <View style={[styles.bottomCategoryIcon, { backgroundColor: category.color }]}>
-                <Ionicons name={category.icon as any} size={20} color="#fff" />
-              </View>
-              <Text style={styles.bottomCategoryName}>{category.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
       </View>
     </ScrollView>
   );
@@ -217,6 +191,74 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 5,
   },
+  searchContainer: {
+    padding: 20,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1f2937',
+    paddingVertical: 0,
+  },
+  searchButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  searchButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  categoriesContainer: {
+    padding: 20,
+    paddingTop: 0,
+  },
+  horizontalCategoriesContainer: {
+    paddingHorizontal: 20,
+  },
+  horizontalCategoryCard: {
+    alignItems: 'center',
+    marginRight: 16,
+    width: 80,
+  },
+  horizontalCategoryIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  horizontalCategoryName: {
+    fontSize: 12,
+    color: '#374151',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
   actionsContainer: {
     padding: 20,
   },
@@ -225,44 +267,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 15,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  actionCard: {
-    backgroundColor: '#fff',
-    width: '48%',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  actionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1f2937',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  actionSubtitle: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center',
   },
   featuredContainer: {
     padding: 20,
@@ -330,45 +334,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
   },
-  communityContainer: {
-    padding: 20,
-    paddingTop: 0,
-  },
-  communityCard: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  communityTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  communityText: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  communityButton: {
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  communityButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   userBanner: {
     backgroundColor: '#8b5cf6',
     paddingVertical: 20,
@@ -388,37 +353,5 @@ const styles = StyleSheet.create({
     color: '#ddd6fe',
     textAlign: 'center',
     marginTop: 5,
-  },
-  bottomCategoriesContainer: {
-    padding: 20,
-    paddingTop: 10,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  bottomCategoryCard: {
-    width: '23%',
-    alignItems: 'center',
-    marginBottom: 20,
-    padding: 10,
-  },
-  bottomCategoryIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  bottomCategoryName: {
-    fontSize: 11,
-    color: '#374151',
-    textAlign: 'center',
-    fontWeight: '500',
   },
 });
