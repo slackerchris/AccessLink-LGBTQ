@@ -19,7 +19,8 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#6c5ce7"
-      }
+      },
+      "package": "com.accesslinklgbtq.lgbtq"
     },
     "web": {
       "bundler": "metro"

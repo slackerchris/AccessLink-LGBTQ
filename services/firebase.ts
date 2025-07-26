@@ -7,16 +7,14 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Temporary Firebase configuration for development
-// TODO: Replace with actual Firebase project config
+// Firebase configuration from google-services.json
 const firebaseConfig = {
-  apiKey: "demo-api-key",
-  authDomain: "accesslinklgbtq-demo.firebaseapp.com",
-  projectId: "accesslinklgbtq-demo",
-  storageBucket: "accesslinklgbtq-demo.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:demo",
-  measurementId: "G-DEMO"
+  apiKey: "AIzaSyDQOnwLXW_PtQKtxhfxasWp2C4c7Bp2GKw",
+  authDomain: "acceinklgbtq-a1de8.firebaseapp.com",
+  projectId: "acceinklgbtq-a1de8",
+  storageBucket: "acceinklgbtq-a1de8.firebasestorage.app",
+  messagingSenderId: "580679166679",
+  appId: "1:580679166679:android:ea493c0f288e2f5cd65e92"
 };
 
 // Initialize Firebase

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "580679166679",
+    "project_id": "acceinklgbtq-a1de8",
+    "storage_bucket": "acceinklgbtq-a1de8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:580679166679:android:ea493c0f288e2f5cd65e92",
+        "android_client_info": {
+          "package_name": "com.accesslinklgbtq.lgbtq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQOnwLXW_PtQKtxhfxasWp2C4c7Bp2GKw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
