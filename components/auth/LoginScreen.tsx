@@ -55,8 +55,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <Ionicons name="heart" size={60} color="#6366f1" />
-          <Text style={styles.title}>AccessLink LGBTQ+</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+          <Text style={styles.title}>🏳️‍🌈 AccessLink LGBTQ+</Text>
+          <Text style={styles.subtitle}>Sign in to connect with inclusive businesses</Text>
         </View>
 
         {/* Demo Accounts Section */}
@@ -67,13 +67,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               style={[styles.demoButton, styles.adminButton]} 
               onPress={() => quickLogin('admin', 'accesslink1234')}
             >
-              <Text style={styles.demoButtonText}>�️ ADMIN DASHBOARD</Text>
+              <Text style={styles.demoButtonText}>👑 Admin Login</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.demoButton, styles.userButton]} 
               onPress={() => quickLogin('user@example.com', 'password123')}
             >
-              <Text style={styles.demoButtonText}>🏳️‍🌈 USER EXPERIENCE</Text>
+              <Text style={styles.demoButtonText}>👤 User Login</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('business@example.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>☕ Rainbow Café</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('owner@pridehealth.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>🏥 Pride Health</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -146,6 +158,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <Text style={styles.credentialsText}>Admin: admin / accesslink1234</Text>
           <Text style={styles.credentialsText}>Admin2: admin@accesslinklgbtq.app / admin123</Text>
           <Text style={styles.credentialsText}>User: user@example.com / password123</Text>
+          <Text style={styles.credentialsText}>Business: business@example.com / password123</Text>
+          <Text style={styles.credentialsText}>Health Center: owner@pridehealth.com / password123</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -201,14 +215,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   adminButton: {
-    backgroundColor: '#dc2626',
-    borderWidth: 2,
-    borderColor: '#991b1b',
+    backgroundColor: '#6366f1',
   },
   userButton: {
-    backgroundColor: '#8b5cf6',
-    borderWidth: 2,
-    borderColor: '#7c3aed',
+    backgroundColor: '#10b981',
+  },
+  businessButton: {
+    backgroundColor: '#f59e0b',
   },
   demoButtonText: {
     color: '#fff',

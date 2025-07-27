@@ -26,11 +26,6 @@
       "bundler": "metro"
     },
     "scheme": "accesslink",
-    "extra": {
-      "eas": {
-        "projectId": "your-actual-project-id"
-      }
-    },
     "owner": "slackerchris",
     "updates": {
       "url": "https://u.expo.dev/your-project-id"

@@ -25,6 +25,18 @@ export interface ServiceItem {
   available: boolean;
 }
 
+export interface MediaItem {
+  id: string;
+  type: 'photo' | 'video';
+  uri: string;
+  thumbnail?: string;
+  title: string;
+  description?: string;
+  category: 'interior' | 'exterior' | 'accessibility' | 'events' | 'menu' | 'staff' | 'other';
+  uploadedAt: Date;
+  featured: boolean;
+}
+
 export interface BusinessListing {
   id?: string;
   name: string;
@@ -69,6 +81,7 @@ export interface BusinessListing {
   tags?: string[];
   images?: string[];
   services?: ServiceItem[];
+  mediaGallery?: MediaItem[];
   ownerId: string;
   approved: boolean;
   featured: boolean;
@@ -155,6 +168,48 @@ const mockBusinesses: BusinessListing[] = [
         available: true
       }
     ],
+    mediaGallery: [
+      {
+        id: 'media-1',
+        type: 'photo',
+        uri: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
+        title: 'Main Dining Area',
+        description: 'Our spacious and accessible main dining area with wide aisles and comfortable seating',
+        category: 'interior',
+        uploadedAt: new Date('2024-12-15'),
+        featured: true
+      },
+      {
+        id: 'media-2',
+        type: 'photo',
+        uri: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=400',
+        title: 'Accessible Entrance',
+        description: 'Our wheelchair-accessible entrance with automatic doors and ramp access',
+        category: 'accessibility',
+        uploadedAt: new Date('2024-12-10'),
+        featured: false
+      },
+      {
+        id: 'media-3',
+        type: 'photo',
+        uri: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400',
+        title: 'Pride Month Celebration',
+        description: 'Our special Pride Month setup with rainbow decorations and community gathering space',
+        category: 'events',
+        uploadedAt: new Date('2024-12-08'),
+        featured: false
+      },
+      {
+        id: 'media-4',
+        type: 'photo',
+        uri: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400',
+        title: 'Barista at Work',
+        description: 'Our skilled baristas crafting the perfect cup with fair-trade, organic beans',
+        category: 'staff',
+        uploadedAt: new Date('2024-12-05'),
+        featured: false
+      }
+    ],
     ownerId: 'mock-business-001',
     approved: true,
     featured: true,
@@ -230,6 +285,38 @@ const mockBusinesses: BusinessListing[] = [
         duration: '30 minutes',
         category: 'Sexual Health',
         available: true
+      }
+    ],
+    mediaGallery: [
+      {
+        id: 'health-media-1',
+        type: 'photo',
+        uri: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400',
+        title: 'Modern Reception Area',
+        description: 'Our welcoming, accessible reception area designed for all patients',
+        category: 'interior',
+        uploadedAt: new Date('2024-12-12'),
+        featured: true
+      },
+      {
+        id: 'health-media-2',
+        type: 'photo',
+        uri: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
+        title: 'Accessible Examination Room',
+        description: 'Fully accessible examination room with adjustable equipment',
+        category: 'accessibility',
+        uploadedAt: new Date('2024-12-09'),
+        featured: false
+      },
+      {
+        id: 'health-media-3',
+        type: 'photo',
+        uri: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400',
+        title: 'Medical Team',
+        description: 'Our diverse, LGBTQ+-affirming medical team committed to inclusive healthcare',
+        category: 'staff',
+        uploadedAt: new Date('2024-12-07'),
+        featured: false
       }
     ],
     ownerId: 'mock-business-002',
@@ -553,6 +640,66 @@ class MockBusinessService {
     if (business && business.services) {
       business.services = business.services.filter(s => s.id !== serviceId);
       business.updatedAt = new Date();
+    }
+  }
+
+  // Media Gallery Management Methods
+  async getBusinessMedia(businessId: string): Promise<MediaItem[]> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    return business?.mediaGallery || [];
+  }
+
+  async addBusinessMedia(businessId: string, mediaData: Omit<MediaItem, 'id' | 'uploadedAt'>): Promise<string> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business) {
+      const newMedia: MediaItem = {
+        ...mediaData,
+        id: `media-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        uploadedAt: new Date()
+      };
+      
+      if (!business.mediaGallery) {
+        business.mediaGallery = [];
+      }
+      business.mediaGallery.unshift(newMedia); // Add at beginning
+      business.updatedAt = new Date();
+      return newMedia.id;
+    }
+    throw new Error('Business not found');
+  }
+
+  async updateBusinessMedia(businessId: string, mediaId: string, mediaData: Partial<MediaItem>): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business && business.mediaGallery) {
+      const mediaIndex = business.mediaGallery.findIndex(m => m.id === mediaId);
+      if (mediaIndex !== -1) {
+        business.mediaGallery[mediaIndex] = { ...business.mediaGallery[mediaIndex], ...mediaData };
+        business.updatedAt = new Date();
+      }
+    }
+  }
+
+  async deleteBusinessMedia(businessId: string, mediaId: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business && business.mediaGallery) {
+      business.mediaGallery = business.mediaGallery.filter(m => m.id !== mediaId);
+      business.updatedAt = new Date();
+    }
+  }
+
+  async setFeaturedMedia(businessId: string, mediaId: string, featured: boolean): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business && business.mediaGallery) {
+      const mediaIndex = business.mediaGallery.findIndex(m => m.id === mediaId);
+      if (mediaIndex !== -1) {
+        business.mediaGallery[mediaIndex].featured = featured;
+        business.updatedAt = new Date();
+      }
     }
   }
 }

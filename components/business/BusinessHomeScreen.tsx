@@ -76,9 +76,9 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     },
     {
       icon: 'camera',
-      title: 'Update Photos',
-      subtitle: 'Add or change business photos',
-      onPress: () => Alert.alert('Photos', 'Photo management coming soon!')
+      title: 'Media Gallery',
+      subtitle: 'Manage photos and videos',
+      onPress: () => navigation.navigate('MediaGallery')
     },
     {
       icon: 'pricetag',
