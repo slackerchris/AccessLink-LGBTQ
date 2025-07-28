@@ -37,6 +37,31 @@ export interface MediaItem {
   featured: boolean;
 }
 
+export interface BusinessEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  location: string;
+  category: 'social' | 'educational' | 'health' | 'advocacy' | 'entertainment' | 'support' | 'community' | 'fundraising' | 'other';
+  isAccessible: boolean;
+  accessibilityFeatures: string[];
+  maxAttendees?: number;
+  currentAttendees: number;
+  isPublic: boolean;
+  registrationRequired: boolean;
+  registrationDeadline?: Date;
+  ticketPrice?: number;
+  contactEmail?: string;
+  contactPhone?: string;
+  imageUri?: string;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface BusinessListing {
   id?: string;
   name: string;
@@ -82,6 +107,7 @@ export interface BusinessListing {
   images?: string[];
   services?: ServiceItem[];
   mediaGallery?: MediaItem[];
+  events?: BusinessEvent[];
   ownerId: string;
   approved: boolean;
   featured: boolean;
@@ -208,6 +234,50 @@ const mockBusinesses: BusinessListing[] = [
         category: 'staff',
         uploadedAt: new Date('2024-12-05'),
         featured: false
+      }
+    ],
+    events: [
+      {
+        id: 'event-1',
+        title: 'Pride Month Celebration',
+        description: 'Join us for a special Pride Month celebration with live music, food, and community connections. This is a welcoming space for all members of the LGBTQ+ community and allies.',
+        date: new Date('2025-06-15'),
+        startTime: '18:00',
+        endTime: '22:00',
+        location: 'Main Dining Area',
+        category: 'social',
+        isAccessible: true,
+        accessibilityFeatures: ['Wheelchair Accessible', 'Sign Language Interpreter', 'Gender-Neutral Restrooms'],
+        maxAttendees: 50,
+        currentAttendees: 32,
+        isPublic: true,
+        registrationRequired: true,
+        registrationDeadline: new Date('2025-06-10'),
+        contactEmail: 'events@rainbowcafe.com',
+        contactPhone: '(555) 123-4567',
+        tags: ['pride', 'community', 'celebration', 'music'],
+        createdAt: new Date('2025-05-01'),
+        updatedAt: new Date('2025-05-15')
+      },
+      {
+        id: 'event-2',
+        title: 'Coffee & Community: Trans Support Meet-up',
+        description: 'A monthly gathering for transgender individuals and allies. Safe space to connect, share experiences, and build community over great coffee.',
+        date: new Date('2025-08-10'),
+        startTime: '10:00',
+        endTime: '12:00',
+        location: 'Private Back Room',
+        category: 'support',
+        isAccessible: true,
+        accessibilityFeatures: ['Wheelchair Accessible', 'Quiet Space Available', 'Gender-Neutral Restrooms'],
+        maxAttendees: 15,
+        currentAttendees: 8,
+        isPublic: true,
+        registrationRequired: false,
+        contactEmail: 'community@rainbowcafe.com',
+        tags: ['transgender', 'support', 'community', 'monthly'],
+        createdAt: new Date('2025-07-01'),
+        updatedAt: new Date('2025-07-01')
       }
     ],
     ownerId: 'mock-business-001',
@@ -701,6 +771,92 @@ class MockBusinessService {
         business.updatedAt = new Date();
       }
     }
+  }
+
+  // Event Management Methods
+  async getBusinessEvents(businessId: string): Promise<BusinessEvent[]> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    return business?.events || [];
+  }
+
+  async addBusinessEvent(businessId: string, event: BusinessEvent): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business) {
+      if (!business.events) {
+        business.events = [];
+      }
+      business.events.unshift(event);
+      business.updatedAt = new Date();
+    }
+  }
+
+  async updateBusinessEvent(businessId: string, eventId: string, updates: Partial<BusinessEvent>): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business && business.events) {
+      const eventIndex = business.events.findIndex(e => e.id === eventId);
+      if (eventIndex !== -1) {
+        business.events[eventIndex] = { 
+          ...business.events[eventIndex], 
+          ...updates,
+          updatedAt: new Date()
+        };
+        business.updatedAt = new Date();
+      }
+    }
+  }
+
+  async deleteBusinessEvent(businessId: string, eventId: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business && business.events) {
+      business.events = business.events.filter(e => e.id !== eventId);
+      business.updatedAt = new Date();
+    }
+  }
+
+  async getPublicEvents(limit?: number): Promise<BusinessEvent[]> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const allEvents: BusinessEvent[] = [];
+    
+    mockBusinesses.forEach(business => {
+      if (business.events) {
+        const publicEvents = business.events.filter(event => event.isPublic);
+        allEvents.push(...publicEvents);
+      }
+    });
+
+    // Sort by date (upcoming first)
+    allEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+    
+    return limit ? allEvents.slice(0, limit) : allEvents;
+  }
+
+  async searchEvents(query: string, filters?: { category?: string; startDate?: Date; endDate?: Date }): Promise<BusinessEvent[]> {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const allEvents = await this.getPublicEvents();
+    
+    let filteredEvents = allEvents.filter(event => 
+      event.title.toLowerCase().includes(query.toLowerCase()) ||
+      event.description.toLowerCase().includes(query.toLowerCase()) ||
+      event.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+    );
+
+    if (filters) {
+      if (filters.category) {
+        filteredEvents = filteredEvents.filter(event => event.category === filters.category);
+      }
+      if (filters.startDate) {
+        filteredEvents = filteredEvents.filter(event => event.date >= filters.startDate!);
+      }
+      if (filters.endDate) {
+        filteredEvents = filteredEvents.filter(event => event.date <= filters.endDate!);
+      }
+    }
+
+    return filteredEvents;
   }
 }
 

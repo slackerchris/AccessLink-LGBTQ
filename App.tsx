@@ -25,6 +25,7 @@ import { BusinessListScreen } from './components/business/BusinessListScreen';
 import { BusinessProfileEditScreen } from './components/business/BusinessProfileEditScreen';
 import { ServicesManagementScreen } from './components/business/ServicesManagementScreen';
 import { MediaGalleryScreen } from './components/business/MediaGalleryScreen';
+import { EventsManagementScreen } from './components/business/EventsManagementScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
@@ -234,6 +235,11 @@ function BusinessDashboardStackNavigator() {
       <BusinessStack.Screen 
         name="MediaGallery" 
         component={MediaGalleryScreen} 
+        options={{ headerShown: false }}
+      />
+      <BusinessStack.Screen 
+        name="EventsManagement" 
+        component={EventsManagementScreen} 
         options={{ headerShown: false }}
       />
     </BusinessStack.Navigator>

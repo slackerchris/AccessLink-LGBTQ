@@ -81,6 +81,12 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       onPress: () => navigation.navigate('MediaGallery')
     },
     {
+      icon: 'calendar',
+      title: 'Events Management',
+      subtitle: 'Create and manage events',
+      onPress: () => navigation.navigate('EventsManagement')
+    },
+    {
       icon: 'pricetag',
       title: 'Manage Services',
       subtitle: 'Update services and pricing',
