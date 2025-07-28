@@ -117,3 +117,47 @@ export const usePendingBusinesses = () => {
     refresh: loadPendingBusinesses
   };
 };
+
+// Hook for business actions (admin only)
+export const useBusinessActions = () => {
+  const [loading, setLoading] = useState(false);
+  const { userProfile } = useAuth();
+
+  const approveBusiness = useCallback(async (businessId: string) => {
+    if (!userProfile || userProfile.role !== 'admin') {
+      throw new Error('Admin privileges required');
+    }
+    
+    setLoading(true);
+    try {
+      await businessService.approveBusiness(businessId);
+    } catch (error: any) {
+      console.error('Error approving business:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [userProfile]);
+
+  const rejectBusiness = useCallback(async (businessId: string) => {
+    if (!userProfile || userProfile.role !== 'admin') {
+      throw new Error('Admin privileges required');
+    }
+    
+    setLoading(true);
+    try {
+      await businessService.rejectBusiness(businessId);
+    } catch (error: any) {
+      console.error('Error rejecting business:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [userProfile]);
+
+  return {
+    approveBusiness,
+    rejectBusiness,
+    loading
+  };
+};

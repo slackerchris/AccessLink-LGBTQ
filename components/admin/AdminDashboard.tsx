@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useAuth, usePermissions } from '../../hooks/useAuth';
 import { usePendingBusinesses, useBusinessActions } from '../../hooks/useBusiness';
-import { BusinessListing } from '../../services/businessService';
+import { BusinessListing } from '../../services/mockBusinessService';
 import { adminService, PlatformStats } from '../../services/adminService';
 
 interface AdminDashboardProps {
@@ -33,7 +33,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const { userProfile } = useAuth();
   const { isAdmin } = usePermissions();
   const { businesses: pendingBusinesses, loading, refresh } = usePendingBusinesses();
-  const { approveBusiness, rejectBusiness, loading: actionLoading } = useBusinesses();
+  const { approveBusiness, rejectBusiness, loading: actionLoading } = useBusinessActions();
 
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<PlatformStats | null>(null);
