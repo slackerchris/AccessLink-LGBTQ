@@ -14,13 +14,19 @@ import {
   RefreshControl,
   FlatList
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth, usePermissions } from '../../hooks/useAuth';
 import { usePendingBusinesses, useBusinessActions } from '../../hooks/useBusiness';
 import { BusinessListing } from '../../services/mockBusinessService';
-import { adminService, PlatformStats } from '../../services/adminService';
+import { adminService } from '../../services/adminService';
+
+type AdminStackParamList = {
+  UserManagement: undefined;
+  ManageBusinesses: undefined;
+};
 
 interface AdminDashboardProps {
-  navigation: any;
+  navigation: StackNavigationProp<AdminStackParamList, 'UserManagement'>;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -32,7 +38,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const { approveBusiness, rejectBusiness, loading: actionLoading } = useBusinessActions();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState<PlatformStats | null>(null);
 
   useEffect(() => {
     loadPlatformStats();
@@ -40,8 +45,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const loadPlatformStats = async () => {
     try {
-      const platformStats = await adminService.getPlatformStats();
-      setStats(platformStats);
+      await adminService.getPlatformStats();
+      // setStats(platformStats);
     } catch (error) {
       console.error('Error loading platform stats:', error);
     }
@@ -141,7 +146,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <View style={styles.accessDenied}>
           <Text style={styles.accessDeniedTitle}>🚫 Access Denied</Text>
           <Text style={styles.accessDeniedText}>
-            You don't have admin privileges to access this section.
+            You don&apos;t have admin privileges to access this section.
           </Text>
         </View>
       </View>

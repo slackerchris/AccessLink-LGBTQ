@@ -16,10 +16,15 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuthActions } from '../../hooks/useAuth';
 
+type AuthStackParamList = {
+  SignUp: undefined;
+};
+
 interface LoginScreenProps {
-  navigation: any;
+  navigation: StackNavigationProp<AuthStackParamList, 'SignUp'>;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {

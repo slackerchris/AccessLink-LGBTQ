@@ -465,7 +465,7 @@ class BusinessService {
   public async searchBusinesses(searchQuery: string, filters: BusinessFilters = {}, pageLimit: number = 20): Promise<{ businesses: BusinessListing[], lastDoc: DocumentSnapshot | null }> {
     try {
       const businessesRef = collection(db, 'businesses');
-      let q = query(
+      const q = query(
         businessesRef,
         where('approved', '==', true),
         orderBy('createdAt', 'desc'),

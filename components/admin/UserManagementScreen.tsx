@@ -11,13 +11,18 @@ import {
   RefreshControl,
   FlatList
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { adminService, UserDetails, UserFilters } from '../../services/adminService';
 
+type AdminStackParamList = {
+  UserDetails: { userId: string };
+};
+
 interface UserManagementScreenProps {
-  navigation: any;
+  navigation: StackNavigationProp<AdminStackParamList, 'UserDetails'>;
 }
 
-const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation }) => {
+const UserManagementScreen: React.FC<UserManagementScreenProps> = () => {
   const [users, setUsers] = useState<UserDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

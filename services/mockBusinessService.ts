@@ -593,7 +593,7 @@ class MockBusinessService {
   async searchBusinesses(searchQuery: string, filters: BusinessFilters = {}, pageLimit: number = 20): Promise<{ businesses: BusinessListing[], lastDoc: any }> {
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    let results = mockBusinesses.filter(business => {
+    const results = mockBusinesses.filter(business => {
       const searchLower = searchQuery.toLowerCase();
       return business.approved && (
         business.name.toLowerCase().includes(searchLower) ||

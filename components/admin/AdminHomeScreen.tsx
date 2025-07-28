@@ -14,12 +14,18 @@ import {
   RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { usePendingBusinesses } from '../../hooks/useBusiness';
 import { adminService, PlatformStats } from '../../services/adminService';
 
+type AdminStackParamList = {
+  Admin: undefined;
+  UserManagement: undefined;
+};
+
 interface AdminHomeScreenProps {
-  navigation: any;
+  navigation: StackNavigationProp<AdminStackParamList, 'Admin'>;
 }
 
 export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
