@@ -19,6 +19,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { businessService } from '../../services/mockBusinessService';
+import EventDeleteConfirmationScreen from './EventDeleteConfirmationScreen';
 
 export interface BusinessEvent {
   id: string;
@@ -72,6 +73,8 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
   const [userBusiness, setUserBusiness] = useState<any>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRegistrationDeadlinePicker, setShowRegistrationDeadlinePicker] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<BusinessEvent | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -346,78 +349,36 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
   };
 
   const handleDeleteEvent = (eventId: string) => {
-    console.log('🗑️ Delete button clicked for event:', eventId);
-    
-    // Test if Alert works at all
-    console.log('🧪 Testing basic Alert functionality...');
-    
-    // Find the event to get its title for better confirmation
-    const eventToDelete = events.find(e => e.id === eventId);
-    const eventTitle = eventToDelete?.title || 'this event';
-    
-    console.log('📋 Event to delete:', { eventId, eventTitle, eventExists: !!eventToDelete });
-    
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      setEventToDelete(event);
+      setShowDeleteConfirmation(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete || !userBusiness?.id) return;
+
     try {
-      Alert.alert(
-        '⚠️ Delete Event',
-        `Are you sure you want to delete "${eventTitle}"?\n\nThis action cannot be undone and will permanently remove the event from your business profile.`,
-        [
-          { 
-            text: 'Cancel', 
-            style: 'cancel',
-            onPress: () => console.log('❌ Delete cancelled')
-          },
-          {
-            text: 'Delete Event',
-            style: 'destructive',
-            onPress: async () => {
-              if (!userBusiness?.id) {
-                Alert.alert('Error', 'Business not found. Please try again.');
-                return;
-              }
-              
-              try {
-                setDeletingEventId(eventId); // Set loading state
-                console.log(`🔄 Attempting to delete event ${eventId} for business ${userBusiness.id}`);
-                await businessService.deleteBusinessEvent(userBusiness.id, eventId);
-                
-                // Update local state immediately
-                setEvents(prev => {
-                  const updatedEvents = prev.filter(event => event.id !== eventId);
-                  console.log(`✅ Event deleted. Events count: ${prev.length} -> ${updatedEvents.length}`);
-                  return updatedEvents;
-                });
-                
-                // Close the modal if we were editing this event
-                if (editingEvent?.id === eventId) {
-                  setIsModalVisible(false);
-                  setEditingEvent(null);
-                }
-                
-                // Optionally reload events from server to ensure sync
-                await loadEvents();
-                
-                Alert.alert('✅ Success', `"${eventTitle}" has been deleted successfully!`);
-              } catch (error) {
-                console.error('❌ Error deleting event:', error);
-                Alert.alert(
-                  'Error', 
-                  'Failed to delete the event. Please check your connection and try again.',
-                  [{ text: 'OK', style: 'default' }]
-                );
-              } finally {
-                setDeletingEventId(null); // Clear loading state
-              }
-            }
-          }
-        ],
-        { cancelable: true }
-      );
-    } catch (alertError) {
-      console.error('🚨 Alert error:', alertError);
-      console.log('🔧 Fallback: Using simple alert');
-      // Fallback to simple alert
-      Alert.alert('Delete Event', `Delete ${eventTitle}?`);
+      // Update local state immediately
+      setEvents(prev => prev.filter(event => event.id !== eventToDelete.id));
+      
+      // Close the edit modal if we were editing this event
+      if (editingEvent?.id === eventToDelete.id) {
+        setIsModalVisible(false);
+        setEditingEvent(null);
+      }
+      
+      // Reload events from server to ensure sync
+      await loadEvents();
+      
+    } catch (error) {
+      console.error('Error in handleConfirmDelete:', error);
+      // Reload events to restore state if there was an error
+      await loadEvents();
+    } finally {
+      setEventToDelete(null);
+      setShowDeleteConfirmation(false);
     }
   };
 
@@ -592,19 +553,6 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
               {editingEvent ? 'Edit Event' : 'Create Event'}
             </Text>
             <View style={styles.modalHeaderActions}>
-              {editingEvent && (
-                <TouchableOpacity
-                  style={[styles.modalDeleteButton, deletingEventId === editingEvent.id && styles.disabledButton]}
-                  onPress={() => handleDeleteEvent(editingEvent.id)}
-                  disabled={deletingEventId === editingEvent.id}
-                >
-                  <Ionicons 
-                    name="trash-outline" 
-                    size={20} 
-                    color={deletingEventId === editingEvent.id ? "#9ca3af" : "#ef4444"} 
-                  />
-                </TouchableOpacity>
-              )}
               <TouchableOpacity
                 style={[styles.modalSaveButton, isLoading && styles.disabledButton]}
                 onPress={handleSaveEvent}
@@ -982,8 +930,44 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
                 </Text>
               )}
             </View>
+
+            {/* Big Delete Button - Only show when editing */}
+            {editingEvent && (
+              <View style={styles.deleteSection}>
+                <View style={styles.deleteSeparator} />
+                <TouchableOpacity
+                  style={styles.bigDeleteButton}
+                  onPress={() => handleDeleteEvent(editingEvent.id)}
+                >
+                  <Ionicons name="trash" size={24} color="#fff" />
+                  <Text style={styles.bigDeleteButtonText}>Delete Event Permanently</Text>
+                </TouchableOpacity>
+                <Text style={styles.deleteWarningText}>
+                  ⚠️ This action cannot be undone. Deleting this event will permanently remove it and all associated data.
+                </Text>
+              </View>
+            )}
+            
           </ScrollView>
         </View>
+      </Modal>
+
+      {/* Delete Confirmation Screen */}
+      <Modal
+        visible={showDeleteConfirmation}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <EventDeleteConfirmationScreen
+          visible={showDeleteConfirmation}
+          event={eventToDelete}
+          onClose={() => {
+            setShowDeleteConfirmation(false);
+            setEventToDelete(null);
+          }}
+          onConfirmDelete={handleConfirmDelete}
+          businessId={userBusiness?.id || ''}
+        />
       </Modal>
     </View>
   );
@@ -1420,5 +1404,47 @@ const styles = StyleSheet.create({
     borderColor: '#fecaca',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  deleteSection: {
+    marginTop: 40,
+    paddingTop: 30,
+  },
+  deleteSeparator: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginBottom: 30,
+  },
+  bigDeleteButton: {
+    backgroundColor: '#ef4444',
+    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 16,
+    shadowColor: '#ef4444',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  bigDeleteButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  deleteWarningText: {
+    fontSize: 13,
+    color: '#ef4444',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 20,
+    fontStyle: 'italic',
   },
 });
