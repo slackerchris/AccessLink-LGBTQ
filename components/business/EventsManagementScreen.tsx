@@ -388,6 +388,12 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
                   return updatedEvents;
                 });
                 
+                // Close the modal if we were editing this event
+                if (editingEvent?.id === eventId) {
+                  setIsModalVisible(false);
+                  setEditingEvent(null);
+                }
+                
                 // Optionally reload events from server to ensure sync
                 await loadEvents();
                 
@@ -448,32 +454,6 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
                 onPress={() => handleEditEvent(item)}
               >
                 <Ionicons name="pencil" size={18} color="#6366f1" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  styles.deleteButton,
-                  deletingEventId === item.id && styles.disabledActionButton
-                ]}
-                onPress={() => {
-                  console.log('🖱️ Delete TouchableOpacity pressed for item:', item.id);
-                  console.log('🔍 Item details:', { title: item.title, id: item.id });
-                  console.log('⚙️ Current state:', { 
-                    deletingEventId, 
-                    isDisabled: deletingEventId === item.id,
-                    eventsCount: events.length 
-                  });
-                  handleDeleteEvent(item.id);
-                }}
-                disabled={deletingEventId === item.id}
-                activeOpacity={0.7}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                {deletingEventId === item.id ? (
-                  <Ionicons name="hourglass" size={18} color="#9ca3af" />
-                ) : (
-                  <Ionicons name="trash" size={18} color="#dc2626" />
-                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -611,15 +591,30 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
             <Text style={styles.modalTitle}>
               {editingEvent ? 'Edit Event' : 'Create Event'}
             </Text>
-            <TouchableOpacity
-              style={[styles.modalSaveButton, isLoading && styles.disabledButton]}
-              onPress={handleSaveEvent}
-              disabled={isLoading}
-            >
-              <Text style={styles.modalSaveButtonText}>
-                {isLoading ? 'Saving...' : 'Save'}
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.modalHeaderActions}>
+              {editingEvent && (
+                <TouchableOpacity
+                  style={[styles.modalDeleteButton, deletingEventId === editingEvent.id && styles.disabledButton]}
+                  onPress={() => handleDeleteEvent(editingEvent.id)}
+                  disabled={deletingEventId === editingEvent.id}
+                >
+                  <Ionicons 
+                    name="trash-outline" 
+                    size={20} 
+                    color={deletingEventId === editingEvent.id ? "#9ca3af" : "#ef4444"} 
+                  />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.modalSaveButton, isLoading && styles.disabledButton]}
+                onPress={handleSaveEvent}
+                disabled={isLoading}
+              >
+                <Text style={styles.modalSaveButtonText}>
+                  {isLoading ? 'Saving...' : 'Save'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
@@ -1087,12 +1082,6 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: 5,
   },
-  deleteButton: {
-    backgroundColor: '#fee2e2',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#fecaca',
-  },
   disabledActionButton: {
     opacity: 0.5,
   },
@@ -1416,5 +1405,20 @@ const styles = StyleSheet.create({
   dateOptionSubtext: {
     fontSize: 14,
     color: '#6b7280',
+  },
+  modalHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalDeleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
