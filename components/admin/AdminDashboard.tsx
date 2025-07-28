@@ -3,7 +3,7 @@
  * Administrative interface for managing users and businesses
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,22 +17,39 @@ import {
 import { useAuth, usePermissions } from '../../hooks/useAuth';
 import { usePendingBusinesses, useBusinessActions } from '../../hooks/useBusiness';
 import { BusinessListing } from '../../services/businessService';
+import { adminService, PlatformStats } from '../../services/adminService';
 
 interface AdminDashboardProps {
+  navigation?: any;
   onNavigateToBusinessList: () => void;
   onNavigateToUserManagement: () => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
+  navigation,
   onNavigateToBusinessList,
   onNavigateToUserManagement
 }) => {
   const { userProfile } = useAuth();
   const { isAdmin } = usePermissions();
   const { businesses: pendingBusinesses, loading, refresh } = usePendingBusinesses();
-  const { approveBusiness, rejectBusiness, loading: actionLoading } = useBusinessActions();
+  const { approveBusiness, rejectBusiness, loading: actionLoading } = useBusinesses();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+
+  useEffect(() => {
+    loadPlatformStats();
+  }, []);
+
+  const loadPlatformStats = async () => {
+    try {
+      const platformStats = await adminService.getPlatformStats();
+      setStats(platformStats);
+    } catch (error) {
+      console.error('Error loading platform stats:', error);
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);

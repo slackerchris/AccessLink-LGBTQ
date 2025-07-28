@@ -3,18 +3,20 @@
  * Dashboard and overview for admin users
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert
+  Alert,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { usePendingBusinesses } from '../../hooks/useBusiness';
+import { adminService, PlatformStats } from '../../services/adminService';
 
 interface AdminHomeScreenProps {
   navigation: any;
@@ -24,6 +26,31 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
   const { userProfile } = useAuth();
   const { signOut } = useAuthActions();
   const { businesses: pendingBusinesses } = usePendingBusinesses();
+  
+  const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadPlatformStats();
+  }, []);
+
+  const loadPlatformStats = async () => {
+    try {
+      const stats = await adminService.getPlatformStats();
+      setPlatformStats(stats);
+    } catch (error) {
+      console.error('Error loading platform stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadPlatformStats();
+    setRefreshing(false);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -33,7 +60,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
     }
   };
 
-  const stats = [
+  const adminStats = [
     {
       icon: 'business',
       title: 'Pending Approvals',
@@ -44,23 +71,23 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
     {
       icon: 'people',
       title: 'Total Users',
-      value: '124',
+      value: platformStats?.totalUsers.toLocaleString() || '0',
       color: '#10b981',
-      onPress: () => Alert.alert('User Management', 'Feature coming soon!')
+      onPress: () => navigation.navigate('UserManagement')
     },
     {
-      icon: 'checkmark-circle',
-      title: 'Approved Businesses',
-      value: '45',
-      color: '#6366f1',
-      onPress: () => navigation.navigate('Businesses')
+      icon: 'business-outline',
+      title: 'Total Businesses', 
+      value: platformStats?.totalBusinesses.toLocaleString() || '0',
+      color: '#3b82f6',
+      onPress: () => Alert.alert('Business Management', 'Feature coming soon!')
     },
     {
-      icon: 'flag',
-      title: 'Reports',
-      value: '3',
-      color: '#ef4444',
-      onPress: () => Alert.alert('Reports', 'No active reports')
+      icon: 'star',
+      title: 'Total Reviews',
+      value: platformStats?.totalReviews.toLocaleString() || '0',
+      color: '#8b5cf6',
+      onPress: () => Alert.alert('Review Management', 'Feature coming soon!')
     }
   ];
 
@@ -92,7 +119,12 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+    >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -113,7 +145,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
       <View style={styles.statsContainer}>
         <Text style={styles.sectionTitle}>System Overview</Text>
         <View style={styles.statsGrid}>
-          {stats.map((stat, index) => (
+          {adminStats.map((stat, index) => (
             <TouchableOpacity
               key={index}
               style={styles.statCard}

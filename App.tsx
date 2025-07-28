@@ -32,6 +32,7 @@ import { EditProfileScreen } from './components/common/EditProfileScreen';
 
 // Admin Components
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import UserManagementScreen from './components/admin/UserManagementScreen';
 
 // Hooks
 import { useAuth, useAuthActions } from './hooks/useAuth';
@@ -59,6 +60,18 @@ function PortalStackNavigator() {
       <PortalStack.Screen name="AccessibilityPreferences" component={AccessibilityPreferencesScreen} />
       <PortalStack.Screen name="LGBTQIdentity" component={LGBTQIdentityScreen} />
     </PortalStack.Navigator>
+  );
+}
+
+// Admin Stack Navigator
+const AdminStack = createStackNavigator();
+function AdminStackNavigator() {
+  return (
+    <AdminStack.Navigator screenOptions={{ headerShown: false }}>
+      <AdminStack.Screen name="AdminMain" component={AdminHomeScreen} />
+      <AdminStack.Screen name="UserManagement" component={UserManagementScreen} />
+      <AdminStack.Screen name="Admin" component={AdminDashboard} />
+    </AdminStack.Navigator>
   );
 }
 
@@ -109,7 +122,7 @@ function AdminTabNavigator() {
     >
       <AdminTab.Screen 
         name="Dashboard" 
-        component={AdminHomeScreen}
+        component={AdminStackNavigator}
         options={{ 
           title: 'Admin Dashboard',
           headerShown: false
