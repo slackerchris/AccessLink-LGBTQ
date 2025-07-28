@@ -178,41 +178,53 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 40, // Increased for mobile
+    paddingTop: 20, // Safe area spacing
   },
   title: {
-    fontSize: 28,
+    fontSize: 32, // Larger for mobile impact
     fontWeight: 'bold',
     color: '#1f2937',
-    marginTop: 15,
+    marginTop: 20, // Increased spacing
     textAlign: 'center',
+    lineHeight: 40, // Better line height
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18, // Larger for mobile readability
     color: '#6b7280',
-    marginTop: 8,
+    marginTop: 12, // Increased spacing
     textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 10, // Prevent text from touching edges
   },
   demoSection: {
-    marginBottom: 25,
+    marginBottom: 30, // Increased spacing
   },
   demoTitle: {
-    fontSize: 18,
+    fontSize: 20, // Larger for mobile
     fontWeight: '600',
     color: '#374151',
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 20, // Increased spacing
   },
   demoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
+    flexDirection: 'column', // Stack vertically on mobile for better touch targets
+    gap: 12, // Vertical gap between buttons
   },
   demoButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 16, // Larger touch target
+    paddingHorizontal: 20,
+    borderRadius: 12, // More rounded for modern feel
     alignItems: 'center',
+    minHeight: 56, // Ensure good touch target
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   adminButton: {
     backgroundColor: '#6366f1',
@@ -225,13 +237,14 @@ const styles = StyleSheet.create({
   },
   demoButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16, // Larger for mobile
     fontWeight: '600',
+    textAlign: 'center',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 25,
+    marginVertical: 30, // Increased spacing
   },
   dividerLine: {
     flex: 1,
@@ -240,29 +253,39 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: '#6b7280',
-    paddingHorizontal: 15,
-    fontSize: 14,
+    paddingHorizontal: 20, // Increased padding
+    fontSize: 16, // Larger for mobile
+    fontWeight: '500',
   },
   form: {
-    marginBottom: 30,
+    marginBottom: 40, // Increased spacing
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 24, // Increased spacing
   },
   label: {
-    fontSize: 16,
+    fontSize: 18, // Larger for mobile
     fontWeight: '600',
     color: '#374151',
-    marginBottom: 8,
+    marginBottom: 12, // Increased spacing
   },
   input: {
-    borderWidth: 1,
+    borderWidth: 2, // Thicker border for better visibility
     borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
+    borderRadius: 12, // More rounded
+    padding: 18, // Larger touch target
+    fontSize: 17, // Better mobile font size
     backgroundColor: '#fff',
     color: '#1f2937',
+    minHeight: 56, // Ensure good touch target
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   errorContainer: {
     backgroundColor: '#fef2f2',
@@ -279,53 +302,70 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     backgroundColor: '#6366f1',
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12, // More rounded
+    paddingVertical: 20, // Larger touch target
+    paddingHorizontal: 24,
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 20, // Increased spacing
+    minHeight: 64, // Ensure excellent touch target
+    shadowColor: '#6366f1',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
   },
   disabledButton: {
     backgroundColor: '#9ca3af',
+    shadowOpacity: 0.1, // Reduced shadow when disabled
   },
   loginButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18, // Larger for mobile
+    fontWeight: '700', // Bolder text
+    letterSpacing: 0.5,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30, // Increased spacing
+    paddingHorizontal: 20,
   },
   footerText: {
     color: '#6b7280',
-    fontSize: 16,
-    marginRight: 5,
+    fontSize: 17, // Larger for mobile
+    marginRight: 8, // Increased spacing
   },
   signUpText: {
     color: '#6366f1',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17, // Larger for mobile
+    fontWeight: '700', // Bolder text
+    textDecorationLine: 'underline', // Visual cue for link
   },
   credentialsInfo: {
-    backgroundColor: '#f3f4f6',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
+    backgroundColor: '#f8f9fa', // Slightly different color for better contrast
+    padding: 20, // Increased padding
+    borderRadius: 12, // More rounded
+    marginTop: 20, // Increased spacing
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   credentialsTitle: {
-    fontSize: 14,
+    fontSize: 16, // Larger for mobile
     fontWeight: '600',
     color: '#374151',
-    marginBottom: 8,
+    marginBottom: 12, // Increased spacing
     textAlign: 'center',
   },
   credentialsText: {
-    fontSize: 12,
+    fontSize: 14, // Larger for mobile readability
     color: '#6b7280',
     textAlign: 'center',
-    fontFamily: 'monospace',
-    marginBottom: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', // Better font handling
+    marginBottom: 4, // Increased spacing
+    lineHeight: 20, // Better line height
   },
 });

@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#6366f1',
-    paddingTop: 40,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+    paddingTop: 60, // Increased for safe area
+    paddingBottom: 30, // Increased spacing
+    paddingHorizontal: 24, // Better mobile margins
   },
   headerContent: {
     flexDirection: 'row',
@@ -161,42 +161,48 @@ const styles = StyleSheet.create({
   },
   greeting: {
     color: '#e0e7ff',
-    fontSize: 14,
+    fontSize: 16, // Larger for mobile
   },
   userName: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 26, // Larger for mobile
     fontWeight: 'bold',
-    marginTop: 2,
+    marginTop: 4, // Increased spacing
+    lineHeight: 32,
   },
   subtitle: {
     color: '#c7d2fe',
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 14, // Larger for mobile
+    marginTop: 4, // Increased spacing
   },
   profileButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 20,
-    padding: 4,
+    borderRadius: 24, // Larger for better touch target
+    padding: 8, // Increased padding
+    minWidth: 48, // Ensure good touch target
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchContainer: {
-    padding: 20,
+    padding: 24, // Better mobile margins
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    borderRadius: 16, // More rounded for modern feel
+    paddingHorizontal: 20, // Increased padding
+    paddingVertical: 16, // Larger touch target
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 }, // Stronger shadow
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+    minHeight: 56, // Ensure good touch target
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 12, // Increased spacing
   },
   searchInput: {
     flex: 1,

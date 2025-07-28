@@ -287,19 +287,23 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 20,
+    marginBottom: 40, // Increased for mobile
+    marginTop: 30, // Increased for safe area
   },
   title: {
-    fontSize: 28,
+    fontSize: 32, // Larger for mobile impact
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 12, // Increased spacing
+    textAlign: 'center',
+    lineHeight: 40,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18, // Larger for mobile readability
     color: '#666',
     textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 10,
   },
   form: {
     backgroundColor: 'white',

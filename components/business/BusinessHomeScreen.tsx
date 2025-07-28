@@ -211,9 +211,9 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#6366f1',
-    paddingTop: 60,
+    paddingTop: 60, // Already good for safe area
     paddingBottom: 30,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24, // Better mobile margins
   },
   headerContent: {
     flexDirection: 'row',
@@ -221,25 +221,27 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   greeting: {
-    fontSize: 16,
+    fontSize: 18, // Larger for mobile
     color: '#e0e7ff',
   },
   businessName: {
-    fontSize: 24,
+    fontSize: 28, // Larger for mobile
     fontWeight: 'bold',
     color: '#fff',
-    marginTop: 5,
+    marginTop: 8,
+    lineHeight: 34,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16, // Larger for mobile
     color: '#c7d2fe',
-    marginTop: 5,
+    marginTop: 8,
+    lineHeight: 22,
   },
   profileButton: {
-    width: 50,
-    height: 50,
+    width: 56, // Larger touch target
+    height: 56,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 25,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
