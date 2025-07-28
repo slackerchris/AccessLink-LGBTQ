@@ -993,17 +993,26 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22, // Larger for mobile
     fontWeight: '700',
     color: '#111827',
+    flex: 1, // Take available space
   },
   createButton: {
     backgroundColor: '#6366f1',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48, // Larger touch target
+    height: 48, // Larger touch target
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#6366f1',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   filterTabs: {
     flexDirection: 'row',
@@ -1176,22 +1185,33 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e5e7eb',
   },
   modalCloseButton: {
-    padding: 8,
+    padding: 12, // Larger touch target
+    minWidth: 44, // iOS minimum touch target
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20, // Larger for mobile
     fontWeight: '700',
     color: '#111827',
+    flex: 1, // Take available space
+    textAlign: 'center', // Center the title
   },
   modalSaveButton: {
     backgroundColor: '#6366f1',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 20, // Larger touch target
+    paddingVertical: 12, // Larger touch target
+    borderRadius: 10,
+    minHeight: 44, // iOS minimum touch target
+    minWidth: 80, // Ensure good width
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalSaveButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16, // Larger for mobile
     fontWeight: '600',
   },
   disabledButton: {
@@ -1408,43 +1428,50 @@ const styles = StyleSheet.create({
   deleteSection: {
     marginTop: 40,
     paddingTop: 30,
+    paddingHorizontal: 4, // Better mobile margins
+    paddingBottom: 20, // Extra bottom padding
   },
   deleteSeparator: {
-    height: 1,
+    height: 2, // Thicker for better visibility
     backgroundColor: '#e5e7eb',
     marginBottom: 30,
+    marginHorizontal: 20,
   },
   bigDeleteButton: {
     backgroundColor: '#ef4444',
-    borderRadius: 12,
-    paddingVertical: 18,
+    borderRadius: 16, // More rounded for modern mobile feel
+    paddingVertical: 20, // Larger touch target
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 20, // More space before warning
+    marginHorizontal: 20, // Side margins
+    minHeight: 64, // Ensure excellent touch target
     shadowColor: '#ef4444',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4, // Stronger shadow
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8, // Higher elevation for prominence
   },
   bigDeleteButtonText: {
-    fontSize: 18,
+    fontSize: 19, // Larger for mobile
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
+    letterSpacing: 0.5, // Better letter spacing
   },
   deleteWarningText: {
-    fontSize: 13,
+    fontSize: 14, // Larger for mobile readability
     color: '#ef4444',
     textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 20,
+    lineHeight: 20, // Better line spacing
+    paddingHorizontal: 32, // More padding for readability
     fontStyle: 'italic',
+    marginBottom: 20, // Bottom margin for scroll area
   },
 });

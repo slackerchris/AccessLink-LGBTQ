@@ -262,146 +262,183 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 60, // Increased for iPhone status bar
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    backgroundColor: '#fff',
+    // Add safe area handling
+    minHeight: 100,
   },
   closeButton: {
-    padding: 5,
+    padding: 12, // Increased touch target
+    minWidth: 44, // iOS minimum touch target
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22, // Slightly larger for mobile readability
     fontWeight: '600',
     marginLeft: 15,
     color: '#333',
+    flex: 1, // Take available space
   },
   warningSection: {
     alignItems: 'center',
-    paddingVertical: 30,
-    paddingHorizontal: 20,
+    paddingVertical: 40, // Increased padding for mobile
+    paddingHorizontal: 24, // Better mobile margins
     backgroundColor: '#FFF5F5',
     marginTop: 10,
   },
   warningTitle: {
-    fontSize: 24,
+    fontSize: 28, // Larger for mobile impact
     fontWeight: '700',
     color: '#FF4444',
     marginTop: 15,
-    marginBottom: 10,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   warningText: {
-    fontSize: 16,
+    fontSize: 18, // Larger for mobile readability
     color: '#666',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 26, // Better line spacing
+    paddingHorizontal: 10,
   },
   eventDetails: {
-    padding: 20,
+    padding: 24, // Better mobile padding
+    paddingBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20, // Larger for mobile
     fontWeight: '600',
     color: '#333',
-    marginBottom: 15,
+    marginBottom: 18,
   },
   eventCard: {
     backgroundColor: '#f8f9fa',
-    padding: 20,
-    borderRadius: 12,
+    padding: 24, // Increased padding for mobile
+    borderRadius: 16, // More rounded for modern mobile feel
     borderLeftWidth: 4,
     borderLeftColor: '#FF4444',
+    marginBottom: 8,
   },
   eventTitle: {
-    fontSize: 20,
+    fontSize: 22, // Larger for mobile
     fontWeight: '600',
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 12,
+    lineHeight: 28,
   },
   eventDate: {
-    fontSize: 16,
+    fontSize: 17, // Slightly larger
     color: '#666',
-    marginBottom: 5,
+    marginBottom: 8,
+    lineHeight: 24,
   },
   eventTime: {
-    fontSize: 16,
+    fontSize: 17, // Slightly larger
     color: '#666',
-    marginBottom: 5,
+    marginBottom: 8,
+    lineHeight: 24,
   },
   eventLocation: {
-    fontSize: 16,
+    fontSize: 17, // Slightly larger
     color: '#666',
-    marginBottom: 10,
+    marginBottom: 12,
+    lineHeight: 24,
   },
   attendeesWarning: {
-    fontSize: 14,
+    fontSize: 15, // Slightly larger for mobile
     color: '#FF6B35',
     fontWeight: '600',
     backgroundColor: '#FFF3E0',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
+    padding: 14, // Better mobile padding
+    borderRadius: 10,
+    marginTop: 12,
+    lineHeight: 22,
   },
   passwordSection: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingHorizontal: 24, // Better mobile margins
+    marginBottom: 24,
   },
   passwordInput: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
+    borderRadius: 12, // More rounded for mobile
+    padding: 18, // Larger touch target
+    fontSize: 17, // Better mobile font size
     backgroundColor: '#fff',
+    minHeight: 56, // Ensure good touch target
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   checkboxSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    paddingHorizontal: 24, // Better mobile margins
+    marginBottom: 40, // More space before buttons
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 15,
+    gap: 18, // Larger gap for mobile
+    paddingVertical: 8,
   },
   checkboxText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16, // Larger for mobile readability
     color: '#666',
-    lineHeight: 20,
+    lineHeight: 24, // Better line spacing
     paddingTop: 3,
   },
   buttonSection: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 15,
-    marginBottom: 20,
+    flexDirection: 'column', // Stack buttons vertically on mobile
+    paddingHorizontal: 24,
+    gap: 16, // Vertical gap between buttons
+    marginBottom: 24,
+    paddingBottom: 20, // Extra bottom padding for safe area
   },
   cancelButton: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 8,
-    borderWidth: 1,
+    paddingVertical: 18, // Larger touch target
+    borderRadius: 12,
+    borderWidth: 2, // Thicker border for better visibility
     borderColor: '#ddd',
     alignItems: 'center',
+    minHeight: 56, // Ensure good touch target
+    backgroundColor: '#fff',
   },
   cancelButtonText: {
-    fontSize: 16,
+    fontSize: 17, // Larger for mobile
     fontWeight: '600',
     color: '#666',
   },
   deleteButton: {
-    flex: 2,
-    paddingVertical: 15,
-    borderRadius: 8,
+    paddingVertical: 18, // Larger touch target
+    borderRadius: 12,
     backgroundColor: '#FF4444',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
+    minHeight: 56, // Ensure good touch target
+    shadowColor: '#FF4444',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
   },
   deleteButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17, // Larger for mobile
+    fontWeight: '700',
     color: '#fff',
   },
   disabledButton: {
@@ -409,14 +446,16 @@ const styles = StyleSheet.create({
   },
   footerWarning: {
     backgroundColor: '#f8f9fa',
-    padding: 20,
+    padding: 24, // Better mobile padding
     alignItems: 'center',
+    paddingBottom: 40, // Extra padding for safe area
   },
   footerWarningText: {
-    fontSize: 12,
+    fontSize: 14, // Slightly larger for mobile
     color: '#999',
     textAlign: 'center',
     fontStyle: 'italic',
+    lineHeight: 20,
   },
 });
 
