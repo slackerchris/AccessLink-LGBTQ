@@ -810,11 +810,33 @@ class MockBusinessService {
 
   async deleteBusinessEvent(businessId: string, eventId: string): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, 300));
+    
+    console.log(`MockBusinessService: Attempting to delete event ${eventId} from business ${businessId}`);
+    
     const business = mockBusinesses.find(b => b.id === businessId);
-    if (business && business.events) {
-      business.events = business.events.filter(e => e.id !== eventId);
-      business.updatedAt = new Date();
+    if (!business) {
+      console.error(`MockBusinessService: Business with id ${businessId} not found`);
+      throw new Error(`Business with id ${businessId} not found`);
     }
+    
+    if (!business.events) {
+      console.log(`MockBusinessService: Business ${businessId} has no events array`);
+      business.events = [];
+      return;
+    }
+    
+    const initialEventCount = business.events.length;
+    const eventExists = business.events.some(e => e.id === eventId);
+    
+    if (!eventExists) {
+      console.warn(`MockBusinessService: Event ${eventId} not found in business ${businessId}`);
+      throw new Error(`Event with id ${eventId} not found`);
+    }
+    
+    business.events = business.events.filter(e => e.id !== eventId);
+    business.updatedAt = new Date();
+    
+    console.log(`MockBusinessService: Event ${eventId} deleted successfully. Events count: ${initialEventCount} -> ${business.events.length}`);
   }
 
   async getPublicEvents(limit?: number): Promise<BusinessEvent[]> {

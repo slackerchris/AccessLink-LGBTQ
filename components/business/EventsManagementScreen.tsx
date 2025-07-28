@@ -68,6 +68,7 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
   const [editingEvent, setEditingEvent] = useState<BusinessEvent | null>(null);
   const [viewMode, setViewMode] = useState<'upcoming' | 'past' | 'draft'>('upcoming');
   const [isLoading, setIsLoading] = useState(false);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [userBusiness, setUserBusiness] = useState<any>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRegistrationDeadlinePicker, setShowRegistrationDeadlinePicker] = useState(false);
@@ -333,28 +334,58 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
   };
 
   const handleDeleteEvent = (eventId: string) => {
+    // Find the event to get its title for better confirmation
+    const eventToDelete = events.find(e => e.id === eventId);
+    const eventTitle = eventToDelete?.title || 'this event';
+    
     Alert.alert(
-      'Delete Event',
-      'Are you sure you want to delete this event? This action cannot be undone.',
+      '⚠️ Delete Event',
+      `Are you sure you want to delete "${eventTitle}"?\n\nThis action cannot be undone and will permanently remove the event from your business profile.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => console.log('Delete cancelled')
+        },
         {
-          text: 'Delete',
+          text: 'Delete Event',
           style: 'destructive',
           onPress: async () => {
-            if (!userBusiness?.id) return;
+            if (!userBusiness?.id) {
+              Alert.alert('Error', 'Business not found. Please try again.');
+              return;
+            }
             
             try {
+              setDeletingEventId(eventId); // Set loading state
+              console.log(`Attempting to delete event ${eventId} for business ${userBusiness.id}`);
               await businessService.deleteBusinessEvent(userBusiness.id, eventId);
-              setEvents(prev => prev.filter(event => event.id !== eventId));
-              Alert.alert('Success', 'Event deleted successfully!');
+              
+              // Update local state immediately
+              setEvents(prev => {
+                const updatedEvents = prev.filter(event => event.id !== eventId);
+                console.log(`Event deleted. Events count: ${prev.length} -> ${updatedEvents.length}`);
+                return updatedEvents;
+              });
+              
+              // Optionally reload events from server to ensure sync
+              await loadEvents();
+              
+              Alert.alert('✅ Success', `"${eventTitle}" has been deleted successfully!`);
             } catch (error) {
               console.error('Error deleting event:', error);
-              Alert.alert('Error', 'Failed to delete event. Please try again.');
+              Alert.alert(
+                'Error', 
+                'Failed to delete the event. Please check your connection and try again.',
+                [{ text: 'OK', style: 'default' }]
+              );
+            } finally {
+              setDeletingEventId(null); // Clear loading state
             }
           }
         }
-      ]
+      ],
+      { cancelable: true }
     );
   };
 
@@ -393,10 +424,18 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
                 <Ionicons name="pencil" size={18} color="#6366f1" />
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[
+                  styles.actionButton,
+                  deletingEventId === item.id && styles.disabledActionButton
+                ]}
                 onPress={() => handleDeleteEvent(item.id)}
+                disabled={deletingEventId === item.id}
               >
-                <Ionicons name="trash" size={18} color="#dc2626" />
+                {deletingEventId === item.id ? (
+                  <Ionicons name="hourglass" size={18} color="#9ca3af" />
+                ) : (
+                  <Ionicons name="trash" size={18} color="#dc2626" />
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -1009,6 +1048,9 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 5,
+  },
+  disabledActionButton: {
+    opacity: 0.5,
   },
   eventTitle: {
     fontSize: 18,
