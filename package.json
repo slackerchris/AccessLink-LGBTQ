@@ -10,7 +10,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -44,13 +44,18 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
+    "@eslint/js": "^9.32.0",
     "@types/jest": "^29.5.0",
     "@types/react": "~18.3.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.3.0",
     "jest": "^29.7.0",
-    "typescript": "^5.3.0"
+    "jiti": "^2.5.1",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.38.0"
   },
   "repository": {
     "type": "git",
