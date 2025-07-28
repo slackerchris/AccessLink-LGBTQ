@@ -69,6 +69,8 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
   const [viewMode, setViewMode] = useState<'upcoming' | 'past' | 'draft'>('upcoming');
   const [isLoading, setIsLoading] = useState(false);
   const [userBusiness, setUserBusiness] = useState<any>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showRegistrationDeadlinePicker, setShowRegistrationDeadlinePicker] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -163,10 +165,13 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
 
   const handleCreateEvent = () => {
     setEditingEvent(null);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1); // Default to tomorrow to ensure it's not in the past
+    
     setFormData({
       title: '',
       description: '',
-      date: new Date(),
+      date: tomorrow,
       startTime: '09:00',
       endTime: '17:00',
       location: userBusiness?.address || '',
@@ -218,6 +223,39 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
     if (!formData.description.trim()) {
       Alert.alert('Error', 'Please provide a description for this event');
       return;
+    }
+
+    // Validate event date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    const eventDate = new Date(formData.date);
+    eventDate.setHours(0, 0, 0, 0); // Set to start of event date
+    
+    if (eventDate < today) {
+      Alert.alert('Error', 'Event date cannot be in the past. Please select a future date.');
+      return;
+    }
+
+    // Validate start time is before end time
+    if (formData.startTime >= formData.endTime) {
+      Alert.alert('Error', 'Start time must be before end time');
+      return;
+    }
+
+    // Validate registration deadline if registration is required
+    if (formData.registrationRequired && formData.registrationDeadline) {
+      const deadlineDate = new Date(formData.registrationDeadline);
+      deadlineDate.setHours(0, 0, 0, 0);
+      
+      if (deadlineDate > eventDate) {
+        Alert.alert('Error', 'Registration deadline cannot be after the event date');
+        return;
+      }
+      
+      if (deadlineDate < today) {
+        Alert.alert('Error', 'Registration deadline cannot be in the past');
+        return;
+      }
     }
 
     if (!userBusiness?.id) return;
@@ -567,9 +605,60 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
             <View style={styles.formSection}>
               <Text style={styles.sectionTitle}>Date & Time</Text>
               
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Event Date *</Text>
+                <TouchableOpacity 
+                  style={styles.dateButton}
+                  onPress={() => {
+                    // For now, we'll show the date in a simple format
+                    // In a real app, you'd use a proper date picker
+                    Alert.alert(
+                      'Date Selection',
+                      `Currently selected: ${formData.date.toLocaleDateString()}\n\nNote: In a production app, this would open a date picker. For demo purposes, the date is set to today or later.`,
+                      [
+                        {
+                          text: 'Set to Today',
+                          onPress: () => setFormData(prev => ({ ...prev, date: new Date() }))
+                        },
+                        {
+                          text: 'Set to Next Week',
+                          onPress: () => {
+                            const nextWeek = new Date();
+                            nextWeek.setDate(nextWeek.getDate() + 7);
+                            setFormData(prev => ({ ...prev, date: nextWeek }));
+                          }
+                        },
+                        {
+                          text: 'Set to Next Month',
+                          onPress: () => {
+                            const nextMonth = new Date();
+                            nextMonth.setMonth(nextMonth.getMonth() + 1);
+                            setFormData(prev => ({ ...prev, date: nextMonth }));
+                          }
+                        },
+                        { text: 'Cancel', style: 'cancel' }
+                      ]
+                    );
+                  }}
+                >
+                  <Ionicons name="calendar" size={20} color="#6b7280" />
+                  <Text style={styles.dateButtonText}>
+                    {formData.date.toLocaleDateString('en-US', { 
+                      weekday: 'short',
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.helperText}>
+                  Event date must be today or in the future
+                </Text>
+              </View>
+              
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.flex1]}>
-                  <Text style={styles.label}>Start Time</Text>
+                  <Text style={styles.label}>Start Time *</Text>
                   <TextInput
                     style={styles.input}
                     value={formData.startTime}
@@ -578,7 +667,7 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
                   />
                 </View>
                 <View style={[styles.inputGroup, styles.flex1]}>
-                  <Text style={styles.label}>End Time</Text>
+                  <Text style={styles.label}>End Time *</Text>
                   <TextInput
                     style={styles.input}
                     value={formData.endTime}
@@ -645,6 +734,106 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, registrationRequired: value }))}
                 />
               </View>
+
+              {formData.registrationRequired && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Registration Deadline</Text>
+                  {showRegistrationDeadlinePicker ? (
+                    <View style={styles.datePickerContainer}>
+                      <View style={styles.datePickerHeader}>
+                        <Text style={styles.datePickerTitle}>Select Registration Deadline</Text>
+                        <TouchableOpacity
+                          onPress={() => setShowRegistrationDeadlinePicker(false)}
+                          style={styles.datePickerClose}
+                        >
+                          <Text style={styles.datePickerCloseText}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                      
+                      <View style={styles.datePickerContent}>
+                        <Text style={styles.datePickerNote}>
+                          Current: {formData.registrationDeadline ? formatDate(formData.registrationDeadline) : 'None selected'}
+                        </Text>
+                        
+                        <View style={styles.datePickerOptions}>
+                          <TouchableOpacity
+                            style={styles.dateOption}
+                            onPress={() => {
+                              const today = new Date();
+                              setFormData(prev => ({...prev, registrationDeadline: today}));
+                              setShowRegistrationDeadlinePicker(false);
+                            }}
+                          >
+                            <Text style={styles.dateOptionText}>Today</Text>
+                            <Text style={styles.dateOptionSubtext}>{formatDate(new Date())}</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={styles.dateOption}
+                            onPress={() => {
+                              const tomorrow = new Date();
+                              tomorrow.setDate(tomorrow.getDate() + 1);
+                              setFormData(prev => ({...prev, registrationDeadline: tomorrow}));
+                              setShowRegistrationDeadlinePicker(false);
+                            }}
+                          >
+                            <Text style={styles.dateOptionText}>Tomorrow</Text>
+                            <Text style={styles.dateOptionSubtext}>{formatDate(new Date(Date.now() + 86400000))}</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={styles.dateOption}
+                            onPress={() => {
+                              const dayBeforeEvent = new Date(formData.date);
+                              dayBeforeEvent.setDate(dayBeforeEvent.getDate() - 1);
+                              setFormData(prev => ({...prev, registrationDeadline: dayBeforeEvent}));
+                              setShowRegistrationDeadlinePicker(false);
+                            }}
+                          >
+                            <Text style={styles.dateOptionText}>Day Before Event</Text>
+                            <Text style={styles.dateOptionSubtext}>
+                              {(() => {
+                                const dayBefore = new Date(formData.date);
+                                dayBefore.setDate(dayBefore.getDate() - 1);
+                                return formatDate(dayBefore);
+                              })()}
+                            </Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={styles.dateOption}
+                            onPress={() => {
+                              const nextWeek = new Date();
+                              nextWeek.setDate(nextWeek.getDate() + 7);
+                              setFormData(prev => ({...prev, registrationDeadline: nextWeek}));
+                              setShowRegistrationDeadlinePicker(false);
+                            }}
+                          >
+                            <Text style={styles.dateOptionText}>Next Week</Text>
+                            <Text style={styles.dateOptionSubtext}>{formatDate(new Date(Date.now() + 7 * 86400000))}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        
+                        <Text style={styles.helperText}>
+                          💡 Tip: Set deadline 1-2 days before event for better planning
+                        </Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowRegistrationDeadlinePicker(true)}
+                    >
+                      <Text style={styles.dateIcon}>📅</Text>
+                      <Text style={styles.dateButtonText}>
+                        {formData.registrationDeadline ? 
+                          formatDate(formData.registrationDeadline) : 
+                          'Select deadline'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
 
               <View style={styles.row}>
                 <View style={[styles.inputGroup, styles.flex1]}>
@@ -1050,5 +1239,96 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontStyle: 'italic',
     marginTop: 5,
+  },
+  dateButton: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  dateIcon: {
+    fontSize: 18,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#111827',
+    marginLeft: 8,
+  },
+  disabledInput: {
+    backgroundColor: '#f9fafb',
+    borderColor: '#e5e7eb',
+  },
+  disabledText: {
+    color: '#9ca3af',
+  },
+  datePickerContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    margin: 16,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  datePickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  datePickerClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  datePickerCloseText: {
+    fontSize: 18,
+    color: '#6b7280',
+  },
+  datePickerContent: {
+    padding: 16,
+  },
+  datePickerNote: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  datePickerOptions: {
+    gap: 8,
+  },
+  dateOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  dateOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#111827',
+  },
+  dateOptionSubtext: {
+    fontSize: 14,
+    color: '#6b7280',
   },
 });
