@@ -127,6 +127,18 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
     loadEvents();
   }, [userBusiness]);
 
+  // Debug effect to monitor state changes
+  useEffect(() => {
+    console.log('🔍 Component state updated:', {
+      eventsCount: events.length,
+      isLoading: isLoading,
+      isModalVisible: isModalVisible,
+      deletingEventId: deletingEventId,
+      hasUserBusiness: !!userBusiness,
+      businessId: userBusiness?.id
+    });
+  }, [events, isLoading, isModalVisible, deletingEventId, userBusiness]);
+
   const loadUserBusiness = async () => {
     if (userProfile?.businessId) {
       try {
@@ -334,59 +346,73 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
   };
 
   const handleDeleteEvent = (eventId: string) => {
+    console.log('🗑️ Delete button clicked for event:', eventId);
+    
+    // Test if Alert works at all
+    console.log('🧪 Testing basic Alert functionality...');
+    
     // Find the event to get its title for better confirmation
     const eventToDelete = events.find(e => e.id === eventId);
     const eventTitle = eventToDelete?.title || 'this event';
     
-    Alert.alert(
-      '⚠️ Delete Event',
-      `Are you sure you want to delete "${eventTitle}"?\n\nThis action cannot be undone and will permanently remove the event from your business profile.`,
-      [
-        { 
-          text: 'Cancel', 
-          style: 'cancel',
-          onPress: () => console.log('Delete cancelled')
-        },
-        {
-          text: 'Delete Event',
-          style: 'destructive',
-          onPress: async () => {
-            if (!userBusiness?.id) {
-              Alert.alert('Error', 'Business not found. Please try again.');
-              return;
-            }
-            
-            try {
-              setDeletingEventId(eventId); // Set loading state
-              console.log(`Attempting to delete event ${eventId} for business ${userBusiness.id}`);
-              await businessService.deleteBusinessEvent(userBusiness.id, eventId);
+    console.log('📋 Event to delete:', { eventId, eventTitle, eventExists: !!eventToDelete });
+    
+    try {
+      Alert.alert(
+        '⚠️ Delete Event',
+        `Are you sure you want to delete "${eventTitle}"?\n\nThis action cannot be undone and will permanently remove the event from your business profile.`,
+        [
+          { 
+            text: 'Cancel', 
+            style: 'cancel',
+            onPress: () => console.log('❌ Delete cancelled')
+          },
+          {
+            text: 'Delete Event',
+            style: 'destructive',
+            onPress: async () => {
+              if (!userBusiness?.id) {
+                Alert.alert('Error', 'Business not found. Please try again.');
+                return;
+              }
               
-              // Update local state immediately
-              setEvents(prev => {
-                const updatedEvents = prev.filter(event => event.id !== eventId);
-                console.log(`Event deleted. Events count: ${prev.length} -> ${updatedEvents.length}`);
-                return updatedEvents;
-              });
-              
-              // Optionally reload events from server to ensure sync
-              await loadEvents();
-              
-              Alert.alert('✅ Success', `"${eventTitle}" has been deleted successfully!`);
-            } catch (error) {
-              console.error('Error deleting event:', error);
-              Alert.alert(
-                'Error', 
-                'Failed to delete the event. Please check your connection and try again.',
-                [{ text: 'OK', style: 'default' }]
-              );
-            } finally {
-              setDeletingEventId(null); // Clear loading state
+              try {
+                setDeletingEventId(eventId); // Set loading state
+                console.log(`🔄 Attempting to delete event ${eventId} for business ${userBusiness.id}`);
+                await businessService.deleteBusinessEvent(userBusiness.id, eventId);
+                
+                // Update local state immediately
+                setEvents(prev => {
+                  const updatedEvents = prev.filter(event => event.id !== eventId);
+                  console.log(`✅ Event deleted. Events count: ${prev.length} -> ${updatedEvents.length}`);
+                  return updatedEvents;
+                });
+                
+                // Optionally reload events from server to ensure sync
+                await loadEvents();
+                
+                Alert.alert('✅ Success', `"${eventTitle}" has been deleted successfully!`);
+              } catch (error) {
+                console.error('❌ Error deleting event:', error);
+                Alert.alert(
+                  'Error', 
+                  'Failed to delete the event. Please check your connection and try again.',
+                  [{ text: 'OK', style: 'default' }]
+                );
+              } finally {
+                setDeletingEventId(null); // Clear loading state
+              }
             }
           }
-        }
-      ],
-      { cancelable: true }
-    );
+        ],
+        { cancelable: true }
+      );
+    } catch (alertError) {
+      console.error('🚨 Alert error:', alertError);
+      console.log('🔧 Fallback: Using simple alert');
+      // Fallback to simple alert
+      Alert.alert('Delete Event', `Delete ${eventTitle}?`);
+    }
   };
 
   const toggleAccessibilityFeature = (feature: string) => {
@@ -426,10 +452,22 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
               <TouchableOpacity
                 style={[
                   styles.actionButton,
+                  styles.deleteButton,
                   deletingEventId === item.id && styles.disabledActionButton
                 ]}
-                onPress={() => handleDeleteEvent(item.id)}
+                onPress={() => {
+                  console.log('🖱️ Delete TouchableOpacity pressed for item:', item.id);
+                  console.log('🔍 Item details:', { title: item.title, id: item.id });
+                  console.log('⚙️ Current state:', { 
+                    deletingEventId, 
+                    isDisabled: deletingEventId === item.id,
+                    eventsCount: events.length 
+                  });
+                  handleDeleteEvent(item.id);
+                }}
                 disabled={deletingEventId === item.id}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 {deletingEventId === item.id ? (
                   <Ionicons name="hourglass" size={18} color="#9ca3af" />
@@ -1048,6 +1086,12 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 5,
+  },
+  deleteButton: {
+    backgroundColor: '#fee2e2',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#fecaca',
   },
   disabledActionButton: {
     opacity: 0.5,
