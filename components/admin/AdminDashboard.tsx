@@ -20,15 +20,11 @@ import { BusinessListing } from '../../services/mockBusinessService';
 import { adminService, PlatformStats } from '../../services/adminService';
 
 interface AdminDashboardProps {
-  navigation?: any;
-  onNavigateToBusinessList: () => void;
-  onNavigateToUserManagement: () => void;
+  navigation: any;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
-  navigation,
-  onNavigateToBusinessList,
-  onNavigateToUserManagement
+  navigation
 }) => {
   const { userProfile } = useAuth();
   const { isAdmin } = usePermissions();
@@ -181,7 +177,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={onNavigateToBusinessList}
+          onPress={() => {
+            Alert.alert(
+              'Business Management',
+              'Business management features are coming soon!\n\nFor now, you can manage pending business approvals in the section below.',
+              [{ text: 'OK' }]
+            );
+          }}
         >
           <Text style={styles.actionIcon}>🏢</Text>
           <View style={styles.actionContent}>
@@ -192,7 +194,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={onNavigateToUserManagement}
+          onPress={() => navigation.navigate('UserManagement')}
         >
           <Text style={styles.actionIcon}>👥</Text>
           <View style={styles.actionContent}>
