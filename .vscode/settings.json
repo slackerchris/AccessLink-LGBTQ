@@ -1,0 +1,22 @@
+{
+  "files.watcherExclude": {
+    "**/AccessLink/**": true,
+    "**/AccessLink-*/**": true,
+    "**/access-link/**": true,
+    "**/accesslink/**": true
+  },
+  "files.exclude": {
+    "**/AccessLink": true,
+    "**/AccessLink-*": true,
+    "**/access-link": true,
+    "**/accesslink": true
+  },
+  "search.exclude": {
+    "**/AccessLink/**": true,
+    "**/AccessLink-*/**": true,
+    "**/access-link/**": true,
+    "**/accesslink/**": true
+  },
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "npm.autoDetect": "off"
+}

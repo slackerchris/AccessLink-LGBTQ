@@ -1,5 +1,3 @@
-node_modules
-
 # Prevent accidental folder creation
 **/AccessLink/
 **/AccessLink-*/
