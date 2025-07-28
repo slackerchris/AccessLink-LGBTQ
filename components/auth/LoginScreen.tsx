@@ -16,10 +16,15 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuthActions } from '../../hooks/useAuth';
 
+type AuthStackParamList = {
+  SignUp: undefined;
+};
+
 interface LoginScreenProps {
-  navigation: any;
+  navigation: StackNavigationProp<AuthStackParamList, 'SignUp'>;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
@@ -143,7 +148,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account?</Text>
+          <Text style={styles.footerText}>Don&apos;t have an account?</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('SignUp')}
             disabled={loading}

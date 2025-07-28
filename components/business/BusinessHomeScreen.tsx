@@ -13,11 +13,20 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 
+type BusinessStackParamList = {
+  Reviews: undefined;
+  BusinessProfileEdit: undefined;
+  MediaGallery: undefined;
+  EventsManagement: undefined;
+  ServicesManagement: undefined;
+};
+
 interface BusinessHomeScreenProps {
-  navigation: any;
+  navigation: StackNavigationProp<BusinessStackParamList, 'Reviews'>;
 }
 
 export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation }) => {

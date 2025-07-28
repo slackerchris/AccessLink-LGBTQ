@@ -225,7 +225,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
           </View>
 
           <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>I'm a business owner</Text>
+            <Text style={styles.switchLabel}>I&apos;m a business owner</Text>
             <Switch
               value={formData.isBusinessOwner}
               onValueChange={(value) => updateFormData('isBusinessOwner', value)}

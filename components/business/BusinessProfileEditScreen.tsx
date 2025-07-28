@@ -15,11 +15,16 @@ import {
   Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 
+type BusinessStackParamList = {
+  BusinessProfile: undefined;
+};
+
 interface BusinessProfileEditScreenProps {
-  navigation: any;
+  navigation: StackNavigationProp<BusinessStackParamList, 'BusinessProfile'>;
 }
 
 export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps> = ({ navigation }) => {
@@ -172,7 +177,7 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
           <Ionicons name="alert-circle" size={48} color="#ef4444" />
           <Text style={styles.errorTitle}>No Business Found</Text>
           <Text style={styles.errorText}>
-            You don't have a business profile associated with your account.
+            You don&apos;t have a business profile associated with your account.
           </Text>
         </View>
       </View>
