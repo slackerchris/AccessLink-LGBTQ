@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AccessLink LGBTQ+ - Phone Mockup</title>
+    <title>AccessLink LGBTQ+ - Mobile-First Design Mockup</title>
     <style>
         body {
             margin: 0;
@@ -14,6 +14,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
         }
 
         .phone-container {
@@ -48,10 +50,10 @@
             font-weight: 600;
         }
 
-        /* Header */
+        /* Updated Header with Mobile-First Design */
         .header {
             background: #6366f1;
-            padding: 20px;
+            padding: 60px 24px 30px; /* Increased for safe area and mobile margins */
             color: white;
         }
 
@@ -63,91 +65,449 @@
 
         .greeting {
             color: #e0e7ff;
-            font-size: 16px;
+            font-size: 18px; /* Increased from 16px */
         }
 
         .user-name {
             color: white;
-            font-size: 24px;
+            font-size: 28px; /* Increased from 24px */
             font-weight: bold;
-            margin-top: 5px;
+            margin-top: 8px;
+            line-height: 34px;
         }
 
         .subtitle {
             color: #c7d2fe;
-            font-size: 14px;
-            margin-top: 5px;
+            font-size: 16px; /* Increased from 14px */
+            margin-top: 8px;
+            line-height: 22px;
         }
 
         .profile-button {
-            width: 40px;
-            height: 40px;
+            width: 56px; /* Increased from 40px for better touch target */
+            height: 56px;
             background: rgba(255,255,255,0.2);
-            border-radius: 20px;
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
+        }
+
+        /* Enhanced Search Bar */
+        .search-container {
+            padding: 24px; /* Increased padding */
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 16px; /* More rounded */
+            padding: 16px 20px; /* Larger touch target */
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15); /* Stronger shadow */
+            min-height: 56px; /* Ensure good touch target */
+        }
+
+        .search-icon {
+            color: #6b7280;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .search-text {
+            color: #9ca3af;
+            font-size: 17px; /* Larger for mobile */
         }
 
         /* Content Area */
         .content {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 0; /* Remove padding, add to individual sections */
         }
 
         .section-title {
-            font-size: 20px;
+            font-size: 22px; /* Increased from 20px */
             font-weight: bold;
             color: #1f2937;
-            margin-bottom: 15px;
+            margin-bottom: 20px; /* Increased spacing */
+            padding: 0 24px; /* Add horizontal padding */
         }
 
-        /* Quick Actions */
+        /* Enhanced Quick Actions */
+        .actions-section {
+            padding: 0 24px 30px; /* Add padding and spacing */
+        }
+
         .actions-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 16px; /* Increased gap */
         }
 
         .action-card {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 24px; /* Increased padding */
+            border-radius: 16px; /* More rounded */
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Enhanced shadow */
+            min-height: 120px; /* Ensure consistent height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .action-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
-            margin: 0 auto 10px;
+            width: 60px; /* Increased from 50px */
+            height: 60px;
+            border-radius: 30px;
+            margin: 0 auto 15px; /* Increased spacing */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px; /* Larger icon */
+        }
+
+        .action-title {
+            font-size: 16px; /* Increased from 14px */
+            font-weight: 700; /* Bolder */
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .action-subtitle {
+            font-size: 14px; /* Increased from 12px */
+            color: #6b7280;
+            line-height: 20px;
+        }
+
+        /* Enhanced Featured Business Section */
+        .featured-section {
+            padding: 0 24px 30px;
+        }
+
+        .featured-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 24px;
+        }
+
+        .see-all {
+            color: #6366f1;
+            font-size: 17px; /* Increased */
+            font-weight: 700; /* Bolder */
+            text-decoration: underline;
+        }
+
+        .business-card {
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 20px; /* Increased padding */
+            border-radius: 16px; /* More rounded */
+            margin-bottom: 12px; /* Increased spacing */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            min-height: 80px; /* Ensure good touch target */
+        }
+
+        .business-icon {
+            width: 60px; /* Increased from 50px */
+            height: 60px;
+            background: #6366f1;
+            border-radius: 12px; /* More rounded */
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 24px;
+            margin-right: 16px; /* Increased spacing */
         }
 
-        .action-title {
+        .business-info {
+            flex: 1;
+        }
+
+        .business-name {
+            font-size: 18px; /* Increased from 16px */
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .business-category {
+            font-size: 14px; /* Increased from 12px */
+            color: #6366f1;
+            font-weight: 600;
+            margin: 4px 0;
+        }
+
+        .business-rating {
+            font-size: 15px; /* Increased from 14px */
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        /* Enhanced Categories Section */
+        .bottom-categories {
+            background: white;
+            border-top: 1px solid #f3f4f6;
+            padding: 24px; /* Increased padding */
+            margin-top: 20px;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px; /* Increased gap */
+        }
+
+        .category-card {
+            text-align: center;
+            padding: 16px 8px; /* Increased padding */
+            min-height: 80px; /* Ensure good touch target */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .category-icon {
+            width: 52px; /* Increased from 44px */
+            height: 52px;
+            border-radius: 26px;
+            margin: 0 auto 12px; /* Increased spacing */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px; /* Increased */
+        }
+
+        .category-name {
+            font-size: 13px; /* Increased from 11px */
+            color: #374151;
+            font-weight: 600; /* Bolder */
+            line-height: 16px;
+        }
+
+        /* Enhanced Bottom Navigation */
+        .bottom-nav {
+            height: 90px; /* Increased from 80px */
+            background: white;
+            border-top: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: 20px; /* Increased for safe area */
+        }
+
+        .nav-item {
+            text-align: center;
+            color: #6b7280;
+            padding: 8px;
+            min-width: 60px; /* Ensure good touch target */
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-item.active {
+            color: #6366f1;
+        }
+
+        .nav-icon {
+            font-size: 26px; /* Increased from 24px */
+            margin-bottom: 6px; /* Increased spacing */
+        }
+
+        .nav-label {
+            font-size: 12px; /* Increased from 10px */
+            font-weight: 600; /* Bolder */
+        }
+
+        /* Scrollable content */
+        .scrollable-content {
+            height: calc(100% - 134px); /* Adjusted for larger bottom nav */
+            overflow-y: auto;
+        }
+
+        /* Delete Confirmation Mockup */
+        .delete-mockup {
+            background: white;
+        }
+
+        .delete-header {
+            background: white;
+            padding: 60px 24px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .close-button {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #666;
+        }
+
+        .delete-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-left: 15px;
+            flex: 1;
+        }
+
+        .warning-section {
+            text-align: center;
+            padding: 40px 24px;
+            background: #FFF5F5;
+        }
+
+        .warning-icon {
+            font-size: 48px;
+            color: #FF4444;
+            margin-bottom: 15px;
+        }
+
+        .warning-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FF4444;
+            margin-bottom: 15px;
+        }
+
+        .warning-text {
+            font-size: 18px;
+            color: #666;
+            line-height: 26px;
+        }
+
+        .delete-form {
+            padding: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 18px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 18px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 17px;
+            min-height: 56px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 40px;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            background: #FF4444;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .checkbox-text {
+            font-size: 16px;
+            color: #666;
+            line-height: 24px;
+            flex: 1;
+        }
+
+        .delete-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .cancel-button {
+            padding: 18px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            background: white;
+            font-size: 17px;
+            font-weight: 600;
+            color: #666;
+            min-height: 56px;
+        }
+
+        .delete-button {
+            padding: 18px;
+            background: #FF4444;
+            border-radius: 12px;
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Mobile-first typography improvements */
+        .mobile-text-large {
+            font-size: 18px;
+            line-height: 26px;
+        }
+
+        .mobile-text-medium {
+            font-size: 16px;
+            line-height: 24px;
+        }
+
+        .mobile-text-small {
+            font-size: 14px;
+            line-height: 20px;
+        }
+
+        /* Emojis and Icons */
+        .emoji {
+            font-style: normal;
+        }
+
+        /* Phone labels */
+        .phone-label {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
             font-size: 14px;
             font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 5px;
+            text-align: center;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
         }
-
-        .action-subtitle {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        /* Featured Business */
-        .featured-header {
-            display: flex;
-            justify-content: space-between;
+    </style>
+</head>
             align-items: center;
             margin-bottom: 15px;
         }
@@ -283,121 +643,164 @@
     </style>
 </head>
 <body>
-    <div class="phone-container">
+    <!-- Home Screen Mockup -->
+    <div class="phone-container" style="margin-right: 20px;">
         <div class="phone-screen">
-            <!-- Status Bar -->
             <div class="status-bar">
-                <span>9:41</span>
-                <span>AccessLink</span>
-                <span>100% 🔋</span>
+                <div>9:41</div>
+                <div>📶 📶 🔋</div>
+            </div>
+            
+            <div class="header">
+                <div class="header-content">
+                    <div>
+                        <div class="greeting">Good morning 👋</div>
+                        <div class="user-name">Alex</div>
+                        <div class="subtitle">Find LGBTQ+ friendly spaces near you</div>
+                    </div>
+                    <div class="profile-button">
+                        <span class="emoji">🏳️‍🌈</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-container">
+                <div class="search-bar">
+                    <div class="search-icon">🔍</div>
+                    <div class="search-text">Search for businesses, events...</div>
+                </div>
             </div>
 
             <div class="scrollable-content">
-                <!-- Header -->
-                <div class="header">
-                    <div class="header-content">
-                        <div>
-                            <div class="greeting">Welcome back,</div>
-                            <div class="user-name">Sarah! 🏳️‍🌈</div>
-                            <div class="subtitle">Find your community</div>
+                <div class="actions-section">
+                    <div class="section-title">Quick Actions</div>
+                    <div class="actions-grid">
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #10b981;">
+                                <span class="emoji">�</span>
+                            </div>
+                            <div class="action-title">Find Places</div>
+                            <div class="action-subtitle">Discover LGBTQ+ friendly venues</div>
                         </div>
-                        <div class="profile-button">👤</div>
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #f59e0b;">
+                                <span class="emoji">🎉</span>
+                            </div>
+                            <div class="action-title">Events</div>
+                            <div class="action-subtitle">Join community events</div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #8b5cf6;">
+                                <span class="emoji">⭐</span>
+                            </div>
+                            <div class="action-title">Saved</div>
+                            <div class="action-subtitle">Your favorite places</div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #ef4444;">
+                                <span class="emoji">�</span>
+                            </div>
+                            <div class="action-title">Reviews</div>
+                            <div class="action-subtitle">Share your experience</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Content -->
-                <div class="content">
-                    <!-- Quick Actions -->
-                    <div class="section-title">What would you like to do?</div>
-                    <div class="actions-grid">
-                        <div class="action-card">
-                            <div class="action-icon" style="background: #6366f1;">🔎</div>
-                            <div class="action-title">Find Businesses</div>
-                            <div class="action-subtitle">Discover LGBTQ+ friendly places</div>
-                        </div>
-                        <div class="action-card">
-                            <div class="action-icon" style="background: #ec4899;">❤️</div>
-                            <div class="action-title">Saved Places</div>
-                            <div class="action-subtitle">Your favorite businesses</div>
-                        </div>
-                        <div class="action-card">
-                            <div class="action-icon" style="background: #fbbf24;">⭐</div>
-                            <div class="action-title">Write Review</div>
-                            <div class="action-subtitle">Share your experience</div>
-                        </div>
-                        <div class="action-card">
-                            <div class="action-icon" style="background: #10b981;">📅</div>
-                            <div class="action-title">Events</div>
-                            <div class="action-subtitle">Community events near you</div>
-                        </div>
-                    </div>
-
-                    <!-- Featured Businesses -->
+                <div class="featured-section">
                     <div class="featured-header">
                         <div class="section-title">Featured Businesses</div>
                         <div class="see-all">See All</div>
                     </div>
                     
                     <div class="business-card">
-                        <div class="business-icon">🏥</div>
+                        <div class="business-icon">
+                            <span class="emoji">☕</span>
+                        </div>
                         <div class="business-info">
-                            <div class="business-name">Pride Health Center</div>
-                            <div class="business-category">Healthcare</div>
-                            <div class="business-rating">⭐ 4.8 • 0.3 mi</div>
+                            <div class="business-name">Rainbow Café</div>
+                            <div class="business-category">Coffee Shop</div>
+                            <div class="business-rating">⭐ 4.8 (127 reviews)</div>
                         </div>
                     </div>
-
+                    
                     <div class="business-card">
-                        <div class="business-icon">🍽️</div>
+                        <div class="business-icon">
+                            <span class="emoji">�</span>
+                        </div>
                         <div class="business-info">
-                            <div class="business-name">Rainbow Cafe</div>
-                            <div class="business-category">Dining</div>
-                            <div class="business-rating">⭐ 4.9 • 0.5 mi</div>
+                            <div class="business-name">Pride Theater</div>
+                            <div class="business-category">Entertainment</div>
+                            <div class="business-rating">⭐ 4.9 (89 reviews)</div>
                         </div>
                     </div>
+                    
+                    <div class="business-card">
+                        <div class="business-icon">
+                            <span class="emoji">🏥</span>
+                        </div>
+                        <div class="business-info">
+                            <div class="business-name">Inclusive Health Center</div>
+                            <div class="business-category">Healthcare</div>
+                            <div class="business-rating">⭐ 4.7 (203 reviews)</div>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Categories at Bottom -->
-                    <div class="bottom-categories">
-                        <div class="section-title">Browse by Category</div>
-                        <div class="categories-grid">
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #f59e0b;">🍽️</div>
-                                <div class="category-name">Dining</div>
+                <div class="bottom-categories">
+                    <div class="section-title">Categories</div>
+                    <div class="categories-grid">
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #f59e0b;">
+                                <span class="emoji">🍽️</span>
                             </div>
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #10b981;">💪</div>
-                                <div class="category-name">Fitness</div>
+                            <div class="category-name">Dining</div>
+                        </div>
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #10b981;">
+                                <span class="emoji">🏥</span>
                             </div>
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #ef4444;">🏥</div>
-                                <div class="category-name">Healthcare</div>
+                            <div class="category-name">Health</div>
+                        </div>
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #8b5cf6;">
+                                <span class="emoji">�</span>
                             </div>
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #8b5cf6;">✂️</div>
-                                <div class="category-name">Beauty & Spa</div>
+                            <div class="category-name">Entertainment</div>
+                        </div>
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #ef4444;">
+                                <span class="emoji">🛍️</span>
                             </div>
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #06b6d4;">🏪</div>
-                                <div class="category-name">Shopping</div>
+                            <div class="category-name">Shopping</div>
+                        </div>
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #06b6d4;">
+                                <span class="emoji">✂️</span>
                             </div>
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #f97316;">📚</div>
-                                <div class="category-name">Education</div>
+                            <div class="category-name">Beauty</div>
+                        </div>
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #84cc16;">
+                                <span class="emoji">🏋️</span>
                             </div>
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #84cc16;">☕</div>
-                                <div class="category-name">Cafes</div>
+                            <div class="category-name">Fitness</div>
+                        </div>
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #f97316;">
+                                <span class="emoji">🎓</span>
                             </div>
-                            <div class="category-card">
-                                <div class="category-icon" style="background: #64748b;">🚗</div>
-                                <div class="category-name">Services</div>
+                            <div class="category-name">Education</div>
+                        </div>
+                        <div class="category-card">
+                            <div class="category-icon" style="background: #ec4899;">
+                                <span class="emoji">🏠</span>
                             </div>
+                            <div class="category-name">Housing</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Bottom Navigation -->
             <div class="bottom-nav">
                 <div class="nav-item active">
                     <div class="nav-icon">🏠</div>
@@ -405,10 +808,14 @@
                 </div>
                 <div class="nav-item">
                     <div class="nav-icon">🔍</div>
-                    <div class="nav-label">Explore</div>
+                    <div class="nav-label">Search</div>
                 </div>
                 <div class="nav-item">
-                    <div class="nav-icon">❤️</div>
+                    <div class="nav-icon">📍</div>
+                    <div class="nav-label">Map</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">⭐</div>
                     <div class="nav-label">Saved</div>
                 </div>
                 <div class="nav-item">
@@ -417,6 +824,49 @@
                 </div>
             </div>
         </div>
+        <div class="phone-label">Home Screen - Mobile-First Design</div>
+    </div>
+
+    <!-- Delete Confirmation Mockup -->
+    <div class="phone-container">
+        <div class="phone-screen delete-mockup">
+            <div class="status-bar">
+                <div>9:41</div>
+                <div>📶 📶 🔋</div>
+            </div>
+            
+            <div class="delete-header">
+                <div class="close-button">✕</div>
+                <div class="delete-title">Delete Event</div>
+            </div>
+
+            <div class="warning-section">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-title">Delete Event?</div>
+                <div class="warning-text">This action cannot be undone. All event data will be permanently deleted.</div>
+            </div>
+
+            <div class="delete-form">
+                <div class="form-section">
+                    <div class="form-label">Enter your password to confirm:</div>
+                    <input type="password" class="password-input" placeholder="Enter your password">
+                </div>
+
+                <div class="checkbox-section">
+                    <div class="checkbox">✓</div>
+                    <div class="checkbox-text">I understand this action is permanent and cannot be undone. All event information, attendee data, and related content will be deleted.</div>
+                </div>
+            </div>
+
+            <div class="delete-buttons">
+                <div class="cancel-button">Cancel</div>
+                <div class="delete-button">
+                    <span>🗑️</span>
+                    Delete Event Forever
+                </div>
+            </div>
+        </div>
+        <div class="phone-label">Enhanced Delete Flow - Secure Confirmation</div>
     </div>
 </body>
 </html>
