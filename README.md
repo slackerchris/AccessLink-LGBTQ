@@ -23,6 +23,24 @@ A React Native mobile application that helps LGBTQ+ individuals discover, review
 - **UI Components**: React Native Paper
 - **Development**: Hot reload, TypeScript compilation
 
+## 🔐 Environment Variable Setup
+
+**This is a critical security step.** This project uses a `.env` file to manage secret keys for services like Firebase. You must set this up before running the application.
+
+1.  **Create a `.env` file** in the root of the project. You can do this by copying the example file:
+    ```bash
+    cp .env.example .env
+    ```
+
+2.  **Fill in your credentials** in the newly created `.env` file. The required variables are listed in `.env.example`.
+
+    ```
+    EXPO_PUBLIC_FIREBASE_API_KEY="YOUR_API_KEY_HERE"
+    # ... and other keys
+    ```
+
+3.  **The `.env` file is already listed in `.gitignore` and will not be committed to the repository.**
+
 ## 🏃‍♂️ Quick Start
 
 ```bash
