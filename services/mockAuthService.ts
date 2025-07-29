@@ -192,7 +192,7 @@ class MockAuthService {
     this.listeners.forEach(listener => listener(this.currentAuthState));
   }
 
-  async signUp(email: string, password: string, displayName: string, role: string = 'user'): Promise<UserProfile> {
+  async signUp(email: string, password: string, displayName: string, role: string = 'user', additionalInfo?: Partial<UserProfile['profile']>): Promise<UserProfile> {
     // Validate input
     const emailValidation = validators.email(email);
     if (!emailValidation.isValid) {
@@ -247,7 +247,8 @@ class MockAuthService {
           pronouns: '',
           identities: [],
           preferredName: ''
-        }
+        },
+        ...additionalInfo
       },
       createdAt: new Date(),
       updatedAt: new Date()

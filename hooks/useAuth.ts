@@ -27,12 +27,13 @@ export const useAuthActions = () => {
     email: string,
     password: string,
     displayName: string,
+    role: string = 'user',
     additionalInfo?: Partial<UserProfile['profile']>
   ) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.signUp(email, password, displayName, additionalInfo);
+      await authService.signUp(email, password, displayName, role, additionalInfo);
     } catch (err: any) {
       setError(err.message);
       throw err;

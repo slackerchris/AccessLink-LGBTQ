@@ -327,7 +327,10 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListEmptyComponent={!loading ? renderEmptyState : null}
-        showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
+        getItemLayout={(data, index) => (
+          {length: 150, offset: 150 * index, index}
+        )}
       />
 
       {/* Filter Modal */}

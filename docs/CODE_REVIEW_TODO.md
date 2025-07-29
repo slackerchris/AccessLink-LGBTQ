@@ -101,9 +101,9 @@ The AccessLink LGBTQ+ application has made significant strides in development qu
   - [x] Memoize `BusinessListItem` in `BusinessListScreen.tsx` to prevent re-renders ✅ DONE
   - [x] Memoize `ReviewItem` in `BusinessDetailsScreen.tsx` ✅ DONE
 
-- [ ] **List Virtualization**
-  - [ ] Use `FlatList` or `SectionList` for all long lists
-  - [ ] Ensure `getItemLayout` is used where possible
+- [x] **List Virtualization**
+  - [x] Use `FlatList` or `SectionList` for all long lists ✅ DONE
+  - [x] Ensure `getItemLayout` is used where possible ✅ DONE
 
 - [ ] **Bundle Size Reduction**
   - [ ] Analyze bundle with `expo-bundle-analyzer`
