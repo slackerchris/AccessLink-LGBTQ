@@ -20,19 +20,25 @@
       "adaptiveIcon": {
         "backgroundColor": "#6c5ce7"
       },
-      "package": "com.accesslinklgbtq.lgbtq"
+      "package": "com.accesslinklgbtq.lgbtq",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0"
     },
     "web": {
       "bundler": "metro"
     },
     "scheme": "accesslink",
-    "owner": "slackerchris",
+    "owner": "chriseckman",
     "updates": {
-      "url": "https://u.expo.dev/your-project-id"
+      "url": "https://u.expo.dev/chriseckman/accesslink-lgbtq"
     },
-    "runtimeVersion": {
-      "policy": "sdkVersion"
-    },
+    "sdkVersion": "51.0.0",
     "plugins": [
       [
         "expo-location",
@@ -40,6 +46,11 @@
           "locationAlwaysAndWhenInUsePermission": "Allow AccessLink to use your location to find nearby LGBTQ+ friendly businesses."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "351daa17-f3ee-470c-9936-54eb17100775"
+      }
+    }
   }
 }
