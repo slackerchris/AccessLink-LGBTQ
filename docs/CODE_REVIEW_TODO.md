@@ -67,26 +67,21 @@ The AccessLink LGBTQ+ application has made significant strides in development qu
 **Estimated Remaining Time:** 1-2 weeks for component test fixes and hook testing
 
 ### **2. Security Hardening**
-**Status: ⚠️ CRITICAL VULNERABILITIES**
+**Status: 🟡 IN PROGRESS**
 
-- [ ] **Environment Variables**
+- [x] **Environment Variables** ✅ DONE
   ```typescript
-  // CURRENT: Exposed in firebase.ts
-  const firebaseConfig = {
-    apiKey: "AIzaSyDQOnwLXW_PtQKtxhfxasWp2C4c7Bp2GKw", // ❌ EXPOSED
-  };
-  
-  // TODO: Move to environment variables
+  // COMPLETED: Moved to environment variables in `services/firebase.ts`
   const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   };
   ```
 
-- [ ] **Authentication Security**
-  - Remove hardcoded passwords from `mockAuthService.ts`
-  - Implement proper password hashing
-  - Add rate limiting for auth attempts
-  - Implement session timeout
+- [x] **Authentication Security** 🟡 IN PROGRESS
+  - [x] Remove hardcoded passwords from `mockAuthService.ts` ✅ DONE
+  - [x] Implement proper password hashing (simulated for mock service) ✅ DONE
+  - [ ] Add rate limiting for auth attempts
+  - [ ] Implement session timeout
 
 - [ ] **API Security**
   - Add request validation middleware
@@ -99,10 +94,27 @@ The AccessLink LGBTQ+ application has made significant strides in development qu
 - `services/mockAuthService.ts`
 - `services/adminService.ts`
 
-### **3. Error Handling & Logging**
+### **3. Performance Optimization**
+**Status: 🟡 IN PROGRESS**
+
+- [x] **Component Memoization**
+  - [x] Memoize `BusinessListItem` in `BusinessListScreen.tsx` to prevent re-renders ✅ DONE
+  - [ ] Memoize `ReviewItem` in `BusinessDetailsScreen.tsx`
+
+- [ ] **List Virtualization**
+  - [ ] Use `FlatList` or `SectionList` for all long lists
+  - [ ] Ensure `getItemLayout` is used where possible
+
+- [ ] **Bundle Size Reduction**
+  - [ ] Analyze bundle with `expo-bundle-analyzer`
+  - [ ] Remove unused packages
+  - [ ] Lazy load heavy components/screens
+
+### **4. Error Handling & Logging**
 **Status: ⚠️ INCONSISTENT**
 
 - [ ] **Centralized Error Management**
+  - [ ] Implement a global error boundary component
   ```typescript
   // TODO: Create error handling utility
   // File: utils/errorHandler.ts
@@ -140,41 +152,6 @@ The AccessLink LGBTQ+ application has made significant strides in development qu
 ---
 
 ## 🔥 **HIGH PRIORITY (Next Sprint)**
-
-### **4. Performance Optimization**
-**Status: ⚠️ NEEDS IMPROVEMENT**
-
-- [ ] **React Performance**
-  ```typescript
-  // TODO: Add memoization to heavy components
-  const BusinessListItem = React.memo(({ business, onSave, onUnsave }) => {
-    const isBusinessSaved = useMemo(() => 
-      savedBusinesses.includes(business.id), [savedBusinesses, business.id]
-    );
-    
-    return <View>...</View>;
-  });
-  ```
-
-- [ ] **List Virtualization**
-  - Implement FlatList for business listings
-  - Add pull-to-refresh optimization
-  - Implement infinite scroll with proper loading states
-
-- [ ] **Bundle Size Optimization**
-  - Analyze bundle with `npx react-native-bundle-visualizer`
-  - Implement code splitting for admin screens
-  - Add lazy loading for non-critical components
-
-- [ ] **Image Optimization**
-  - Implement image caching
-  - Add image compression
-  - Use appropriate image formats (WebP where supported)
-
-**Files to Modify:**
-- `components/business/BusinessListScreen.tsx`
-- `components/admin/AdminDashboard.tsx`
-- Multiple component files for memoization
 
 ### **5. Form Validation Enhancement**
 **Status: ✅ PARTIALLY COMPLETED - Foundation Established**

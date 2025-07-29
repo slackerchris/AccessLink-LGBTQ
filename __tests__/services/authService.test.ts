@@ -45,7 +45,7 @@ describe('AuthService', () => {
 
   describe('User Authentication', () => {
     it('should authenticate valid admin credentials', async () => {
-      const result = await authService.signIn('admin@accesslinklgbtq.app', 'admin123');
+      const result = await authService.signIn('admin@accesslinklgbtq.app', 'adminpassword');
       expect(result).toBeDefined();
       expect(result.role).toBe('admin');
       expect(result.email).toBe('admin@accesslinklgbtq.app');
@@ -66,15 +66,13 @@ describe('AuthService', () => {
     });
 
     it('should reject invalid credentials', async () => {
-      await expect(
-        authService.signIn('user@example.com', 'wrongpassword')
-      ).rejects.toThrow('Invalid email or password');
+      await expect(authService.signIn('user@example.com', 'wrongpassword'))
+        .rejects.toEqual({ code: 'auth/wrong-password', message: 'Incorrect password' });
     });
 
     it('should reject non-existent user', async () => {
-      await expect(
-        authService.signIn('nonexistent@example.com', 'password123')
-      ).rejects.toThrow('Invalid email or password');
+      await expect(authService.signIn('nonexistent@example.com', 'password123'))
+        .rejects.toEqual({ code: 'auth/user-not-found', message: 'User not found' });
     });
   });
 

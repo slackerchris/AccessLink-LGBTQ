@@ -3,7 +3,7 @@
  * Displays list of approved businesses with search and filtering
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, memo } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,99 @@ interface BusinessListScreenProps {
   onNavigateToAddBusiness: () => void;
   onNavigateToBusinessDetails: (business: BusinessListing) => void;
 }
+
+const renderRating = (rating: number) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  
+  for (let i = 0; i < fullStars; i++) {
+    stars.push('⭐');
+  }
+  if (hasHalfStar) {
+    stars.push('⭐');
+  }
+  while (stars.length < 5) {
+    stars.push('☆');
+  }
+  
+  return stars.join('');
+};
+
+const BusinessListItem = memo(({
+  item,
+  isSaved,
+  onToggleSaved,
+  onNavigateToDetails,
+}: {
+  item: BusinessListing;
+  isSaved: boolean;
+  onToggleSaved: (id: string) => void;
+  onNavigateToDetails: (item: BusinessListing) => void;
+}) => {
+  return (
+    <TouchableOpacity
+      style={styles.businessCard}
+      onPress={() => onNavigateToDetails(item)}
+    >
+      <View style={styles.businessHeader}>
+        <View style={styles.businessTitleSection}>
+          <Text style={styles.businessName}>{item.name}</Text>
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryText}>{item.category}</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.bookmarkButton}
+          onPress={() => onToggleSaved(item.id)}
+        >
+          <Ionicons
+            name={isSaved ? 'bookmark' : 'bookmark-outline'}
+            size={24}
+            color={isSaved ? '#6366f1' : '#9ca3af'}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.businessDescription} numberOfLines={2}>
+        {item.description}
+      </Text>
+
+      <View style={styles.businessInfo}>
+        <Text style={styles.locationText}>
+          📍 {item.location.city}, {item.location.state}
+        </Text>
+        
+        {item.averageRating > 0 && (
+          <View style={styles.ratingContainer}>
+            <Text style={styles.ratingText}>
+              {renderRating(item.averageRating)} ({item.reviewCount || 0})
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {item.tags && item.tags.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {item.tags.slice(0, 3).map((tag, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+          {item.tags.length > 3 && (
+            <Text style={styles.moreTagsText}>+{item.tags.length - 3} more</Text>
+          )}
+        </View>
+      )}
+
+      {item.featured && (
+        <View style={styles.featuredBadge}>
+          <Text style={styles.featuredText}>⭐ Featured</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+});
 
 export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   initialCategory,
@@ -124,86 +217,16 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
     }
   }, [hasMore, loading, loadMore]);
 
-  const renderRating = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push('⭐');
-    }
-    if (hasHalfStar) {
-      stars.push('⭐');
-    }
-    while (stars.length < 5) {
-      stars.push('☆');
-    }
-    
-    return stars.join('');
+  const renderBusinessItem = ({ item }: { item: BusinessListing }) => {
+    return (
+      <BusinessListItem
+        item={item}
+        isSaved={isBusinessSaved(item.id)}
+        onToggleSaved={handleToggleSaved}
+        onNavigateToDetails={onNavigateToBusinessDetails}
+      />
+    );
   };
-
-  const renderBusinessItem = ({ item }: { item: BusinessListing }) => (
-    <TouchableOpacity
-      style={styles.businessCard}
-      onPress={() => onNavigateToBusinessDetails(item)}
-    >
-      <View style={styles.businessHeader}>
-        <View style={styles.businessTitleSection}>
-          <Text style={styles.businessName}>{item.name}</Text>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{item.category}</Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={styles.bookmarkButton}
-          onPress={() => handleToggleSaved(item.id)}
-        >
-          <Ionicons
-            name={isBusinessSaved(item.id) ? 'bookmark' : 'bookmark-outline'}
-            size={24}
-            color={isBusinessSaved(item.id) ? '#6366f1' : '#9ca3af'}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.businessDescription} numberOfLines={2}>
-        {item.description}
-      </Text>
-
-      <View style={styles.businessInfo}>
-        <Text style={styles.locationText}>
-          📍 {item.location.city}, {item.location.state}
-        </Text>
-        
-        {item.averageRating > 0 && (
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>
-              {renderRating(item.averageRating)} ({item.reviewCount || 0})
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {item.tags && item.tags.length > 0 && (
-        <View style={styles.tagsContainer}>
-          {item.tags.slice(0, 3).map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-          {item.tags.length > 3 && (
-            <Text style={styles.moreTagsText}>+{item.tags.length - 3} more</Text>
-          )}
-        </View>
-      )}
-
-      {item.featured && (
-        <View style={styles.featuredBadge}>
-          <Text style={styles.featuredText}>⭐ Featured</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
 
   const renderCategoryFilter = ({ item }: { item: typeof categories[0] }) => (
     <TouchableOpacity
