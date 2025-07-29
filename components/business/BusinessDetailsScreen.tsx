@@ -234,12 +234,12 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
         )}
 
         {/* Accessibility Features */}
-        {business.accessibilityFeatures && Object.values(business.accessibilityFeatures).some(Boolean) && (
+        {business.accessibility && Object.values(business.accessibility).some((value) => value !== false && value !== '') && (
           <View style={styles.infoSection}>
             <Text style={styles.sectionTitle}>Accessibility Features</Text>
             <View style={styles.accessibilityGrid}>
-              {Object.entries(business.accessibilityFeatures)
-                .filter(([_, value]) => value)
+              {Object.entries(business.accessibility)
+                .filter(([key, value]) => value === true)
                 .map(([feature, _]) => (
                   <View key={feature} style={styles.accessibilityTag}>
                     <Ionicons name="checkmark-circle" size={16} color="#10b981" />
@@ -249,6 +249,11 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
                   </View>
                 ))
               }
+              {business.accessibility.accessibilityNotes && (
+                <Text style={styles.accessibilityNotes}>
+                  {business.accessibility.accessibilityNotes}
+                </Text>
+              )}
             </View>
           </View>
         )}
@@ -409,6 +414,12 @@ const styles = StyleSheet.create({
     color: '#065f46',
     marginLeft: 4,
     fontWeight: '500',
+  },
+  accessibilityNotes: {
+    fontSize: 14,
+    color: '#374151',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   writeReviewButton: {
     flexDirection: 'row',

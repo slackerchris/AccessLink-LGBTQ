@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
+import { BusinessListing } from '../../services/mockBusinessService';
 
 interface UserHomeScreenProps {
   navigation: any;
@@ -27,6 +28,9 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
   const { businesses } = useBusinesses({}, 6); // Get first 6 businesses
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Debug business data
+  console.log('Businesses data:', businesses.map((b, i) => ({ index: i, name: b.name, id: b.id })));
+
   const handleSearch = () => {
     if (searchQuery.trim()) {
       navigation.navigate('Directory', { searchQuery: searchQuery.trim() });
@@ -35,21 +39,14 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
     }
   };
 
-  const categories = [
-    { icon: 'restaurant', name: 'Dining', color: '#f59e0b' },
-    { icon: 'fitness', name: 'Fitness', color: '#10b981' },
-    { icon: 'medical', name: 'Healthcare', color: '#ef4444' },
-    { icon: 'cut', name: 'Beauty & Spa', color: '#8b5cf6' },
-    { icon: 'storefront', name: 'Shopping', color: '#06b6d4' },
-    { icon: 'library', name: 'Education', color: '#f97316' },
-    { icon: 'cafe', name: 'Cafes', color: '#84cc16' },
-    { icon: 'car-sport', name: 'Services', color: '#64748b' },
-  ];
-
   const firstName = userProfile?.profile?.firstName || userProfile?.displayName?.split(' ')[0] || 'Friend';
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -76,50 +73,45 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
           />
           <TouchableOpacity 
             style={styles.searchButton}
-            onPress={handleSearch}
+            activeOpacity={0.7}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleSearch();
+            }}
           >
             <Text style={styles.searchButtonText}>Search</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Categories Section - Horizontal Scroll */}
-      <View style={styles.categoriesContainer}>
-        <Text style={styles.sectionTitle}>Browse by Category</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalCategoriesContainer}
-        >
-          {categories.map((category, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.horizontalCategoryCard}
-              onPress={() => navigation.navigate('Directory')}
-            >
-              <View style={[styles.horizontalCategoryIcon, { backgroundColor: category.color }]}>
-                <Ionicons name={category.icon as any} size={24} color="#fff" />
-              </View>
-              <Text style={styles.horizontalCategoryName}>{category.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
       {/* Featured Businesses */}
       <View style={styles.featuredContainer}>
         <View style={styles.featuredHeader}>
           <Text style={styles.sectionTitle}>Featured Businesses</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Businesses')}>
+          <TouchableOpacity 
+            activeOpacity={0.7}
+            onPress={(e) => {
+              e.stopPropagation();
+              navigation.navigate('Directory');
+            }}
+          >
             <Text style={styles.seeAllText}>See All</Text>
           </TouchableOpacity>
         </View>
         
         {businesses.slice(0, 3).map((business, index) => (
           <TouchableOpacity
-            key={business.id}
+            key={`business-${business.id || index}`}
             style={styles.businessCard}
-            onPress={() => Alert.alert(business.name, business.description)}
+            activeOpacity={0.7}
+            onPress={(e) => {
+              e.stopPropagation();
+              console.log('Business clicked:', business.name, 'Index:', index);
+              navigation.navigate('Directory', { 
+                screen: 'BusinessDetails', 
+                params: { business } 
+              });
+            }}
           >
             <View style={styles.businessInfo}>
               <Text style={styles.businessName}>{business.name}</Text>
@@ -222,40 +214,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  categoriesContainer: {
-    padding: 20,
-    paddingTop: 0,
-  },
-  horizontalCategoriesContainer: {
-    paddingHorizontal: 20,
-  },
-  horizontalCategoryCard: {
-    alignItems: 'center',
-    marginRight: 16,
-    width: 80,
-  },
-  horizontalCategoryIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  horizontalCategoryName: {
-    fontSize: 12,
-    color: '#374151',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  actionsContainer: {
-    padding: 20,
-  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -265,6 +223,7 @@ const styles = StyleSheet.create({
   featuredContainer: {
     padding: 20,
     paddingTop: 0,
+    overflow: 'hidden',
   },
   featuredHeader: {
     flexDirection: 'row',
@@ -289,6 +248,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+    overflow: 'hidden',
+    minHeight: 80,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   businessInfo: {
     flex: 1,

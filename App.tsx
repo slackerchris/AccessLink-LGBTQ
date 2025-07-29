@@ -27,6 +27,7 @@ import { BusinessProfileEditScreen } from './components/business/BusinessProfile
 import { ServicesManagementScreen } from './components/business/ServicesManagementScreen';
 import { MediaGalleryScreen } from './components/business/MediaGalleryScreen';
 import { EventsManagementScreen } from './components/business/EventsManagementScreen';
+import BusinessDetailsScreen from './components/business/BusinessDetailsScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
@@ -46,6 +47,45 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
     </ProfileStack.Navigator>
+  );
+}
+
+// Business Stack Navigator
+const BusinessStack = createStackNavigator();
+function BusinessStackNavigator() {
+  return (
+    <BusinessStack.Navigator screenOptions={{ headerShown: false }}>
+      <BusinessStack.Screen 
+        name="BusinessList" 
+        component={BusinessListWrapper}
+      />
+      <BusinessStack.Screen 
+        name="BusinessDetails" 
+        component={BusinessDetailsScreen}
+      />
+      <BusinessStack.Screen 
+        name="CreateReview" 
+        component={CreateReviewScreen}
+      />
+    </BusinessStack.Navigator>
+  );
+}
+
+// Business List Wrapper Component
+function BusinessListWrapper({ navigation, route }: { navigation: any; route: any }) {
+  const initialCategory = route.params?.initialCategory;
+  
+  return (
+    <BusinessListScreen
+      initialCategory={initialCategory}
+      onNavigateToAddBusiness={() => {
+        // Handle add business navigation
+        Alert.alert('Coming Soon', 'Business registration is coming soon!');
+      }}
+      onNavigateToBusinessDetails={(business) => {
+        navigation.navigate('BusinessDetails', { business });
+      }}
+    />
   );
 }
 
@@ -133,7 +173,7 @@ function AdminTabNavigator() {
       
       <AdminTab.Screen 
         name="Businesses" 
-        component={BusinessListScreen}
+        component={BusinessStackNavigator}
         options={{ title: 'Directory' }}
       />
       
@@ -199,7 +239,7 @@ function UserTabNavigator() {
       
       <UserTab.Screen 
         name="Directory" 
-        component={BusinessListScreen}
+        component={BusinessStackNavigator}
         options={{ title: 'Directory' }}
       />
       
@@ -228,36 +268,36 @@ function UserTabNavigator() {
 }
 
 // Business Owner Tab Navigator
-const BusinessStack = createStackNavigator();
+const BusinessOwnerStack = createStackNavigator();
 function BusinessDashboardStackNavigator() {
   return (
-    <BusinessStack.Navigator>
-      <BusinessStack.Screen 
+    <BusinessOwnerStack.Navigator>
+      <BusinessOwnerStack.Screen 
         name="BusinessHome" 
         component={BusinessHomeScreen} 
         options={{ headerShown: false }}
       />
-      <BusinessStack.Screen 
+      <BusinessOwnerStack.Screen 
         name="BusinessProfileEdit" 
         component={BusinessProfileEditScreen} 
         options={{ headerShown: false }}
       />
-      <BusinessStack.Screen 
+      <BusinessOwnerStack.Screen 
         name="ServicesManagement" 
         component={ServicesManagementScreen} 
         options={{ headerShown: false }}
       />
-      <BusinessStack.Screen 
+      <BusinessOwnerStack.Screen 
         name="MediaGallery" 
         component={MediaGalleryScreen} 
         options={{ headerShown: false }}
       />
-      <BusinessStack.Screen 
+      <BusinessOwnerStack.Screen 
         name="EventsManagement" 
         component={EventsManagementScreen} 
         options={{ headerShown: false }}
       />
-    </BusinessStack.Navigator>
+    </BusinessOwnerStack.Navigator>
   );
 }
 
@@ -305,7 +345,7 @@ function BusinessTabNavigator() {
       
       <BusinessTab.Screen 
         name="Directory" 
-        component={BusinessListScreen}
+        component={BusinessStackNavigator}
         options={{ title: 'Directory' }}
       />
       

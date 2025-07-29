@@ -50,7 +50,13 @@ export function SavedPlacesScreen() {
   };
 
   const renderSavedBusiness = ({ item }: { item: any }) => (
-    <View style={styles.businessCard}>
+    <TouchableOpacity 
+      style={styles.businessCard}
+      onPress={() => (navigation as any).navigate('Directory', { 
+        screen: 'BusinessDetails', 
+        params: { business: item } 
+      })}
+    >
       <View style={styles.businessHeader}>
         <View style={styles.businessInfo}>
           <Text style={styles.businessName}>{item.name}</Text>
@@ -70,12 +76,15 @@ export function SavedPlacesScreen() {
         </View>
         <TouchableOpacity
           style={styles.unsaveButton}
-          onPress={() => handleUnsaveBusiness(item.id)}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleUnsaveBusiness(item.id);
+          }}
         >
           <Ionicons name="bookmark" size={24} color="#ef4444" />
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (savedBusinesses.length === 0) {

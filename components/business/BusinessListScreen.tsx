@@ -3,7 +3,7 @@
  * Displays list of approved businesses with search and filtering
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,21 +18,23 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useBusinesses, useBusinessActions } from '../../hooks/useBusiness';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
-import { BusinessListing, BusinessCategory } from '../../services/businessService';
+import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
 
 interface BusinessListScreenProps {
+  initialCategory?: BusinessCategory;
   onNavigateToAddBusiness: () => void;
   onNavigateToBusinessDetails: (business: BusinessListing) => void;
 }
 
 export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
+  initialCategory,
   onNavigateToAddBusiness,
   onNavigateToBusinessDetails
 }) => {
   const { userProfile } = useAuth();
   const { saveBusiness, unsaveBusiness } = useAuthActions();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | 'all'>(initialCategory || 'all');
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -108,6 +110,13 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
     }
     setShowFilters(false);
   }, [filterByCategory, refresh]);
+
+  // Handle initial category filtering
+  useEffect(() => {
+    if (initialCategory) {
+      handleCategoryFilter(initialCategory);
+    }
+  }, [initialCategory, handleCategoryFilter]);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !loading) {
