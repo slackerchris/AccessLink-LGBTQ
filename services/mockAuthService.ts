@@ -303,15 +303,16 @@ class MockAuthService {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     const mockUser = mockUsers[email as keyof typeof mockUsers];
+    
+    // Proper error for non-existent user
     if (!mockUser) {
-      // For development, we can log a warning instead of throwing an error for unknown users
-      console.warn(`Mock sign-in attempt for non-existent user: ${email}`);
-      throw new Error('Invalid email or password');
+      throw { code: 'auth/user-not-found', message: 'User not found' };
     }
 
-    // Bypassing password check for mock service.
-    // In a real app, this is where you would validate the password.
-    console.log(`Mock sign-in successful for ${email}. Password check was bypassed for development.`);
+    // Hardcoded password check for mock service
+    if (password !== 'password123') {
+      throw { code: 'auth/wrong-password', message: 'Incorrect password' };
+    }
 
     this.currentAuthState = {
       user: { uid: mockUser.uid, email: mockUser.email },
