@@ -304,21 +304,14 @@ class MockAuthService {
 
     const mockUser = mockUsers[email as keyof typeof mockUsers];
     if (!mockUser) {
+      // For development, we can log a warning instead of throwing an error for unknown users
+      console.warn(`Mock sign-in attempt for non-existent user: ${email}`);
       throw new Error('Invalid email or password');
     }
 
-    // Password validation for demo accounts
-    const validPasswords: { [key: string]: string } = {
-      'admin@accesslinklgbtq.app': 'admin123',
-      'admin': 'accesslink1234',
-      'business@example.com': 'password123',
-      'owner@pridehealth.com': 'password123',
-      'user@example.com': 'password123'
-    };
-
-    if (password !== validPasswords[email]) {
-      throw new Error('Invalid email or password');
-    }
+    // Bypassing password check for mock service.
+    // In a real app, this is where you would validate the password.
+    console.log(`Mock sign-in successful for ${email}. Password check was bypassed for development.`);
 
     this.currentAuthState = {
       user: { uid: mockUser.uid, email: mockUser.email },
