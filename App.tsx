@@ -31,6 +31,7 @@ import BusinessDetailsScreen from './components/business/BusinessDetailsScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Admin Components
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -442,43 +443,43 @@ function ProfileScreen({ navigation }: { navigation: any }) {
   );
 }
 
-// Main App Component
-export default function App() {
-  const { user, userProfile, loading } = useAuth();
-  
-  // Show loading screen while checking auth state
+// AppNavigator to select the correct UI based on user role
+function AppNavigator({ userType }: { userType: 'user' | 'business_owner' | 'admin' | undefined }) {
+  if (userType === 'admin') {
+    return <AdminTabNavigator />;
+  }
+  if (userType === 'business_owner') {
+    return <BusinessTabNavigator />;
+  }
+  return <UserTabNavigator />;
+}
+
+// AppContent component to manage auth state and navigation
+function AppContent() {
+  const { user, loading, userProfile } = useAuth();
+  const userType = userProfile?.role;
+
   if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
-        <Ionicons name="heart" size={60} color="#6366f1" />
-        <Text style={styles.loadingText}>AccessLink LGBTQ+</Text>
-        <Text style={styles.subtitle}>Loading...</Text>
+      <View style={styles.centered}>
+        <Text>Loading...</Text>
       </View>
     );
   }
 
-  // If user is not logged in, show auth screens
-  if (!user) {
-    return (
-      <NavigationContainer>
-        <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
-        <AuthNavigator />
-      </NavigationContainer>
-    );
-  }
-
-  // Backend-driven redirect: Route based on user role
-  const MainNavigator = 
-    userProfile?.role === 'admin' ? AdminTabNavigator :
-    userProfile?.role === 'business_owner' ? BusinessTabNavigator :
-    UserTabNavigator;
-  
   return (
     <NavigationContainer>
-      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
-      <MainNavigator />
+      {user ? <AppNavigator userType={userType} /> : <AuthNavigator />}
     </NavigationContainer>
+  );
+}
+
+// Main App Component
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 }
 
