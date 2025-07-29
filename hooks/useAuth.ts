@@ -128,11 +128,21 @@ export const useAuthActions = () => {
     }
   }, []);
 
-  const addReview = useCallback(async (businessId: string, rating: number, comment: string) => {
+  const addReview = useCallback(async (
+    businessId: string, 
+    rating: number, 
+    comment: string,
+    photos?: Array<{
+      uri: string;
+      caption?: string;
+      category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
+    }>,
+    accessibilityTags?: string[]
+  ) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.addReview(businessId, rating, comment);
+      await authService.addReview(businessId, rating, comment, photos, accessibilityTags);
     } catch (err: any) {
       setError(err.message);
       throw err;

@@ -25,6 +25,15 @@ export interface UserProfile {
       businessId: string;
       rating: number;
       comment: string;
+      photos?: {
+        id: string;
+        uri: string;
+        caption?: string;
+        category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
+        uploadedAt: string;
+      }[];
+      accessibilityTags?: string[]; // Tags for specific accessibility features
+      helpfulCount?: number;
       createdAt: string;
       updatedAt: string;
     }[];
@@ -127,17 +136,46 @@ const mockUsers = {
           id: 'review-1',
           businessId: 'rainbow-cafe-001',
           rating: 5,
-          comment: 'Amazing coffee and such a welcoming space! The staff is incredibly friendly and the atmosphere is perfect for both working and socializing. Highly recommend their rainbow latte!',
-          createdAt: '2025-01-15T10:30:00Z',
-          updatedAt: '2025-01-15T10:30:00Z'
+          comment: 'Absolutely love this place! The staff is incredibly welcoming and the accessibility features are excellent. The ramp is wide and well-maintained, and they have braille menus available.',
+          photos: [
+            {
+              id: 'photo-1',
+              uri: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80',
+              caption: 'Wide accessibility ramp at entrance',
+              category: 'accessibility' as const,
+              uploadedAt: '2025-01-15T14:30:00Z'
+            },
+            {
+              id: 'photo-2',
+              uri: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80',
+              caption: 'Spacious interior with wide aisles',
+              category: 'interior' as const,
+              uploadedAt: '2025-01-15T14:32:00Z'
+            }
+          ],
+          accessibilityTags: ['Wheelchair Accessible', 'Wide Doorways', 'Braille Menus', 'Good Lighting'],
+          helpfulCount: 12,
+          createdAt: '2025-01-15T14:30:00Z',
+          updatedAt: '2025-01-15T14:30:00Z'
         },
         {
           id: 'review-2',
           businessId: 'pride-health-center-002',
           rating: 4,
-          comment: 'Great healthcare experience. Dr. Martinez was very knowledgeable and made me feel comfortable throughout my visit. The only downside was the longer wait time.',
-          createdAt: '2025-01-10T14:20:00Z',
-          updatedAt: '2025-01-12T09:15:00Z'
+          comment: 'Great healthcare provider! They are very knowledgeable about LGBTQ+ health issues and the facility is mostly accessible. The parking could be better marked.',
+          photos: [
+            {
+              id: 'photo-3',
+              uri: 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?w=400&q=80',
+              caption: 'Accessible parking spaces',
+              category: 'accessibility' as const,
+              uploadedAt: '2025-01-10T11:15:00Z'
+            }
+          ],
+          accessibilityTags: ['Accessible Parking', 'Elevator Access', 'Wide Doorways'],
+          helpfulCount: 8,
+          createdAt: '2025-01-10T11:15:00Z',
+          updatedAt: '2025-01-10T11:15:00Z'
         },
         {
           id: 'review-3',
@@ -367,17 +405,32 @@ class MockAuthService {
     });
   }
 
-  async addReview(businessId: string, rating: number, comment: string): Promise<void> {
+  async addReview(businessId: string, rating: number, comment: string, photos?: Array<{
+    uri: string;
+    caption?: string;
+    category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
+  }>, accessibilityTags?: string[]): Promise<void> {
     if (!this.currentAuthState.userProfile) {
       throw new Error('No user logged in');
     }
 
     const reviews = this.currentAuthState.userProfile.profile?.reviews || [];
+    const reviewPhotos = photos?.map(photo => ({
+      id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      uri: photo.uri,
+      caption: photo.caption,
+      category: photo.category,
+      uploadedAt: new Date().toISOString()
+    })) || [];
+
     const newReview = {
       id: `review-${Date.now()}`,
       businessId,
       rating,
       comment,
+      photos: reviewPhotos,
+      accessibilityTags: accessibilityTags || [],
+      helpfulCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

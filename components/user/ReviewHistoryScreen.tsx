@@ -8,6 +8,7 @@ import {
   Alert,
   SafeAreaView,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
@@ -17,6 +18,15 @@ interface Review {
   businessId: string;
   rating: number;
   comment: string;
+  photos?: {
+    id: string;
+    uri: string;
+    caption?: string;
+    category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
+    uploadedAt: string;
+  }[];
+  accessibilityTags?: string[];
+  helpfulCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -126,12 +136,48 @@ export default function ReviewHistoryScreen() {
 
       <Text style={styles.reviewComment}>{review.comment}</Text>
 
+      {/* Photos Section */}
+      {review.photos && review.photos.length > 0 && (
+        <View style={styles.photosSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {review.photos.map(photo => (
+              <View key={photo.id} style={styles.reviewPhoto}>
+                <Image source={{ uri: photo.uri }} style={styles.reviewPhotoImage} />
+                {photo.caption && (
+                  <Text style={styles.reviewPhotoCaption} numberOfLines={2}>
+                    {photo.caption}
+                  </Text>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Accessibility Tags */}
+      {review.accessibilityTags && review.accessibilityTags.length > 0 && (
+        <View style={styles.accessibilityTagsSection}>
+          <Text style={styles.accessibilityTagsTitle}>Accessibility Features:</Text>
+          <View style={styles.accessibilityTags}>
+            {review.accessibilityTags.map(tag => (
+              <View key={tag} style={styles.accessibilityTag}>
+                <Ionicons name="checkmark-circle" size={12} color="#059669" />
+                <Text style={styles.accessibilityTagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
       <View style={styles.reviewFooter}>
         <Text style={styles.reviewDate}>
           {formatDate(review.createdAt)}
         </Text>
         {review.updatedAt !== review.createdAt && (
           <Text style={styles.editedLabel}>• Edited</Text>
+        )}
+        {review.helpfulCount && review.helpfulCount > 0 && (
+          <Text style={styles.helpfulCount}>• {review.helpfulCount} found helpful</Text>
         )}
       </View>
     </View>
@@ -390,5 +436,61 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // New styles for photo and accessibility features
+  photosSection: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  reviewPhoto: {
+    width: 80,
+    marginRight: 8,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  reviewPhotoImage: {
+    width: '100%',
+    height: 60,
+    resizeMode: 'cover',
+  },
+  reviewPhotoCaption: {
+    fontSize: 10,
+    color: '#6b7280',
+    padding: 4,
+    backgroundColor: '#f9fafb',
+  },
+  accessibilityTagsSection: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  accessibilityTagsTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 6,
+  },
+  accessibilityTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  accessibilityTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  accessibilityTagText: {
+    fontSize: 10,
+    color: '#059669',
+    marginLeft: 2,
+    fontWeight: '500',
+  },
+  helpfulCount: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontStyle: 'italic',
   },
 });
