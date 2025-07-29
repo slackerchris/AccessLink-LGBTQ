@@ -99,7 +99,7 @@ The AccessLink LGBTQ+ application has made significant strides in development qu
 
 - [x] **Component Memoization**
   - [x] Memoize `BusinessListItem` in `BusinessListScreen.tsx` to prevent re-renders ✅ DONE
-  - [ ] Memoize `ReviewItem` in `BusinessDetailsScreen.tsx`
+  - [x] Memoize `ReviewItem` in `BusinessDetailsScreen.tsx` ✅ DONE
 
 - [ ] **List Virtualization**
   - [ ] Use `FlatList` or `SectionList` for all long lists

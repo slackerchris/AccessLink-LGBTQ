@@ -3,7 +3,7 @@
  * Shows detailed information about a specific business
  */
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,11 @@ import {
   SafeAreaView,
   Image,
   Linking,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
-import { BusinessListing } from '../../services/businessService';
+import { BusinessListing, BusinessReview as Review } from '../../services/businessService';
 
 interface BusinessDetailsScreenProps {
   navigation: any;
@@ -27,6 +28,36 @@ interface BusinessDetailsScreenProps {
     };
   };
 }
+
+const ReviewItem = memo(({ item }: { item: Review }) => {
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Ionicons
+          key={i}
+          name={i <= rating ? 'star' : 'star-outline'}
+          size={16}
+          color={i <= rating ? '#fbbf24' : '#d1d5db'}
+        />
+      );
+    }
+    return stars;
+  };
+
+  return (
+    <View style={styles.reviewCard}>
+      <View style={styles.reviewHeader}>
+        <Text style={styles.reviewAuthor}>{item.userName || 'Anonymous'}</Text>
+        <View style={styles.reviewRating}>
+          {renderStars(item.rating)}
+        </View>
+      </View>
+      <Text style={styles.reviewComment}>{item.content}</Text>
+      <Text style={styles.reviewDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+    </View>
+  );
+});
 
 export default function BusinessDetailsScreen({ navigation, route }: BusinessDetailsScreenProps) {
   const { business } = route.params;
@@ -81,6 +112,8 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
     }
     navigation.navigate('CreateReview', { businessId: business.id, businessName: business.name });
   };
+
+  const renderReviewItem = ({ item }: { item: Review }) => <ReviewItem item={item} />;
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -258,6 +291,19 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
           </View>
         )}
 
+        {/* Reviews Section */}
+        <View style={styles.infoSection}>
+          <Text style={styles.sectionTitle}>Reviews</Text>
+          <FlatList
+            data={(business as any).reviews || []}
+            renderItem={renderReviewItem}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.reviewsList}
+          />
+        </View>
+
         {/* Write Review Button */}
         <TouchableOpacity style={styles.writeReviewButton} onPress={handleWriteReview}>
           <Ionicons name="create" size={20} color="#ffffff" />
@@ -420,6 +466,42 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginTop: 8,
     fontStyle: 'italic',
+  },
+  reviewsSection: {
+    paddingVertical: 15,
+  },
+  reviewsList: {
+    paddingHorizontal: 20,
+  },
+  reviewCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 15,
+    marginRight: 15,
+    width: 280,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reviewAuthor: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  reviewRating: {
+    flexDirection: 'row',
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: '#4b5563',
+    marginBottom: 8,
+  },
+  reviewDate: {
+    fontSize: 12,
+    color: '#9ca3af',
   },
   writeReviewButton: {
     flexDirection: 'row',
