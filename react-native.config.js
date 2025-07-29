@@ -1,11 +1,7 @@
 module.exports = {
   project: {
-    ios: {},
     android: {
-      sourceDir: './android',
-      appName: 'AccessLink LGBTQ',
       packageName: 'com.accesslinklgbtq.lgbtq',
     },
   },
-  assets: ['./assets/'],
 };
