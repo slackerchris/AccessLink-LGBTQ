@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { validators } from '../utils/validators';
 
 export interface UserProfile {
   uid: string;
@@ -191,29 +192,72 @@ class MockAuthService {
     this.listeners.forEach(listener => listener(this.currentAuthState));
   }
 
-  async signUp(email: string, password: string, displayName: string, additionalInfo?: Partial<UserProfile['profile']>): Promise<UserProfile> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  async signUp(email: string, password: string, displayName: string, role: string = 'user'): Promise<UserProfile> {
+    // Validate input
+    const emailValidation = validators.email(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.message);
+    }
 
-    const uid = `mock-${Date.now()}`;
-    const userProfile: UserProfile = {
-      uid,
+    const passwordValidation = validators.password(password);
+    if (!passwordValidation.isValid) {
+      throw new Error(passwordValidation.message);
+    }
+
+    const displayNameValidation = validators.displayName(displayName);
+    if (!displayNameValidation.isValid) {
+      throw new Error(displayNameValidation.message);
+    }
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Check if user already exists
+    if (mockUsers[email as keyof typeof mockUsers]) {
+      throw new Error('User already exists with this email');
+    }
+
+    const mockUser: UserProfile = {
+      uid: `mock-${Date.now()}`,
       email,
       displayName,
-      role: 'user',
-      profile: additionalInfo || {},
+      role: role as 'user' | 'business_owner' | 'admin',
+      profile: {
+        firstName: displayName.split(' ')[0] || '',
+        lastName: displayName.split(' ')[1] || '',
+        bio: '',
+        preferredPronouns: '',
+        interests: [],
+        accessibilityNeeds: [],
+        savedBusinesses: [],
+        reviews: [],
+        accessibilityPreferences: {
+          wheelchairAccess: false,
+          visualImpairment: false,
+          hearingImpairment: false,
+          cognitiveSupport: false,
+          mobilitySupport: false,
+          sensoryFriendly: false
+        },
+        lgbtqIdentity: {
+          visible: false,
+          pronouns: '',
+          identities: [],
+          preferredName: ''
+        }
+      },
       createdAt: new Date(),
       updatedAt: new Date()
     };
 
     this.currentAuthState = {
-      user: { uid, email },
-      userProfile,
+      user: { uid: mockUser.uid, email: mockUser.email },
+      userProfile: mockUser,
       loading: false
     };
 
     this.notifyListeners();
-    return userProfile;
+    return mockUser;
   }
 
   async signIn(email: string, password: string): Promise<UserProfile> {
@@ -273,6 +317,11 @@ class MockAuthService {
   }
 
   async resetPassword(email: string): Promise<void> {
+    const emailValidation = validators.email(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.message);
+    }
+
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     console.log(`Password reset email sent to ${email}`);

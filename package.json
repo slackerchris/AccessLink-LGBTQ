@@ -44,12 +44,20 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
-    "@types/jest": "^29.5.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^12.9.0",
+    "@types/jest": "^29.5.14",
     "@types/react": "~18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "babel-jest": "^30.0.5",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.0.5",
+    "react-test-renderer": "^18.3.1",
     "typescript": "^5.3.0"
   },
   "repository": {

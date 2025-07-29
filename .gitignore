@@ -1,5 +1,9 @@
 node_modules
 
+# Test coverage reports
+coverage/
+*.lcov
+
 # Prevent accidental folder creation
 **/AccessLink/
 **/AccessLink-*/
