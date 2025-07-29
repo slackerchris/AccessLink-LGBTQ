@@ -31,7 +31,7 @@ interface Review {
   updatedAt: string;
 }
 
-export default function ReviewHistoryScreen() {
+export default function ReviewHistoryScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   
@@ -218,10 +218,21 @@ export default function ReviewHistoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Review History</Text>
-        <Text style={styles.headerSubtitle}>
-          Your contributions to the community
-        </Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.headerTitle}>Review History</Text>
+            <Text style={styles.headerSubtitle}>
+              Your contributions to the community
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.writeReviewButton}
+            onPress={() => navigation.navigate('CreateReview')}
+          >
+            <Ionicons name="add-circle" size={24} color="#6366f1" />
+            <Text style={styles.writeReviewText}>Write Review</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -280,6 +291,27 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  writeReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  writeReviewText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6366f1',
+    marginLeft: 4,
   },
   headerTitle: {
     fontSize: 24,

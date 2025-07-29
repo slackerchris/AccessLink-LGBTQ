@@ -18,6 +18,7 @@ import { PortalScreen } from './components/user/PortalScreen';
 import AccessibilityPreferencesScreen from './components/user/AccessibilityPreferencesScreen';
 import LGBTQIdentityScreen from './components/user/LGBTQIdentityScreen';
 import ReviewHistoryScreen from './components/user/ReviewHistoryScreen';
+import CreateReviewScreen from './components/user/CreateReviewScreen';
 import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 
 // Business Components  
@@ -57,6 +58,7 @@ function PortalStackNavigator() {
       <PortalStack.Screen name="EditProfile" component={EditProfileScreen} />
       <PortalStack.Screen name="SavedPlaces" component={SavedPlacesScreen} />
       <PortalStack.Screen name="ReviewHistory" component={ReviewHistoryScreen} />
+      <PortalStack.Screen name="CreateReview" component={CreateReviewScreen} />
       <PortalStack.Screen name="AccessibilityPreferences" component={AccessibilityPreferencesScreen} />
       <PortalStack.Screen name="LGBTQIdentity" component={LGBTQIdentityScreen} />
     </PortalStack.Navigator>
