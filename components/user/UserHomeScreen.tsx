@@ -142,9 +142,9 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#6366f1',
-    paddingTop: 60, // Increased for safe area
-    paddingBottom: 30, // Increased spacing
-    paddingHorizontal: 24, // Better mobile margins
+    paddingTop: 60, // Safe area padding
+    paddingBottom: 30, 
+    paddingHorizontal: 24,
   },
   headerContent: {
     flexDirection: 'row',
@@ -153,19 +153,19 @@ const styles = StyleSheet.create({
   },
   greeting: {
     color: '#e0e7ff',
-    fontSize: 16, // Larger for mobile
+    fontSize: 18, // Increased for better mobile readability
   },
   userName: {
     color: '#fff',
-    fontSize: 26, // Larger for mobile
+    fontSize: 28, // Increased for better mobile impact
     fontWeight: 'bold',
-    marginTop: 4, // Increased spacing
-    lineHeight: 32,
+    marginTop: 4,
+    lineHeight: 34,
   },
   subtitle: {
     color: '#c7d2fe',
-    fontSize: 14, // Larger for mobile
-    marginTop: 4, // Increased spacing
+    fontSize: 16, // Increased for better mobile readability
+    marginTop: 4,
   },
   profileButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -177,21 +177,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchContainer: {
-    padding: 24, // Better mobile margins
+    padding: 24,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 16, // More rounded for modern feel
-    paddingHorizontal: 20, // Increased padding
-    paddingVertical: 16, // Larger touch target
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18, // Increased for better touch target
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 }, // Stronger shadow
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 5,
-    minHeight: 56, // Ensure good touch target
+    minHeight: 60, // Increased minimum height for better touch
   },
   searchIcon: {
     marginRight: 12, // Increased spacing
@@ -204,14 +204,15 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     backgroundColor: '#6366f1',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginLeft: 10,
+    paddingHorizontal: 22, // Increased for better touch
+    paddingVertical: 10, // Increased for better touch
+    borderRadius: 10, // Slightly more rounded
+    marginLeft: 12, // Increased spacing
+    minHeight: 44, // Ensure minimum touch target
   },
   searchButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16, // Increased for better readability
     fontWeight: '600',
   },
   sectionTitle: {
@@ -240,16 +241,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
+    padding: 18, // Increased padding for better touch
+    borderRadius: 16, // More rounded for modern feel
+    marginBottom: 12, // Increased spacing
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08, // Slightly stronger shadow
+    shadowRadius: 3,
+    elevation: 3,
     overflow: 'hidden',
-    minHeight: 80,
+    minHeight: 90, // Increased minimum height
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
@@ -257,21 +258,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   businessName: {
-    fontSize: 16,
+    fontSize: 18, // Increased for better readability
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 2,
+    marginBottom: 4, // Increased spacing
   },
   businessCategory: {
-    fontSize: 12,
+    fontSize: 14, // Increased for better readability
     color: '#6366f1',
     fontWeight: '600',
-    marginBottom: 5,
+    marginBottom: 6, // Increased spacing
   },
   businessDescription: {
-    fontSize: 14,
+    fontSize: 15, // Increased for better readability
     color: '#6b7280',
-    marginBottom: 8,
+    marginBottom: 10, // Increased spacing
+    lineHeight: 22, // Better line height
   },
   businessMeta: {
     flexDirection: 'row',

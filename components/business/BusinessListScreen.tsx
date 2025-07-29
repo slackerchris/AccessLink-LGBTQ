@@ -357,47 +357,49 @@ const styles = StyleSheet.create({
     backgroundColor: '#6c5ce7',
   },
   title: {
-    fontSize: 28,
+    fontSize: 30, // Increased for better mobile impact
     fontWeight: 'bold',
     color: 'white',
   },
   addButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 20, // Increased for better touch
+    paddingVertical: 12, // Increased for better touch
+    borderRadius: 22, // Slightly more rounded
+    minHeight: 44, // Ensure minimum touch target
   },
   addButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 17, // Increased for better readability
     fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
-    padding: 16,
-    paddingBottom: 8,
+    padding: 20, // Increased for better mobile spacing
+    paddingBottom: 12,
   },
   searchInput: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20, // Increased padding
+    paddingVertical: 16, // Increased for better touch target
     borderRadius: 25,
-    fontSize: 16,
+    fontSize: 17, // Increased for better mobile readability
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    minHeight: 56, // Ensure good touch target
   },
   filterButton: {
     backgroundColor: 'white',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56, // Increased for better touch target
+    height: 56, // Increased for better touch target
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
+    marginLeft: 16, // Increased spacing
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -465,28 +467,30 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   businessName: {
-    fontSize: 18,
+    fontSize: 19, // Increased for better mobile readability
     fontWeight: 'bold',
     color: '#333',
     flex: 1,
     marginRight: 8,
+    lineHeight: 24, // Better line height
   },
   categoryBadge: {
     backgroundColor: '#f0f0ff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10, // Increased padding
+    paddingVertical: 6, // Increased padding
     borderRadius: 12,
   },
   categoryText: {
-    fontSize: 12,
+    fontSize: 13, // Increased for better readability
     color: '#6c5ce7',
     textTransform: 'capitalize',
+    fontWeight: '600',
   },
   businessDescription: {
-    fontSize: 14,
+    fontSize: 15, // Increased for better mobile readability
     color: '#666',
     marginBottom: 12,
-    lineHeight: 20,
+    lineHeight: 22, // Better line height
   },
   businessInfo: {
     flexDirection: 'row',
