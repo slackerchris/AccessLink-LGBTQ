@@ -7,18 +7,17 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Firebase configuration from google-services.json
-const firebaseConfig = {
-  apiKey: "AIzaSyDQOnwLXW_PtQKtxhfxasWp2C4c7Bp2GKw",
-  authDomain: "acceinklgbtq-a1de8.firebaseapp.com",
-  projectId: "acceinklgbtq-a1de8",
-  storageBucket: "acceinklgbtq-a1de8.firebasestorage.app",
-  messagingSenderId: "580679166679",
-  appId: "1:580679166679:android:ea493c0f288e2f5cd65e92"
-};
+
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+});
 
 // Initialize Firebase Auth
 const auth = getAuth(app);
