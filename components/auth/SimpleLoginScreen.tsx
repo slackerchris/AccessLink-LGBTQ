@@ -113,7 +113,8 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
         {/* Simple test credentials note */}
         <View style={styles.credentialsInfo}>
           <Text style={styles.credentialsTitle}>Test Credentials:</Text>
-          <Text style={styles.credentialsText}>admin / accesslink1234 (Admin)</Text>
+          <Text style={styles.credentialsText}>admin@accesslinklgbtq.app / adminpassword (Admin)</Text>
+          <Text style={styles.credentialsText}>admin@AccessLinkLGBTQ.app / adminpassword (Admin)</Text>
           <Text style={styles.credentialsText}>user@example.com / password123 (User)</Text>
         </View>
       </ScrollView>

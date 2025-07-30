@@ -11,6 +11,7 @@ import {
   RefreshControl,
   FlatList
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { adminService, UserDetails, UserFilters } from '../../services/adminService';
 
 interface UserManagementScreenProps {
@@ -278,8 +279,16 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>User Management</Text>
-        <Text style={styles.headerSubtitle}>{totalCount} total users</Text>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>User Management</Text>
+          <Text style={styles.headerSubtitle}>{totalCount} total users</Text>
+        </View>
       </View>
 
       <View style={styles.searchContainer}>
@@ -323,8 +332,22 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#1e293b',
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 20,
     paddingTop: 60,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  headerContent: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,

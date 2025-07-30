@@ -43,7 +43,7 @@ const pronounOptions = [
   'prefer not to say'
 ];
 
-export default function LGBTQIdentityScreen() {
+export default function LGBTQIdentityScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
   const { updateProfile } = useAuthActions();
   const [saving, setSaving] = useState(false);
@@ -153,10 +153,18 @@ export default function LGBTQIdentityScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>LGBTQ+ Identity Settings</Text>
-        <Text style={styles.headerSubtitle}>
-          Share your identity to connect with affirming businesses and community
-        </Text>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#6366f1" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>LGBTQ+ Identity Settings</Text>
+          <Text style={styles.headerSubtitle}>
+            Share your identity to connect with affirming businesses and community
+          </Text>
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -330,10 +338,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     padding: 20,
     paddingTop: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f0f9ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 4,
+  },
+  headerContent: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,

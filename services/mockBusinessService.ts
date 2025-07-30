@@ -880,6 +880,32 @@ class MockBusinessService {
 
     return filteredEvents;
   }
+
+  // Admin methods for business management
+  async getAllBusinesses(): Promise<{ businesses: BusinessListing[], lastDoc: any }> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return {
+      businesses: [...mockBusinesses],
+      lastDoc: null
+    };
+  }
+
+  async toggleBusinessFeature(businessId: string, featured: boolean): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const business = mockBusinesses.find(b => b.id === businessId);
+    if (business) {
+      business.featured = featured;
+      business.updatedAt = new Date();
+    }
+  }
+
+  async deleteBusiness(businessId: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const businessIndex = mockBusinesses.findIndex(b => b.id === businessId);
+    if (businessIndex > -1) {
+      mockBusinesses.splice(businessIndex, 1);
+    }
+  }
 }
 
 export const businessService = new MockBusinessService();

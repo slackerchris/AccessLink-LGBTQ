@@ -58,7 +58,7 @@ const accessibilityOptions: AccessibilityPreference[] = [
   }
 ];
 
-export default function AccessibilityPreferencesScreen() {
+export default function AccessibilityPreferencesScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
   const { updateProfile } = useAuthActions();
   const [saving, setSaving] = useState(false);
@@ -147,7 +147,14 @@ export default function AccessibilityPreferencesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#6366f1" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Accessibility Preferences</Text>
+        <View style={styles.headerSpacer} />
         <Text style={styles.headerSubtitle}>
           Customize your accessibility needs to find businesses that work best for you
         </Text>
@@ -203,16 +210,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 20,
     paddingTop: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f0f9ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
   headerTitle: {
+    flex: 1,
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 4,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerSubtitle: {
     fontSize: 14,

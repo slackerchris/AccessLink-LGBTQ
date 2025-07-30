@@ -14,6 +14,7 @@ import {
   RefreshControl,
   FlatList
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth, usePermissions } from '../../hooks/useAuth';
 import { usePendingBusinesses, useBusinessActions } from '../../hooks/useBusiness';
 import { BusinessListing } from '../../services/mockBusinessService';
@@ -156,8 +157,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       }
     >
       <View style={styles.header}>
-        <Text style={styles.title}>🔧 Admin Dashboard</Text>
-        <Text style={styles.subtitle}>Welcome back, {userProfile?.displayName}</Text>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#6366f1" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>🔧 Admin Dashboard</Text>
+          <Text style={styles.subtitle}>Welcome back, {userProfile?.displayName}</Text>
+        </View>
       </View>
 
       <View style={styles.statsContainer}>
@@ -237,9 +246,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 20,
     paddingTop: 40,
     backgroundColor: '#6c5ce7',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  headerContent: {
+    flex: 1,
   },
   title: {
     fontSize: 28,

@@ -77,6 +77,18 @@ const mockUsers: Record<string, UserProfile> = {
     createdAt: new Date(),
     updatedAt: new Date(),
   },
+  'admin@AccessLinkLGBTQ.app': {
+    uid: 'mock-admin-123',
+    email: 'admin@AccessLinkLGBTQ.app',
+    displayName: 'Admin User',
+    role: 'admin' as const,
+    profile: {
+      firstName: 'Admin',
+      lastName: 'User',
+    },
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
   'admin': {
     uid: 'mock-admin-789',
     email: 'admin',
@@ -142,6 +154,7 @@ const mockUsers: Record<string, UserProfile> = {
 
 const mockPasswords: Record<string, string> = {
     'admin@accesslinklgbtq.app': 'drowssapnimda-hashed',
+    'admin@AccessLinkLGBTQ.app': 'drowssapnimda-hashed',
     'admin': 'drowssapnimda-hashed',
     'business@example.com': '321drowssap-hashed',
     'owner@pridehealth.com': '321drowssap-hashed',
@@ -270,8 +283,16 @@ class MockAuthService {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const mockUser = mockUsers[email as keyof typeof mockUsers];
-    const hashedPassword = mockPasswords[email as keyof typeof mockPasswords];
+    // Try exact match first, then try case-insensitive match for email domains
+    let mockUser = mockUsers[email as keyof typeof mockUsers];
+    let hashedPassword = mockPasswords[email as keyof typeof mockPasswords];
+    
+    // If not found, try case-insensitive match for common admin emails
+    if (!mockUser || !hashedPassword) {
+      const normalizedEmail = email.toLowerCase();
+      mockUser = mockUsers[normalizedEmail as keyof typeof mockUsers];
+      hashedPassword = mockPasswords[normalizedEmail as keyof typeof mockPasswords];
+    }
     
     // Proper error for non-existent user
     if (!mockUser || !hashedPassword) {

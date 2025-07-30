@@ -80,7 +80,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
       title: 'Total Businesses', 
       value: platformStats?.totalBusinesses.toLocaleString() || '0',
       color: '#3b82f6',
-      onPress: () => Alert.alert('Business Management', 'Feature coming soon!')
+      onPress: () => navigation.navigate('BusinessManagement')
     },
     {
       icon: 'star',
@@ -96,7 +96,10 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
       icon: 'add-circle',
       title: 'Add Business',
       subtitle: 'Manually add a new business',
-      onPress: () => Alert.alert('Add Business', 'Feature coming soon!')
+      onPress: () => {
+        // Navigate to AddBusiness screen within AdminStack
+        navigation.navigate('AddBusiness');
+      }
     },
     {
       icon: 'settings',

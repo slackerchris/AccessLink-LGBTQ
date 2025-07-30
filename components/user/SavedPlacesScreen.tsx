@@ -8,15 +8,20 @@ import {
   Alert 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 
 export function SavedPlacesScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
   const { userProfile } = useAuth();
   const { unsaveBusiness } = useAuthActions();
   const { businesses } = useBusinesses();
+
+  // Check if we can go back (i.e., we're in a stack, not a tab)
+  const canGoBack = navigation.canGoBack();
+  const showBackButton = canGoBack && route.name === 'SavedPlaces';
 
   // Get saved businesses
   const savedBusinesses = useMemo(() => {
@@ -109,10 +114,20 @@ export function SavedPlacesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Saved Places</Text>
-        <Text style={styles.headerSubtitle}>
-          {savedBusinesses.length} saved {savedBusinesses.length === 1 ? 'place' : 'places'}
-        </Text>
+        {showBackButton && (
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#6366f1" />
+          </TouchableOpacity>
+        )}
+        <View style={[styles.headerContent, !showBackButton && styles.headerContentCentered]}>
+          <Text style={styles.headerTitle}>Saved Places</Text>
+          <Text style={styles.headerSubtitle}>
+            {savedBusinesses.length} saved {savedBusinesses.length === 1 ? 'place' : 'places'}
+          </Text>
+        </View>
       </View>
       
       <FlatList
@@ -132,10 +147,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     padding: 20,
     paddingTop: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f0f9ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 4,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerContentCentered: {
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 24,

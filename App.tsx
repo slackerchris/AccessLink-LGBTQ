@@ -28,6 +28,7 @@ import { ServicesManagementScreen } from './components/business/ServicesManageme
 import { MediaGalleryScreen } from './components/business/MediaGalleryScreen';
 import { EventsManagementScreen } from './components/business/EventsManagementScreen';
 import BusinessDetailsScreen from './components/business/BusinessDetailsScreen';
+import AddBusinessScreen from './components/business/AddBusinessScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
@@ -36,6 +37,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 // Admin Components
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import UserManagementScreen from './components/admin/UserManagementScreen';
+import BusinessManagementScreen from './components/admin/BusinessManagementScreen';
 
 // Hooks
 import { useAuth, useAuthActions } from './hooks/useAuth';
@@ -65,6 +67,10 @@ function BusinessStackNavigator() {
         component={BusinessDetailsScreen}
       />
       <BusinessStack.Screen 
+        name="AddBusiness" 
+        component={AddBusinessScreen}
+      />
+      <BusinessStack.Screen 
         name="CreateReview" 
         component={CreateReviewScreen}
       />
@@ -80,8 +86,8 @@ function BusinessListWrapper({ navigation, route }: { navigation: any; route: an
     <BusinessListScreen
       initialCategory={initialCategory}
       onNavigateToAddBusiness={() => {
-        // Handle add business navigation
-        Alert.alert('Coming Soon', 'Business registration is coming soon!');
+        // Navigate to add business screen
+        navigation.navigate('AddBusiness');
       }}
       onNavigateToBusinessDetails={(business) => {
         navigation.navigate('BusinessDetails', { business });
@@ -113,6 +119,8 @@ function AdminStackNavigator() {
     <AdminStack.Navigator screenOptions={{ headerShown: false }}>
       <AdminStack.Screen name="AdminMain" component={AdminHomeScreen} />
       <AdminStack.Screen name="UserManagement" component={UserManagementScreen} />
+      <AdminStack.Screen name="BusinessManagement" component={BusinessManagementScreen} />
+      <AdminStack.Screen name="AddBusiness" component={AddBusinessScreen} />
       <AdminStack.Screen name="Admin" component={AdminDashboard} />
     </AdminStack.Navigator>
   );

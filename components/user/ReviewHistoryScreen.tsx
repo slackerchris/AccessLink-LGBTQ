@@ -219,7 +219,13 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <View>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#6366f1" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleSection}>
             <Text style={styles.headerTitle}>Review History</Text>
             <Text style={styles.headerSubtitle}>
               Your contributions to the community
@@ -296,6 +302,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f0f9ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  headerTitleSection: {
+    flex: 1,
   },
   writeReviewButton: {
     flexDirection: 'row',
