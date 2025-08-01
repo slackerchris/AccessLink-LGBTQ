@@ -71,6 +71,22 @@ This document details the comprehensive navigation system improvements implement
 
 ## 🎨 Design Standards
 
+### **Theme Integration**
+All screens should support both light and dark themes:
+```tsx
+import { useTheme } from '../../hooks/useTheme';
+
+const ScreenComponent = () => {
+  const { colors } = useTheme();
+  
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.text, { color: colors.text }]}>Content</Text>
+    </View>
+  );
+};
+```
+
 ### **Back Button Specifications**
 ```tsx
 const backButtonStyles = {
@@ -82,43 +98,56 @@ const backButtonStyles = {
   marginRight: 12,
 }
 
-// Light themes
-backgroundColor: '#f0f9ff',
-iconColor: '#6366f1',
-
-// Dark themes  
-backgroundColor: 'rgba(255,255,255,0.1)',
-iconColor: '#ffffff',
+// Theme-aware colors
+backgroundColor: colors.surface,
+iconColor: colors.text,
 ```
 
 ### **Header Layout Patterns**
 
 #### **Standard Stack Screen**
 ```tsx
-<View style={styles.header}>
-  <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-    <Ionicons name="arrow-back" size={24} color="#6366f1" />
-  </TouchableOpacity>
-  <View style={styles.headerContent}>
-    <Text style={styles.headerTitle}>Screen Title</Text>
-  </View>
-</View>
+const ScreenComponent = ({ navigation }) => {
+  const { colors } = useTheme();
+  
+  return (
+    <View style={[styles.header, { backgroundColor: colors.header }]}>
+      <TouchableOpacity 
+        style={[styles.backButton, { backgroundColor: colors.surface }]} 
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color={colors.text} />
+      </TouchableOpacity>
+      <View style={styles.headerContent}>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Screen Title</Text>
+      </View>
+    </View>
+  );
+};
 ```
 
 #### **Context-Aware Screen (SavedPlacesScreen)**
 ```tsx
-const showBackButton = navigation.canGoBack() && route.name === 'SavedPlaces';
+const ContextAwareScreen = ({ navigation, route }) => {
+  const { colors } = useTheme();
+  const showBackButton = navigation.canGoBack() && route.name === 'SavedPlaces';
 
-<View style={styles.header}>
-  {showBackButton && (
-    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-      <Ionicons name="arrow-back" size={24} color="#6366f1" />
-    </TouchableOpacity>
-  )}
-  <View style={[styles.headerContent, !showBackButton && styles.headerContentCentered]}>
-    <Text style={styles.headerTitle}>Screen Title</Text>
-  </View>
-</View>
+  return (
+    <View style={[styles.header, { backgroundColor: colors.header }]}>
+      {showBackButton && (
+        <TouchableOpacity 
+          style={[styles.backButton, { backgroundColor: colors.surface }]} 
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+      )}
+      <View style={[styles.headerContent, !showBackButton && styles.headerContentCentered]}>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Screen Title</Text>
+      </View>
+    </View>
+  );
+};
 ```
 
 ## 🧪 Testing Guide

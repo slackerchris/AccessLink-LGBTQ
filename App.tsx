@@ -41,6 +41,7 @@ import BusinessManagementScreen from './components/admin/BusinessManagementScree
 
 // Hooks
 import { useAuth, useAuthActions } from './hooks/useAuth';
+import { ThemeProvider } from './hooks/useTheme';
 
 // Profile Stack Navigator
 const ProfileStack = createStackNavigator();
@@ -486,7 +487,9 @@ function AppContent() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

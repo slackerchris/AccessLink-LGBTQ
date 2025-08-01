@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
+import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing } from '../../services/mockBusinessService';
 
 interface UserHomeScreenProps {
@@ -27,6 +28,7 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
   const { userProfile } = useAuth();
   const { businesses } = useBusinesses({}, 6); // Get first 6 businesses
   const [searchQuery, setSearchQuery] = useState('');
+  const { colors } = useTheme();
 
   // Debug business data
   console.log('Businesses data:', businesses.map((b, i) => ({ index: i, name: b.name, id: b.id })));
@@ -43,36 +45,37 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
 
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.header }]}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.userName}>{firstName}! 🏳️‍🌈</Text>
-            <Text style={styles.subtitle}>Find your community</Text>
+            <Text style={[styles.greeting, { color: colors.headerText + 'CC' }]}>Welcome back,</Text>
+            <Text style={[styles.userName, { color: colors.headerText }]}>{firstName}! 🏳️‍🌈</Text>
+            <Text style={[styles.subtitle, { color: colors.headerText + 'CC' }]}>Find your community</Text>
           </View>
         </View>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Text style={styles.sectionTitle}>Find LGBTQ+ Friendly Businesses</Text>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#6b7280" style={styles.searchIcon} />
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Find LGBTQ+ Friendly Businesses</Text>
+        <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search for restaurants, cafes, services..."
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
           />
           <TouchableOpacity 
-            style={styles.searchButton}
+            style={[styles.searchButton, { backgroundColor: colors.primary }]}
             activeOpacity={0.7}
             onPress={(e) => {
               e.stopPropagation();
@@ -87,7 +90,7 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
       {/* Featured Businesses */}
       <View style={styles.featuredContainer}>
         <View style={styles.featuredHeader}>
-          <Text style={styles.sectionTitle}>Featured Businesses</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Featured Businesses</Text>
           <TouchableOpacity 
             activeOpacity={0.7}
             onPress={(e) => {
@@ -95,14 +98,14 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
               navigation.navigate('Directory');
             }}
           >
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={[styles.seeAllText, { color: colors.primary }]}>See All</Text>
           </TouchableOpacity>
         </View>
         
         {businesses.slice(0, 3).map((business, index) => (
           <TouchableOpacity
             key={`business-${business.id || index}`}
-            style={styles.businessCard}
+            style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             activeOpacity={0.7}
             onPress={(e) => {
               e.stopPropagation();
@@ -114,20 +117,20 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
             }}
           >
             <View style={styles.businessInfo}>
-              <Text style={styles.businessName}>{business.name}</Text>
-              <Text style={styles.businessCategory}>{business.category}</Text>
-              <Text style={styles.businessDescription} numberOfLines={2}>
+              <Text style={[styles.businessName, { color: colors.text }]}>{business.name}</Text>
+              <Text style={[styles.businessCategory, { color: colors.primary }]}>{business.category}</Text>
+              <Text style={[styles.businessDescription, { color: colors.textSecondary }]} numberOfLines={2}>
                 {business.description}
               </Text>
               <View style={styles.businessMeta}>
                 <View style={styles.rating}>
                   <Ionicons name="star" size={16} color="#fbbf24" />
-                  <Text style={styles.ratingText}>{business.averageRating.toFixed(1)}</Text>
+                  <Text style={[styles.ratingText, { color: colors.textSecondary }]}>{business.averageRating.toFixed(1)}</Text>
                 </View>
-                <Text style={styles.location}>{business.location.address}</Text>
+                <Text style={[styles.location, { color: colors.textSecondary }]}>{business.location.address}</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         ))}
       </View>
@@ -138,10 +141,8 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#6366f1',
     paddingTop: 60, // Safe area padding
     paddingBottom: 30, 
     paddingHorizontal: 24,
@@ -152,18 +153,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   greeting: {
-    color: '#e0e7ff',
     fontSize: 18, // Increased for better mobile readability
   },
   userName: {
-    color: '#fff',
     fontSize: 28, // Increased for better mobile impact
     fontWeight: 'bold',
     marginTop: 4,
     lineHeight: 34,
   },
   subtitle: {
-    color: '#c7d2fe',
     fontSize: 16, // Increased for better mobile readability
     marginTop: 4,
   },
@@ -182,7 +180,6 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 18, // Increased for better touch target
@@ -192,6 +189,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
     minHeight: 60, // Increased minimum height for better touch
+    borderWidth: 1,
   },
   searchIcon: {
     marginRight: 12, // Increased spacing
@@ -199,11 +197,9 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1f2937',
     paddingVertical: 0,
   },
   searchButton: {
-    backgroundColor: '#6366f1',
     paddingHorizontal: 22, // Increased for better touch
     paddingVertical: 10, // Increased for better touch
     borderRadius: 10, // Slightly more rounded
@@ -218,7 +214,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 15,
   },
   featuredContainer: {
@@ -233,12 +228,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   seeAllText: {
-    color: '#6366f1',
     fontSize: 16,
     fontWeight: '600',
   },
   businessCard: {
-    backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 18, // Increased padding for better touch
@@ -252,7 +245,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     minHeight: 90, // Increased minimum height
     borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   businessInfo: {
     flex: 1,
@@ -260,18 +252,15 @@ const styles = StyleSheet.create({
   businessName: {
     fontSize: 18, // Increased for better readability
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 4, // Increased spacing
   },
   businessCategory: {
     fontSize: 14, // Increased for better readability
-    color: '#6366f1',
     fontWeight: '600',
     marginBottom: 6, // Increased spacing
   },
   businessDescription: {
     fontSize: 15, // Increased for better readability
-    color: '#6b7280',
     marginBottom: 10, // Increased spacing
     lineHeight: 22, // Better line height
   },
@@ -286,12 +275,10 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 14,
-    color: '#1f2937',
     marginLeft: 4,
   },
   location: {
     fontSize: 12,
-    color: '#6b7280',
   },
   userBanner: {
     backgroundColor: '#8b5cf6',

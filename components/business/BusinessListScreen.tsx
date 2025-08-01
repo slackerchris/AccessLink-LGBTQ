@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useBusinesses, useBusinessActions } from '../../hooks/useBusiness';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
 
 interface BusinessListScreenProps {
@@ -126,6 +127,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
 }) => {
   const { userProfile } = useAuth();
   const { saveBusiness, unsaveBusiness } = useAuthActions();
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | 'all'>(initialCategory || 'all');
   const [showFilters, setShowFilters] = useState(false);

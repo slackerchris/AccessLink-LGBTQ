@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
+import { useTheme } from '../../hooks/useTheme';
 
 export function SavedPlacesScreen() {
   const navigation = useNavigation();
@@ -18,6 +19,7 @@ export function SavedPlacesScreen() {
   const { userProfile } = useAuth();
   const { unsaveBusiness } = useAuthActions();
   const { businesses } = useBusinesses();
+  const { colors } = useTheme();
 
   // Check if we can go back (i.e., we're in a stack, not a tab)
   const canGoBack = navigation.canGoBack();
@@ -94,15 +96,15 @@ export function SavedPlacesScreen() {
 
   if (savedBusinesses.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.emptyState}>
-          <Ionicons name="bookmark-outline" size={80} color="#9ca3af" />
-          <Text style={styles.emptyTitle}>No Saved Places Yet</Text>
-          <Text style={styles.emptySubtitle}>
+          <Ionicons name="bookmark-outline" size={80} color={colors.textSecondary} />
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Saved Places Yet</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
             Start exploring LGBTQ+ friendly businesses and save your favorites here
           </Text>
           
-          <TouchableOpacity style={styles.exploreButton} onPress={handleGoToDirectory}>
+          <TouchableOpacity style={[styles.exploreButton, { backgroundColor: colors.primary }]} onPress={handleGoToDirectory}>
             <Ionicons name="compass-outline" size={20} color="#fff" />
             <Text style={styles.exploreButtonText}>Explore Directory</Text>
           </TouchableOpacity>
@@ -112,19 +114,19 @@ export function SavedPlacesScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.header }]}>
         {showBackButton && (
           <TouchableOpacity 
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.surface }]}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#6366f1" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         )}
         <View style={[styles.headerContent, !showBackButton && styles.headerContentCentered]}>
-          <Text style={styles.headerTitle}>Saved Places</Text>
-          <Text style={styles.headerSubtitle}>
+          <Text style={[styles.headerTitle, { color: colors.headerText }]}>Saved Places</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}>
             {savedBusinesses.length} saved {savedBusinesses.length === 1 ? 'place' : 'places'}
           </Text>
         </View>

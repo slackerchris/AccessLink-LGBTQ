@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+- 🌓 **Complete Light/Dark Theme System**: Full app-wide theme support with persistent storage
+  - **Theme Toggle**: Simple switch in Portal screen for instant theme switching
+  - **Universal Coverage**: Updated all major screens to support both light and dark themes
+  - **Screens Updated**: UserHomeScreen, SavedPlacesScreen, EventsScreen, PortalScreen
+  - **Smart Colors**: Adaptive color schemes that maintain accessibility and readability
+  - **Persistent Storage**: Theme preference automatically saved using AsyncStorage
+  - **Navigation Integration**: Updated navigation system documentation for theme support
+
+### Improved
+- **Design System**: Enhanced component styling patterns for theme consistency
+- **User Experience**: Better visual hierarchy in both light and dark modes
+- **Accessibility**: Proper contrast ratios maintained across all themes
+
 ### Planned
 - Real-time notifications system
 - Advanced business search filters

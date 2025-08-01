@@ -10,11 +10,18 @@ A React Native mobile application that helps LGBTQ+ individuals discover, review
 - **🏢 Business Directory** - Comprehensive listings of LGBTQ+ friendly businesses
 - **⭐ Review System** - Community-driven ratings and reviews
 - **👑 Admin Dashboard** - Business approval and management workflow
+- **🌓 Light/Dark Themes** - Complete theme system with persistent storage
 - **🧭 Universal Navigation** - Complete back navigation system across all screens
 - **📱 Mobile First** - Native mobile experience with proper touch targets
 - **🌐 Cross Platform** - iOS, Android, and Web support
 
 ## ✨ Latest Updates (July 29, 2025)
+
+**🌓 Complete Theme System Implementation**
+- ✅ App-wide light and dark theme support  
+- ✅ Persistent theme storage with AsyncStorage
+- ✅ Simple toggle switch in Portal screen
+- ✅ Smart color schemes maintaining accessibility
 
 **🧭 Complete Navigation System Overhaul**
 - ✅ Universal back navigation on all stack screens

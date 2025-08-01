@@ -13,12 +13,14 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../hooks/useTheme';
 
 interface EventsScreenProps {
   navigation: any;
 }
 
 export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
+  const { colors } = useTheme();
   const events = [
     {
       id: 1,
@@ -50,10 +52,10 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Community Events</Text>
-        <Text style={styles.headerSubtitle}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.header }]}>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Community Events</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}>
           Connect with your community at these upcoming events
         </Text>
       </View>
@@ -62,29 +64,29 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
         {events.map((event) => (
           <TouchableOpacity
             key={event.id}
-            style={styles.eventCard}
+            style={[styles.eventCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => Alert.alert(event.title, `${event.date} at ${event.time}\n${event.location}`)}
           >
             <View style={[styles.eventCategory, { backgroundColor: event.color }]}>
               <Text style={styles.eventCategoryText}>{event.category}</Text>
             </View>
             
-            <Text style={styles.eventTitle}>{event.title}</Text>
+            <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
             
             <View style={styles.eventDetails}>
               <View style={styles.eventDetail}>
-                <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                <Text style={styles.eventDetailText}>{event.date}</Text>
+                <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.date}</Text>
               </View>
               
               <View style={styles.eventDetail}>
-                <Ionicons name="time-outline" size={16} color="#6b7280" />
-                <Text style={styles.eventDetailText}>{event.time}</Text>
+                <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.time}</Text>
               </View>
               
               <View style={styles.eventDetail}>
-                <Ionicons name="location-outline" size={16} color="#6b7280" />
-                <Text style={styles.eventDetailText}>{event.location}</Text>
+                <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.location}</Text>
               </View>
             </View>
           </TouchableOpacity>
