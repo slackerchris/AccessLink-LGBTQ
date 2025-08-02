@@ -50,48 +50,50 @@ const BusinessListItem = memo(({
   isSaved,
   onToggleSaved,
   onNavigateToDetails,
+  colors,
 }: {
   item: BusinessListing;
   isSaved: boolean;
   onToggleSaved: (id: string) => void;
   onNavigateToDetails: (item: BusinessListing) => void;
+  colors: any;
 }) => {
   return (
     <TouchableOpacity
-      style={styles.businessCard}
+      style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={() => onNavigateToDetails(item)}
     >
       <View style={styles.businessHeader}>
         <View style={styles.businessTitleSection}>
-          <Text style={styles.businessName}>{item.name}</Text>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{item.category}</Text>
+          <Text style={[styles.businessName, { color: colors.text }]}>{item.name}</Text>
+          <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '20' }]}>
+            <Text style={[styles.categoryText, { color: colors.primary }]}>{item.category}</Text>
           </View>
         </View>
         <TouchableOpacity
-          style={styles.bookmarkButton}
+          style={[styles.bookmarkButton, { backgroundColor: colors.surface }]}
           onPress={() => onToggleSaved(item.id)}
         >
           <Ionicons
             name={isSaved ? 'bookmark' : 'bookmark-outline'}
             size={24}
-            color={isSaved ? '#6366f1' : '#9ca3af'}
+            color={isSaved ? colors.primary : colors.textSecondary}
           />
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.businessDescription} numberOfLines={2}>
+      <Text style={[styles.businessDescription, { color: colors.textSecondary }]} numberOfLines={2}>
         {item.description}
       </Text>
 
       <View style={styles.businessInfo}>
-        <Text style={styles.locationText}>
+        <Text style={[styles.locationText, { color: colors.textSecondary }]}>
           📍 {item.location.city}, {item.location.state}
         </Text>
         
         {item.averageRating > 0 && (
           <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>
+            <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
               {renderRating(item.averageRating)} ({item.reviewCount || 0})
             </Text>
           </View>
@@ -101,19 +103,19 @@ const BusinessListItem = memo(({
       {item.tags && item.tags.length > 0 && (
         <View style={styles.tagsContainer}>
           {item.tags.slice(0, 3).map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
+            <View key={index} style={[styles.tag, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.tagText, { color: colors.textSecondary }]}>{tag}</Text>
             </View>
           ))}
           {item.tags.length > 3 && (
-            <Text style={styles.moreTagsText}>+{item.tags.length - 3} more</Text>
+            <Text style={[styles.moreTagsText, { color: colors.textSecondary }]}>+{item.tags.length - 3} more</Text>
           )}
         </View>
       )}
 
       {item.featured && (
-        <View style={styles.featuredBadge}>
-          <Text style={styles.featuredText}>⭐ Featured</Text>
+        <View style={[styles.featuredBadge, { backgroundColor: colors.primary + '20' }]}>
+          <Text style={[styles.featuredText, { color: colors.primary }]}>⭐ Featured</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -226,6 +228,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
         isSaved={isBusinessSaved(item.id)}
         onToggleSaved={handleToggleSaved}
         onNavigateToDetails={onNavigateToBusinessDetails}
+        colors={colors}
       />
     );
   };
@@ -234,14 +237,16 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
     <TouchableOpacity
       style={[
         styles.categoryButton,
-        selectedCategory === item.key && styles.categoryButtonActive
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        selectedCategory === item.key && { backgroundColor: colors.primary, borderColor: colors.primary }
       ]}
       onPress={() => handleCategoryFilter(item.key)}
     >
       <Text style={styles.categoryIcon}>{item.icon}</Text>
       <Text style={[
         styles.categoryLabel,
-        selectedCategory === item.key && styles.categoryLabelActive
+        { color: colors.text },
+        selectedCategory === item.key && { color: '#ffffff' }
       ]}>
         {item.label}
       </Text>
@@ -251,10 +256,10 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>🔍</Text>
-      <Text style={styles.emptyTitle}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
         {searchQuery ? 'No businesses found' : 'No businesses yet'}
       </Text>
-      <Text style={styles.emptyText}>
+      <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
         {searchQuery 
           ? `Try adjusting your search or filters`
           : 'Be the first to add a business to our community'
@@ -262,7 +267,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
       </Text>
       {!searchQuery && (
         <TouchableOpacity
-          style={styles.addFirstButton}
+          style={[styles.addFirstButton, { backgroundColor: colors.primary }]}
           onPress={onNavigateToAddBusiness}
         >
           <Text style={styles.addFirstButtonText}>+ Add First Business</Text>
@@ -272,12 +277,12 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>🏢 Businesses</Text>
+      <View style={[styles.header, { backgroundColor: colors.header }]}>
+        <Text style={[styles.title, { color: colors.headerText }]}>🏢 Businesses</Text>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={onNavigateToAddBusiness}
         >
           <Text style={styles.addButtonText}>+ Add</Text>
@@ -287,21 +292,18 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
           placeholder="Search businesses..."
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
-          onChangeText={(text) => {
-            setSearchQuery(text);
-            handleSearch(text);
-          }}
-          returnKeyType="search"
-          onSubmitEditing={() => handleSearch(searchQuery)}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={() => search(searchQuery)}
         />
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setShowFilters(true)}
+        <TouchableOpacity 
+          style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => setShowFilters(!showFilters)}
         >
-          <Text style={styles.filterIcon}>🔧</Text>
+          <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>Filter</Text>
         </TouchableOpacity>
       </View>
 
@@ -342,14 +344,14 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
         presentationStyle="pageSheet"
         onRequestClose={() => setShowFilters(false)}
       >
-        <View style={styles.filterModal}>
-          <View style={styles.filterHeader}>
-            <Text style={styles.filterTitle}>Filter by Category</Text>
+        <View style={[styles.filterModal, { backgroundColor: colors.background }]}>
+          <View style={[styles.filterHeader, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.filterTitle, { color: colors.text }]}>Filter by Category</Text>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={[styles.closeButton, { backgroundColor: colors.surface }]}
               onPress={() => setShowFilters(false)}
             >
-              <Text style={styles.closeButtonText}>✕</Text>
+              <Text style={[styles.closeButtonText, { color: colors.text }]}>✕</Text>
             </TouchableOpacity>
           </View>
           
@@ -374,7 +376,6 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     flexDirection: 'row',
@@ -382,7 +383,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     paddingTop: 40,
-    backgroundColor: '#6c5ce7',
   },
   title: {
     fontSize: 30, // Increased for better mobile impact

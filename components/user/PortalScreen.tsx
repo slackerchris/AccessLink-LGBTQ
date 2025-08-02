@@ -104,6 +104,9 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={() => navigation.navigate('EditProfile')}
+            accessibilityRole="button"
+            accessibilityLabel="Edit Profile"
+            accessibilityHint="Opens screen to edit your personal profile information"
           >
             <View style={dynamicStyles.portalIconContainer}>
               <Ionicons name="person" size={28} color="#8b5cf6" />
@@ -115,6 +118,9 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={() => navigation.navigate('SavedPlaces')}
+            accessibilityRole="button"
+            accessibilityLabel="Saved Places"
+            accessibilityHint="View and manage your saved businesses"
           >
             <View style={dynamicStyles.portalIconContainer}>
               <Ionicons name="bookmark" size={28} color="#6366f1" />
@@ -128,6 +134,9 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={() => navigation.navigate('ReviewHistory')}
+            accessibilityRole="button"
+            accessibilityLabel="My Reviews"
+            accessibilityHint="View and manage your business reviews"
           >
             <View style={dynamicStyles.portalIconContainer}>
               <Ionicons name="star" size={28} color="#f59e0b" />
@@ -141,6 +150,9 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={() => navigation.navigate('AccessibilityPreferences')}
+            accessibilityRole="button"
+            accessibilityLabel="Accessibility Settings"
+            accessibilityHint="Configure your accessibility preferences and needs"
           >
             <View style={dynamicStyles.portalIconContainer}>
               <Ionicons name="accessibility" size={28} color="#10b981" />
@@ -152,6 +164,9 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={() => navigation.navigate('LGBTQIdentity')}
+            accessibilityRole="button"
+            accessibilityLabel="Identity Settings"
+            accessibilityHint="Manage your LGBTQ+ identity and visibility preferences"
           >
             <View style={dynamicStyles.portalIconContainer}>
               <Ionicons name="heart" size={28} color="#ec4899" />
@@ -176,6 +191,9 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
                 onValueChange={toggleTheme}
                 trackColor={{ false: '#e5e7eb', true: colors.primary }}
                 thumbColor={theme === 'dark' ? '#ffffff' : '#ffffff'}
+                accessibilityRole="switch"
+                accessibilityLabel="Theme toggle"
+                accessibilityHint={`Currently in ${theme} mode. Toggle to switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               />
             </View>
           </View>
@@ -183,6 +201,9 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={handleSignOut}
+            accessibilityRole="button"
+            accessibilityLabel="Sign Out"
+            accessibilityHint="Sign out of your account"
           >
             <View style={dynamicStyles.portalIconContainer}>
               <Ionicons name="log-out" size={28} color="#ef4444" />
@@ -253,7 +274,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     width: '48%',
+    minHeight: 120, // Ensure adequate touch target height
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -274,9 +297,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 6,
     textAlign: 'center',
+    lineHeight: 20, // Better line height for readability
   },
   portalCardSubtitle: {
-    fontSize: 13,
+    fontSize: 14, // Increased from 13px for better readability
     textAlign: 'center',
     lineHeight: 18,
   },

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 
 interface Review {
   id: string;
@@ -33,6 +34,7 @@ interface Review {
 
 export default function ReviewHistoryScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
+  const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   
   const reviews = userProfile?.profile?.reviews || [];
@@ -107,13 +109,13 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
   };
 
   const renderReviewItem = (review: Review, index: number) => (
-    <View key={review.id} style={styles.reviewCard}>
+    <View key={review.id} style={[styles.reviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.reviewHeader}>
         <View style={styles.businessInfo}>
-          <Text style={styles.businessName}>{getBusinessName(review.businessId)}</Text>
+          <Text style={[styles.businessName, { color: colors.text }]}>{getBusinessName(review.businessId)}</Text>
           <View style={styles.ratingContainer}>
             {renderStars(review.rating)}
-            <Text style={styles.ratingText}>({review.rating}/5)</Text>
+            <Text style={[styles.ratingText, { color: colors.textSecondary }]}>({review.rating}/5)</Text>
           </View>
         </View>
         <TouchableOpacity
@@ -130,11 +132,11 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
             );
           }}
         >
-          <Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
+          <Ionicons name="ellipsis-vertical" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.reviewComment}>{review.comment}</Text>
+      <Text style={[styles.reviewComment, { color: colors.text }]}>{review.comment}</Text>
 
       {/* Photos Section */}
       {review.photos && review.photos.length > 0 && (
@@ -144,7 +146,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
               <View key={photo.id} style={styles.reviewPhoto}>
                 <Image source={{ uri: photo.uri }} style={styles.reviewPhotoImage} />
                 {photo.caption && (
-                  <Text style={styles.reviewPhotoCaption} numberOfLines={2}>
+                  <Text style={[styles.reviewPhotoCaption, { color: colors.textSecondary, backgroundColor: colors.surface }]} numberOfLines={2}>
                     {photo.caption}
                   </Text>
                 )}
@@ -157,7 +159,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
       {/* Accessibility Tags */}
       {review.accessibilityTags && review.accessibilityTags.length > 0 && (
         <View style={styles.accessibilityTagsSection}>
-          <Text style={styles.accessibilityTagsTitle}>Accessibility Features:</Text>
+          <Text style={[styles.accessibilityTagsTitle, { color: colors.text }]}>Accessibility Features:</Text>
           <View style={styles.accessibilityTags}>
             {review.accessibilityTags.map(tag => (
               <View key={tag} style={styles.accessibilityTag}>
@@ -170,14 +172,14 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
       )}
 
       <View style={styles.reviewFooter}>
-        <Text style={styles.reviewDate}>
+        <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>
           {formatDate(review.createdAt)}
         </Text>
         {review.updatedAt !== review.createdAt && (
-          <Text style={styles.editedLabel}>• Edited</Text>
+          <Text style={[styles.editedLabel, { color: colors.textSecondary }]}>• Edited</Text>
         )}
         {review.helpfulCount && review.helpfulCount > 0 && (
-          <Text style={styles.helpfulCount}>• {review.helpfulCount} found helpful</Text>
+          <Text style={[styles.helpfulCount, { color: colors.textSecondary }]}>• {review.helpfulCount} found helpful</Text>
         )}
       </View>
     </View>
@@ -185,12 +187,12 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="star-outline" size={80} color="#d1d5db" />
-      <Text style={styles.emptyTitle}>No Reviews Yet</Text>
-      <Text style={styles.emptySubtitle}>
+      <Ionicons name="star-outline" size={80} color={colors.textSecondary} />
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Reviews Yet</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         Start exploring businesses and share your experiences with the community!
       </Text>
-      <TouchableOpacity style={styles.exploreButton}>
+      <TouchableOpacity style={[styles.exploreButton, { backgroundColor: colors.primary }]}>
         <Text style={styles.exploreButtonText}>Explore Businesses</Text>
         <Ionicons name="arrow-forward" size={16} color="#fff" />
       </TouchableOpacity>
@@ -216,28 +218,21 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
   const stats = getReviewStats();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity 
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.surface }]}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#6366f1" />
+            <Ionicons name="arrow-back" size={24} color={colors.headerText} />
           </TouchableOpacity>
           <View style={styles.headerTitleSection}>
-            <Text style={styles.headerTitle}>Review History</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: colors.headerText }]}>Review History</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.headerText }]}>
               Your contributions to the community
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.writeReviewButton}
-            onPress={() => navigation.navigate('CreateReview')}
-          >
-            <Ionicons name="add-circle" size={24} color="#6366f1" />
-            <Text style={styles.writeReviewText}>Write Review</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -249,26 +244,26 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
         }
       >
         {stats && (
-          <View style={styles.statsCard}>
+          <View style={[styles.statsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.statsHeader}>
-              <Text style={styles.statsTitle}>Your Impact</Text>
-              <Ionicons name="bar-chart" size={20} color="#6366f1" />
+              <Text style={[styles.statsTitle, { color: colors.text }]}>Your Impact</Text>
+              <Ionicons name="bar-chart" size={20} color={colors.primary} />
             </View>
             
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{stats.totalReviews}</Text>
-                <Text style={styles.statLabel}>Reviews</Text>
+                <Text style={[styles.statNumber, { color: colors.primary }]}>{stats.totalReviews}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Reviews</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{stats.averageRating}</Text>
-                <Text style={styles.statLabel}>Avg Rating</Text>
+                <Text style={[styles.statNumber, { color: colors.primary }]}>{stats.averageRating}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg Rating</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
+                <Text style={[styles.statNumber, { color: colors.primary }]}>
                   {reviews.filter(r => new Date(r.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
                 </Text>
-                <Text style={styles.statLabel}>This Month</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>This Month</Text>
               </View>
             </View>
           </View>
@@ -276,7 +271,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
 
         {sortedReviews.length > 0 ? (
           <View style={styles.reviewsList}>
-            <Text style={styles.sectionTitle}>All Reviews ({sortedReviews.length})</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>All Reviews ({sortedReviews.length})</Text>
             {sortedReviews.map((review, index) => renderReviewItem(review, index))}
           </View>
         ) : (
@@ -290,13 +285,11 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     padding: 20,
     paddingTop: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   headerContent: {
     flexDirection: 'row',
@@ -307,7 +300,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f9ff',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -315,43 +307,23 @@ const styles = StyleSheet.create({
   headerTitleSection: {
     flex: 1,
   },
-  writeReviewButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  writeReviewText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6366f1',
-    marginLeft: 4,
-  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
   },
   content: {
     flex: 1,
     padding: 20,
   },
   statsCard: {
-    backgroundColor: '#f8fafc',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
   statsHeader: {
     flexDirection: 'row',
@@ -362,7 +334,6 @@ const styles = StyleSheet.create({
   statsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
   },
   statsRow: {
     flexDirection: 'row',
@@ -374,25 +345,21 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#6366f1',
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6b7280',
     fontWeight: '500',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
     marginBottom: 16,
   },
   reviewsList: {
     flex: 1,
   },
   reviewCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -402,7 +369,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f3f4f6',
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -416,7 +382,6 @@ const styles = StyleSheet.create({
   businessName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
     marginBottom: 4,
   },
   ratingContainer: {
@@ -425,7 +390,6 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 12,
-    color: '#6b7280',
     marginLeft: 6,
   },
   menuButton: {
@@ -433,7 +397,6 @@ const styles = StyleSheet.create({
   },
   reviewComment: {
     fontSize: 14,
-    color: '#374151',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -443,11 +406,9 @@ const styles = StyleSheet.create({
   },
   reviewDate: {
     fontSize: 12,
-    color: '#6b7280',
   },
   editedLabel: {
     fontSize: 12,
-    color: '#6b7280',
     marginLeft: 4,
     fontStyle: 'italic',
   },
@@ -461,19 +422,16 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#374151',
     marginTop: 20,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#6b7280',
     marginTop: 10,
     textAlign: 'center',
     lineHeight: 24,
   },
   exploreButton: {
-    backgroundColor: '#6366f1',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
@@ -505,9 +463,7 @@ const styles = StyleSheet.create({
   },
   reviewPhotoCaption: {
     fontSize: 10,
-    color: '#6b7280',
     padding: 4,
-    backgroundColor: '#f9fafb',
   },
   accessibilityTagsSection: {
     marginTop: 12,
@@ -516,7 +472,6 @@ const styles = StyleSheet.create({
   accessibilityTagsTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 6,
   },
   accessibilityTags: {
@@ -540,7 +495,6 @@ const styles = StyleSheet.create({
   },
   helpfulCount: {
     fontSize: 12,
-    color: '#6b7280',
     fontStyle: 'italic',
   },
 });

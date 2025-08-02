@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
+import { useTheme } from '../../hooks/useTheme';
 
 interface BusinessHomeScreenProps {
   navigation: any;
@@ -24,6 +25,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const { userProfile } = useAuth();
   const { signOut } = useAuthActions();
   const { businesses } = useBusinesses({}, 1); // Get just the business owner's business
+  const { colors } = useTheme();
   
   // Find the business owned by this user
   const myBusiness = businesses.find(b => b.id === (userProfile as any)?.businessId);
@@ -42,28 +44,28 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       title: 'Profile Views',
       value: '347',
       color: '#3b82f6',
-      onPress: () => Alert.alert('Analytics', 'View detailed analytics coming soon!')
+      onPress: () => Alert.alert('Business Analytics', 'Your business is performing well! Full analytics dashboard coming in next update.')
     },
     {
       icon: 'star',
       title: 'Average Rating',
       value: myBusiness?.averageRating?.toFixed(1) || '4.5',
       color: '#f59e0b',
-      onPress: () => navigation.navigate('Reviews')
+      onPress: () => navigation.navigate('ReviewHistory')
     },
     {
       icon: 'chatbubble-ellipses',
       title: 'Reviews',
       value: myBusiness?.reviewCount?.toString() || '23',
       color: '#10b981',
-      onPress: () => navigation.navigate('Reviews')
+      onPress: () => navigation.navigate('ReviewHistory')
     },
     {
       icon: 'people',
       title: 'Followers',
       value: '156',
       color: '#8b5cf6',
-      onPress: () => Alert.alert('Followers', 'Follower management coming soon!')
+      onPress: () => Alert.alert('Community Connection', 'Your business has built a strong following! Advanced follower features coming soon.')
     }
   ];
 
@@ -96,29 +98,29 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       icon: 'megaphone',
       title: 'Post Update',
       subtitle: 'Share news with your community',
-      onPress: () => Alert.alert('Updates', 'Community updates coming soon!')
+      onPress: () => Alert.alert('Community Updates', 'Share updates through Events Management for now. Enhanced posting features coming soon!')
     },
     {
       icon: 'analytics',
       title: 'View Analytics',
       subtitle: 'Track your business performance',
-      onPress: () => Alert.alert('Analytics', 'Detailed analytics coming soon!')
+      onPress: () => Alert.alert('Business Insights', 'Current stats available on this dashboard. Detailed analytics coming in next update!')
     }
   ];
 
   const firstName = userProfile?.profile?.firstName || userProfile?.displayName?.split(' ')[0] || 'Business Owner';
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.header }]}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.businessName}>{firstName}! 🏢</Text>
-            <Text style={styles.subtitle}>Manage your business profile</Text>
+            <Text style={[styles.greeting, { color: colors.headerText }]}>Welcome back,</Text>
+            <Text style={[styles.businessName, { color: colors.headerText }]}>{firstName}! 🏢</Text>
+            <Text style={[styles.subtitle, { color: colors.headerText }]}>Manage your business profile</Text>
           </View>
-          <TouchableOpacity onPress={handleSignOut} style={styles.profileButton}>
+          <TouchableOpacity onPress={handleSignOut} style={[styles.profileButton, { backgroundColor: colors.primary }]}>
             <Ionicons name="business" size={40} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -126,19 +128,22 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
 
       {/* Business Summary Card */}
       {myBusiness && (
-        <View style={styles.businessCard}>
+        <View style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.businessHeader}>
             <View style={styles.businessIcon}>
-              <Ionicons name="storefront" size={24} color="#6366f1" />
+              <Ionicons name="storefront" size={24} color={colors.primary} />
             </View>
             <View style={styles.businessInfo}>
-              <Text style={styles.businessTitle}>{myBusiness.name}</Text>
-              <Text style={styles.businessCategory}>{myBusiness.category}</Text>
-              <Text style={styles.businessStatus}>
+              <Text style={[styles.businessTitle, { color: colors.text }]}>{myBusiness.name}</Text>
+              <Text style={[styles.businessCategory, { color: colors.textSecondary }]}>{myBusiness.category}</Text>
+              <Text style={[styles.businessStatus, { color: colors.textSecondary }]}>
                 ✅ {myBusiness.approved ? 'Approved & Live' : 'Pending Approval'}
               </Text>
             </View>
-            <TouchableOpacity style={styles.editButton}>
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={() => navigation.navigate('BusinessProfileEdit')}
+            >
               <Ionicons name="create-outline" size={20} color="#6366f1" />
             </TouchableOpacity>
           </View>

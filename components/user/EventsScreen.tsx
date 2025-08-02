@@ -38,7 +38,7 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
       time: '7:00 PM',
       location: 'Downtown Convention Center',
       category: 'Networking',
-      color: '#6366f1'
+      color: colors.primary
     },
     {
       id: 3,
@@ -93,9 +93,9 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
         ))}
 
         <View style={styles.comingSoon}>
-          <Ionicons name="calendar" size={48} color="#d1d5db" />
-          <Text style={styles.comingSoonTitle}>More Events Coming Soon!</Text>
-          <Text style={styles.comingSoonText}>
+          <Ionicons name="calendar" size={48} color={colors.textSecondary} />
+          <Text style={[styles.comingSoonTitle, { color: colors.text }]}>More Events Coming Soon!</Text>
+          <Text style={[styles.comingSoonText, { color: colors.textSecondary }]}>
             We're working on adding more community events. Check back regularly for updates.
           </Text>
         </View>
@@ -107,29 +107,24 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#6366f1',
     padding: 20,
     paddingTop: 60,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#e0e7ff',
     lineHeight: 22,
   },
   content: {
     padding: 20,
   },
   eventCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
@@ -154,7 +149,6 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 12,
   },
   eventDetails: {
@@ -167,7 +161,6 @@ const styles = StyleSheet.create({
   },
   eventDetailText: {
     fontSize: 14,
-    color: '#6b7280',
   },
   comingSoon: {
     alignItems: 'center',
@@ -177,13 +170,11 @@ const styles = StyleSheet.create({
   comingSoonTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#374151',
     marginTop: 16,
     marginBottom: 8,
   },
   comingSoonText: {
     fontSize: 14,
-    color: '#6b7280',
     textAlign: 'center',
     lineHeight: 20,
   },

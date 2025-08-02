@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing, BusinessReview as Review } from '../../services/businessService';
 
 interface BusinessDetailsScreenProps {
@@ -29,7 +30,7 @@ interface BusinessDetailsScreenProps {
   };
 }
 
-const ReviewItem = memo(({ item }: { item: Review }) => {
+const ReviewItem = memo(({ item, colors }: { item: Review; colors: any }) => {
   const renderStars = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -38,7 +39,7 @@ const ReviewItem = memo(({ item }: { item: Review }) => {
           key={i}
           name={i <= rating ? 'star' : 'star-outline'}
           size={16}
-          color={i <= rating ? '#fbbf24' : '#d1d5db'}
+          color={i <= rating ? '#fbbf24' : colors.border}
         />
       );
     }
@@ -46,15 +47,15 @@ const ReviewItem = memo(({ item }: { item: Review }) => {
   };
 
   return (
-    <View style={styles.reviewCard}>
+    <View style={[styles.reviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.reviewHeader}>
-        <Text style={styles.reviewAuthor}>{item.userName || 'Anonymous'}</Text>
+        <Text style={[styles.reviewAuthor, { color: colors.text }]}>{item.userName || 'Anonymous'}</Text>
         <View style={styles.reviewRating}>
           {renderStars(item.rating)}
         </View>
       </View>
-      <Text style={styles.reviewComment}>{item.content}</Text>
-      <Text style={styles.reviewDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+      <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>{item.content}</Text>
+      <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>{new Date(item.createdAt).toLocaleDateString()}</Text>
     </View>
   );
 });
@@ -63,6 +64,7 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
   const { business } = route.params;
   const { userProfile } = useAuth();
   const { saveBusiness, unsaveBusiness } = useAuthActions();
+  const { colors } = useTheme();
   const [isSaved, setIsSaved] = useState(() => {
     const savedBusinesses = userProfile?.profile?.savedBusinesses || [];
     return savedBusinesses.includes(business.id);
@@ -113,7 +115,7 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
     navigation.navigate('CreateReview', { businessId: business.id, businessName: business.name });
   };
 
-  const renderReviewItem = ({ item }: { item: Review }) => <ReviewItem item={item} />;
+  const renderReviewItem = ({ item }: { item: Review }) => <ReviewItem item={item} colors={colors} />;
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -123,7 +125,7 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
           key={i}
           name={i <= rating ? 'star' : 'star-outline'}
           size={16}
-          color={i <= rating ? '#fbbf24' : '#d1d5db'}
+          color={i <= rating ? '#fbbf24' : colors.border}
         />
       );
     }
@@ -147,14 +149,14 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#374151" />
+          <Ionicons name="arrow-back" size={24} color={colors.headerText} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.saveButton}
@@ -163,102 +165,102 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
           <Ionicons
             name={isSaved ? 'heart' : 'heart-outline'}
             size={24}
-            color={isSaved ? '#ef4444' : '#374151'}
+            color={isSaved ? '#ef4444' : colors.headerText}
           />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.content, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
         {/* Business Info */}
-        <View style={styles.businessInfo}>
-          <View style={styles.categoryBadge}>
+        <View style={[styles.businessInfo, { backgroundColor: colors.background }]}>
+          <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '20' }]}>
             <Ionicons
               name={getCategoryIcon(business.category)}
               size={16}
-              color="#6366f1"
+              color={colors.primary}
             />
-            <Text style={styles.categoryText}>
+            <Text style={[styles.categoryText, { color: colors.primary }]}>
               {business.category.charAt(0).toUpperCase() + business.category.slice(1)}
             </Text>
           </View>
           
-          <Text style={styles.businessName}>{business.name}</Text>
+          <Text style={[styles.businessName, { color: colors.text }]}>{business.name}</Text>
           
           <View style={styles.ratingContainer}>
             <View style={styles.stars}>
               {renderStars((business as any).averageRating || 0)}
             </View>
-            <Text style={styles.ratingText}>
+            <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
               {((business as any).averageRating || 0).toFixed(1)} ({(business as any).reviewCount || 0} reviews)
             </Text>
           </View>
 
-          <Text style={styles.businessDescription}>{business.description}</Text>
+          <Text style={[styles.businessDescription, { color: colors.textSecondary }]}>{business.description}</Text>
         </View>
 
         {/* Contact Actions */}
-        <View style={styles.actionButtons}>
+        <View style={[styles.actionButtons, { borderTopColor: colors.border, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
           {business.contact?.phone && (
-            <TouchableOpacity style={styles.actionButton} onPress={handleCall}>
-              <Ionicons name="call" size={20} color="#6366f1" />
-              <Text style={styles.actionButtonText}>Call</Text>
+            <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]} onPress={handleCall}>
+              <Ionicons name="call" size={20} color={colors.primary} />
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Call</Text>
             </TouchableOpacity>
           )}
           
           {business.contact?.website && (
-            <TouchableOpacity style={styles.actionButton} onPress={handleWebsite}>
-              <Ionicons name="globe" size={20} color="#6366f1" />
-              <Text style={styles.actionButtonText}>Website</Text>
+            <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]} onPress={handleWebsite}>
+              <Ionicons name="globe" size={20} color={colors.primary} />
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Website</Text>
             </TouchableOpacity>
           )}
           
-          <TouchableOpacity style={styles.actionButton} onPress={handleDirections}>
-            <Ionicons name="navigate" size={20} color="#6366f1" />
-            <Text style={styles.actionButtonText}>Directions</Text>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]} onPress={handleDirections}>
+            <Ionicons name="navigate" size={20} color={colors.primary} />
+            <Text style={[styles.actionButtonText, { color: colors.text }]}>Directions</Text>
           </TouchableOpacity>
         </View>
 
         {/* Contact Info */}
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
+        <View style={[styles.infoSection, { backgroundColor: colors.background }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Contact Information</Text>
           
           <View style={styles.infoRow}>
-            <Ionicons name="location" size={16} color="#6b7280" />
-            <Text style={styles.infoText}>
+            <Ionicons name="location" size={16} color={colors.textSecondary} />
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               {business.location.address}, {business.location.city}, {business.location.state} {business.location.zipCode}
             </Text>
           </View>
 
           {business.contact?.phone && (
             <View style={styles.infoRow}>
-              <Ionicons name="call" size={16} color="#6b7280" />
-              <Text style={styles.infoText}>{business.contact.phone}</Text>
+              <Ionicons name="call" size={16} color={colors.textSecondary} />
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>{business.contact.phone}</Text>
             </View>
           )}
 
           {business.contact?.email && (
             <View style={styles.infoRow}>
-              <Ionicons name="mail" size={16} color="#6b7280" />
-              <Text style={styles.infoText}>{business.contact.email}</Text>
+              <Ionicons name="mail" size={16} color={colors.textSecondary} />
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>{business.contact.email}</Text>
             </View>
           )}
 
           {business.contact?.website && (
             <View style={styles.infoRow}>
-              <Ionicons name="globe" size={16} color="#6b7280" />
-              <Text style={styles.infoText}>{business.contact.website}</Text>
+              <Ionicons name="globe" size={16} color={colors.textSecondary} />
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>{business.contact.website}</Text>
             </View>
           )}
         </View>
 
         {/* Hours */}
         {(business as any).hours && (
-          <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>Hours</Text>
+          <View style={[styles.infoSection, { backgroundColor: colors.background }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Hours</Text>
             {Object.entries((business as any).hours).map(([day, hours]: [string, any]) => (
               <View key={day} style={styles.hoursRow}>
-                <Text style={styles.dayText}>{day.charAt(0).toUpperCase() + day.slice(1)}</Text>
-                <Text style={styles.hoursText}>
+                <Text style={[styles.dayText, { color: colors.text }]}>{day.charAt(0).toUpperCase() + day.slice(1)}</Text>
+                <Text style={[styles.hoursText, { color: colors.textSecondary }]}>
                   {hours.open && hours.close ? `${hours.open} - ${hours.close}` : 'Closed'}
                 </Text>
               </View>
@@ -268,22 +270,22 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
 
         {/* Accessibility Features */}
         {business.accessibility && Object.values(business.accessibility).some((value) => value !== false && value !== '') && (
-          <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>Accessibility Features</Text>
+          <View style={[styles.infoSection, { backgroundColor: colors.background }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Accessibility Features</Text>
             <View style={styles.accessibilityGrid}>
               {Object.entries(business.accessibility)
                 .filter(([key, value]) => value === true)
                 .map(([feature, _]) => (
                   <View key={feature} style={styles.accessibilityTag}>
-                    <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                    <Text style={styles.accessibilityText}>
+                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                    <Text style={[styles.accessibilityText, { color: colors.text }]}>
                       {feature.replace(/([A-Z])/g, ' $1').trim()}
                     </Text>
                   </View>
                 ))
               }
               {business.accessibility.accessibilityNotes && (
-                <Text style={styles.accessibilityNotes}>
+                <Text style={[styles.accessibilityNotes, { color: colors.textSecondary }]}>
                   {business.accessibility.accessibilityNotes}
                 </Text>
               )}
@@ -292,8 +294,8 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
         )}
 
         {/* Reviews Section */}
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>Reviews</Text>
+        <View style={[styles.infoSection, { backgroundColor: colors.background }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Reviews</Text>
           <FlatList
             data={(business as any).reviews || []}
             renderItem={renderReviewItem}
@@ -305,7 +307,7 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
         </View>
 
         {/* Write Review Button */}
-        <TouchableOpacity style={styles.writeReviewButton} onPress={handleWriteReview}>
+        <TouchableOpacity style={[styles.writeReviewButton, { backgroundColor: colors.primary }]} onPress={handleWriteReview}>
           <Ionicons name="create" size={20} color="#ffffff" />
           <Text style={styles.writeReviewText}>Write a Review</Text>
         </TouchableOpacity>

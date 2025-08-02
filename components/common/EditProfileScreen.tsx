@@ -12,10 +12,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 
 export function EditProfileScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
   const { updateProfile } = useAuthActions();
+  const { colors } = useTheme();
   
   const [formData, setFormData] = useState({
     displayName: userProfile?.displayName || '',
@@ -99,21 +101,28 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.header }]}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            accessibilityHint="Returns to previous screen"
           >
-            <Ionicons name="arrow-back" size={24} color="#6366f1" />
+            <Ionicons name="arrow-back" size={24} color={colors.headerText} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <Text style={[styles.headerTitle, { color: colors.headerText }]}>Edit Profile</Text>
           <TouchableOpacity 
-            style={[styles.saveButton, loading && styles.disabledButton]}
+            style={[styles.saveButton, { backgroundColor: colors.primary }, loading && styles.disabledButton]}
             onPress={handleSave}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Save profile"
+            accessibilityHint="Saves your profile changes"
+            accessibilityState={{ disabled: loading }}
           >
             <Text style={styles.saveButtonText}>
               {loading ? 'Saving...' : 'Save'}
@@ -122,81 +131,87 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
         </View>
 
         <View style={styles.profileIcon}>
-          <Ionicons name="person-circle" size={100} color="#6366f1" />
-          <TouchableOpacity style={styles.editIconButton}>
+          <Ionicons name="person-circle" size={100} color={colors.primary} />
+          <TouchableOpacity 
+            style={[styles.editIconButton, { backgroundColor: colors.primary }]}
+            onPress={() => Alert.alert('Profile Photo', 'Photo upload will be available in the next app update. For now, your profile uses a default icon.')}
+          >
             <Ionicons name="camera" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Basic Information</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Display Name *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Display Name *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
               value={formData.displayName}
               onChangeText={(text) => setFormData(prev => ({ ...prev, displayName: text }))}
               placeholder="How you'd like to be shown"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
+              accessibilityLabel="Display name"
+              accessibilityHint="Enter the name you want others to see"
+              returnKeyType="next"
             />
           </View>
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.label}>First Name</Text>
+              <Text style={[styles.label, { color: colors.text }]}>First Name</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
                 value={formData.firstName}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, firstName: text }))}
                 placeholder="First name"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
 
             <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.label}>Last Name</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Last Name</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
                 value={formData.lastName}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
                 placeholder="Last name"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Preferred Pronouns</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Preferred Pronouns</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
               value={formData.preferredPronouns}
               onChangeText={(text) => setFormData(prev => ({ ...prev, preferredPronouns: text }))}
               placeholder="e.g., they/them, she/her, he/him"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Phone Number</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
               value={formData.phone}
               onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
               placeholder="(555) 123-4567"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
               keyboardType="phone-pad"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Bio</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Bio</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
               value={formData.bio}
               onChangeText={(text) => setFormData(prev => ({ ...prev, bio: text }))}
               placeholder="Tell us a bit about yourself..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
             />
@@ -204,8 +219,8 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interests</Text>
-          <Text style={styles.sectionDescription}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Interests</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             Select topics you're interested in to help us recommend relevant businesses
           </Text>
           <View style={styles.tagContainer}>
@@ -214,13 +229,19 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
                 key={interest}
                 style={[
                   styles.tag,
-                  interests.includes(interest) && styles.selectedTag
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  interests.includes(interest) && { backgroundColor: colors.primary, borderColor: colors.primary }
                 ]}
                 onPress={() => toggleInterest(interest)}
+                accessibilityRole="button"
+                accessibilityLabel={`${interest} interest`}
+                accessibilityHint={`${interests.includes(interest) ? 'Remove' : 'Add'} ${interest} from your interests`}
+                accessibilityState={{ selected: interests.includes(interest) }}
               >
                 <Text style={[
                   styles.tagText,
-                  interests.includes(interest) && styles.selectedTagText
+                  { color: colors.text },
+                  interests.includes(interest) && { color: '#ffffff' }
                 ]}>
                   {interest}
                 </Text>
@@ -230,8 +251,8 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Accessibility Needs</Text>
-          <Text style={styles.sectionDescription}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Accessibility Needs</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             Help us find businesses that meet your accessibility requirements
           </Text>
           <View style={styles.tagContainer}>
@@ -240,13 +261,15 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
                 key={need}
                 style={[
                   styles.tag,
-                  accessibilityNeeds.includes(need) && styles.selectedTag
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  accessibilityNeeds.includes(need) && { backgroundColor: colors.primary, borderColor: colors.primary }
                 ]}
                 onPress={() => toggleAccessibilityNeed(need)}
               >
                 <Text style={[
                   styles.tagText,
-                  accessibilityNeeds.includes(need) && styles.selectedTagText
+                  { color: colors.text },
+                  accessibilityNeeds.includes(need) && { color: '#ffffff' }
                 ]}>
                   {need}
                 </Text>
@@ -281,18 +304,25 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   backButton: {
-    padding: 8,
+    padding: 12, // Increased for better touch target
+    minWidth: 44, // Ensure minimum touch target
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20, // Increased for better readability
     fontWeight: '600',
     color: '#333',
   },
   saveButton: {
     backgroundColor: '#6366f1',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 20, // Increased for better touch
+    paddingVertical: 12, // Increased for better touch
     borderRadius: 8,
+    minHeight: 44, // Ensure minimum touch target
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   disabledButton: {
     opacity: 0.6,
@@ -300,6 +330,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 16, // Added explicit font size
   },
   profileIcon: {
     alignItems: 'center',
@@ -355,13 +386,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    padding: 12,
+    padding: 16, // Increased for better touch and readability
     fontSize: 16,
     backgroundColor: '#fafafa',
+    minHeight: 48, // Ensure adequate touch target
   },
   textArea: {
-    height: 100,
+    height: 120, // Increased for better usability
     textAlignVertical: 'top',
+    paddingTop: 16, // Ensure proper padding at top
   },
   tagContainer: {
     flexDirection: 'row',
@@ -370,11 +403,14 @@ const styles = StyleSheet.create({
   },
   tag: {
     backgroundColor: '#f3f4f6',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 16, // Increased for better touch
+    paddingVertical: 12, // Increased for better touch
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    minHeight: 44, // Ensure adequate touch target
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   selectedTag: {
     backgroundColor: '#6366f1',
@@ -383,6 +419,7 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 14,
     color: '#374151',
+    fontWeight: '500', // Added for better readability
   },
   selectedTagText: {
     color: '#fff',

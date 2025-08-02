@@ -17,6 +17,7 @@ import {
   Switch
 } from 'react-native';
 import { useAuthActions } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 
 interface SignUpScreenProps {
   onNavigateToLogin: () => void;
@@ -27,6 +28,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   onNavigateToLogin,
   onSignUpSuccess
 }) => {
+  const { colors } = useTheme();
   const [formData, setFormData] = useState({
     email: '',
     password: '',

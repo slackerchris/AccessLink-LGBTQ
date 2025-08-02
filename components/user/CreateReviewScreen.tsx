@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -44,6 +45,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
   const { businessId, businessName } = route.params;
   const { userProfile } = useAuth();
   const { addReview } = useAuthActions();
+  const { colors } = useTheme();
   
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -180,13 +182,13 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
       await addReview(businessId, rating, comment.trim(), reviewPhotos, accessibilityTags);
       
       Alert.alert(
-        'Review Submitted!',
-        'Thank you for sharing your experience with the community.',
+        'Review Submitted! ⭐',
+        'Thank you for sharing your experience with the community. Your review helps other users find inclusive businesses.',
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (error) {
       console.error('Error submitting review:', error);
-      Alert.alert('Error', 'Failed to submit review. Please try again.');
+      Alert.alert('Submission Error', 'Failed to submit review. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -201,7 +203,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
       <Ionicons
         name={index < rating ? 'star' : 'star-outline'}
         size={32}
-        color={index < rating ? '#fbbf24' : '#d1d5db'}
+        color={index < rating ? '#fbbf24' : colors.border}
       />
     </TouchableOpacity>
   );
@@ -217,13 +219,13 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
             setShowPhotoModal(true);
           }}
         >
-          <Ionicons name="create-outline" size={16} color="#fff" />
+          <Ionicons name="create-outline" size={16} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.photoRemoveButton}
           onPress={() => handleRemovePhoto(item.id)}
         >
-          <Ionicons name="close" size={16} color="#fff" />
+          <Ionicons name="close" size={16} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
       {item.caption && (
@@ -291,7 +293,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
                       <Ionicons 
                         name={category.icon as any} 
                         size={20} 
-                        color={editingPhoto.category === category.value ? '#6366f1' : '#6b7280'} 
+                        color={editingPhoto.category === category.value ? colors.primary : colors.textSecondary} 
                       />
                       <Text style={[
                         styles.categoryItemText,
@@ -310,30 +312,443 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
     </Modal>
   );
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    headerSpacer: {
+      width: 24,
+    },
+    content: {
+      flex: 1,
+      padding: 20,
+    },
+    businessInfo: {
+      alignItems: 'center',
+      marginBottom: 32,
+    },
+    businessName: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    reviewPrompt: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    section: {
+      marginBottom: 32,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    sectionSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 16,
+    },
+    starsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    starButton: {
+      marginHorizontal: 4,
+    },
+    ratingLabel: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 24,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.card,
+      minHeight: 120,
+      textAlignVertical: 'top',
+    },
+    addPhotoButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      gap: 8,
+    },
+    addPhotoText: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.primary,
+    },
+    photosGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      marginTop: 16,
+    },
+    photoContainer: {
+      position: 'relative',
+      width: 100,
+      height: 100,
+    },
+    photoImage: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 8,
+    },
+    photoOverlay: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      flexDirection: 'row',
+      gap: 4,
+    },
+    photoEditButton: {
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      borderRadius: 12,
+      padding: 4,
+    },
+    photoRemoveButton: {
+      backgroundColor: 'rgba(239,68,68,0.8)',
+      borderRadius: 12,
+      padding: 4,
+    },
+    noPhotosContainer: {
+      alignItems: 'center',
+      paddingVertical: 40,
+      borderWidth: 2,
+      borderColor: colors.border,
+      borderStyle: 'dashed',
+      borderRadius: 12,
+      marginTop: 16,
+    },
+    noPhotosText: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.text,
+      marginTop: 12,
+    },
+    noPhotosSubtext: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 4,
+    },
+    accessibilityTagsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    accessibilityTag: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    accessibilityTagSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    accessibilityTagText: {
+      fontSize: 14,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    accessibilityTagTextSelected: {
+      color: '#FFFFFF',
+    },
+    submitButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 32,
+      marginBottom: 20,
+    },
+    submitButtonDisabled: {
+      backgroundColor: colors.surface,
+    },
+    submitButtonText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#FFFFFF',
+    },
+    submitButtonTextDisabled: {
+      color: colors.textSecondary,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 24,
+      margin: 20,
+      maxWidth: 400,
+      width: '100%',
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    captionInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.background,
+      marginBottom: 16,
+    },
+    categoryGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 24,
+    },
+    categoryItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      gap: 6,
+    },
+    categoryItemSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    categoryItemText: {
+      fontSize: 14,
+      color: colors.text,
+    },
+    categoryItemTextSelected: {
+      color: '#FFFFFF',
+    },
+    modalActions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    modalButtonPrimary: {
+      backgroundColor: colors.primary,
+    },
+    modalButtonSecondary: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    modalButtonTextPrimary: {
+      color: '#FFFFFF',
+    },
+    modalButtonTextSecondary: {
+      color: colors.text,
+    },
+    photoCaptionContainer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      padding: 4,
+      borderBottomLeftRadius: 8,
+      borderBottomRightRadius: 8,
+    },
+    photoCaption: {
+      color: '#FFFFFF',
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    photoCategoryBadge: {
+      position: 'absolute',
+      top: 4,
+      left: 4,
+      backgroundColor: colors.primary,
+      borderRadius: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    photoCategoryText: {
+      color: '#FFFFFF',
+      fontSize: 10,
+      fontWeight: '500',
+    },
+    modalContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modalCancelButton: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+    modalSaveButton: {
+      color: colors.primary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    modalPhoto: {
+      width: '100%',
+      height: 200,
+      borderRadius: 8,
+      marginBottom: 16,
+    },
+    modalSection: {
+      marginBottom: 20,
+    },
+    modalSectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    modalTextInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.card,
+    },
+    ratingText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    reviewInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      minHeight: 120,
+      textAlignVertical: 'top',
+    },
+    characterCount: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      textAlign: 'right',
+      marginTop: 4,
+    },
+    photosContainer: {
+      padding: 16,
+    },
+    tagsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    tagItem: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    tagItemSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    tagText: {
+      fontSize: 14,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    tagTextSelected: {
+      color: '#FFFFFF',
+    },
+  });
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1f2937" />
+          <Ionicons name="arrow-back" size={24} color={colors.headerText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Write Review</Text>
+        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Write Review</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.businessInfo}>
-          <Text style={styles.businessName}>{businessName}</Text>
-          <Text style={styles.reviewPrompt}>Share your experience</Text>
+          <Text style={[styles.businessName, { color: colors.text }]}>{businessName}</Text>
+          <Text style={[styles.reviewPrompt, { color: colors.textSecondary }]}>Share your experience</Text>
         </View>
 
         {/* Rating Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Rating *</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Rating *</Text>
           <View style={styles.starsContainer}>
             {[0, 1, 2, 3, 4].map(renderStar)}
           </View>
           {rating > 0 && (
-            <Text style={styles.ratingText}>
+            <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
               {rating} star{rating !== 1 ? 's' : ''}
             </Text>
           )}
@@ -341,10 +756,11 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
 
         {/* Review Text Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Review *</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Review *</Text>
           <TextInput
-            style={styles.reviewInput}
+            style={[styles.reviewInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
             placeholder="Share your experience with this business. How was the accessibility? What did you like most?"
+            placeholderTextColor={colors.textSecondary}
             value={comment}
             onChangeText={setComment}
             multiline
@@ -360,7 +776,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Photos</Text>
             <TouchableOpacity onPress={handleAddPhoto} style={styles.addPhotoButton}>
-              <Ionicons name="camera" size={20} color="#6366f1" />
+              <Ionicons name="camera" size={20} color={colors.primary} />
               <Text style={styles.addPhotoText}>Add Photo</Text>
             </TouchableOpacity>
           </View>
@@ -376,7 +792,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
             />
           ) : (
             <View style={styles.noPhotosContainer}>
-              <Ionicons name="images-outline" size={40} color="#d1d5db" />
+              <Ionicons name="images-outline" size={40} color={colors.border} />
               <Text style={styles.noPhotosText}>Add photos to help other users</Text>
               <Text style={styles.noPhotosSubtext}>
                 Show accessibility features, atmosphere, or anything helpful
@@ -406,7 +822,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
                   {tag}
                 </Text>
                 {accessibilityTags.includes(tag) && (
-                  <Ionicons name="checkmark" size={16} color="#6366f1" />
+                  <Ionicons name="checkmark" size={16} color={colors.primary} />
                 )}
               </TouchableOpacity>
             ))}
@@ -415,11 +831,15 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
 
         {/* Submit Button */}
         <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          style={[
+            styles.submitButton, 
+            { backgroundColor: colors.primary },
+            isSubmitting && { backgroundColor: colors.border }
+          ]}
           onPress={handleSubmitReview}
           disabled={isSubmitting}
         >
-          <Text style={styles.submitButtonText}>
+          <Text style={[styles.submitButtonText, { color: '#ffffff' }]}>
             {isSubmitting ? 'Submitting...' : 'Submit Review'}
           </Text>
         </TouchableOpacity>
@@ -646,17 +1066,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   submitButton: {
-    backgroundColor: '#6366f1',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 32,
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#9ca3af',
+    minHeight: 56, // Ensure good touch target
   },
   submitButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

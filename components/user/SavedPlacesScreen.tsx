@@ -28,6 +28,10 @@ export function SavedPlacesScreen() {
   // Get saved businesses
   const savedBusinesses = useMemo(() => {
     const savedIds = userProfile?.profile?.savedBusinesses || [];
+    // Add safety check for businesses array
+    if (!businesses || !Array.isArray(businesses)) {
+      return [];
+    }
     return businesses.filter(business => savedIds.includes(business.id));
   }, [businesses, userProfile?.profile?.savedBusinesses]);
 
@@ -58,7 +62,7 @@ export function SavedPlacesScreen() {
 
   const renderSavedBusiness = ({ item }: { item: any }) => (
     <TouchableOpacity 
-      style={styles.businessCard}
+      style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={() => (navigation as any).navigate('Directory', { 
         screen: 'BusinessDetails', 
         params: { business: item } 
@@ -66,18 +70,18 @@ export function SavedPlacesScreen() {
     >
       <View style={styles.businessHeader}>
         <View style={styles.businessInfo}>
-          <Text style={styles.businessName}>{item.name}</Text>
-          <Text style={styles.businessCategory}>{item.category}</Text>
-          <Text style={styles.businessDescription} numberOfLines={2}>
+          <Text style={[styles.businessName, { color: colors.text }]}>{item.name}</Text>
+          <Text style={[styles.businessCategory, { color: colors.primary }]}>{item.category}</Text>
+          <Text style={[styles.businessDescription, { color: colors.textSecondary }]} numberOfLines={2}>
             {item.description}
           </Text>
           <View style={styles.businessMeta}>
-            <Text style={styles.location}>
+            <Text style={[styles.location, { color: colors.textSecondary }]}>
               📍 {item.location?.city}, {item.location?.state}
             </Text>
             <View style={styles.rating}>
               <Ionicons name="star" size={16} color="#fbbf24" />
-              <Text style={styles.ratingText}>{item.averageRating?.toFixed(1) || '4.5'}</Text>
+              <Text style={[styles.ratingText, { color: colors.text }]}>{item.averageRating?.toFixed(1) || '4.5'}</Text>
             </View>
           </View>
         </View>
@@ -115,7 +119,7 @@ export function SavedPlacesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.header }]}>
+      <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
         {showBackButton && (
           <TouchableOpacity 
             style={[styles.backButton, { backgroundColor: colors.surface }]}
@@ -126,7 +130,7 @@ export function SavedPlacesScreen() {
         )}
         <View style={[styles.headerContent, !showBackButton && styles.headerContentCentered]}>
           <Text style={[styles.headerTitle, { color: colors.headerText }]}>Saved Places</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}>
+          <Text style={[styles.headerSubtitle, { color: colors.headerText, opacity: 0.8 }]}>
             {savedBusinesses.length} saved {savedBusinesses.length === 1 ? 'place' : 'places'}
           </Text>
         </View>
@@ -146,7 +150,6 @@ export function SavedPlacesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -154,13 +157,11 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f9ff',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -175,18 +176,15 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
   },
   listContainer: {
     padding: 20,
   },
   businessCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -195,6 +193,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
   },
   businessHeader: {
     flexDirection: 'row',
@@ -206,18 +205,15 @@ const styles = StyleSheet.create({
   businessName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 4,
   },
   businessCategory: {
     fontSize: 12,
-    color: '#6366f1',
     fontWeight: '600',
     marginBottom: 8,
   },
   businessDescription: {
     fontSize: 14,
-    color: '#6b7280',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -228,7 +224,6 @@ const styles = StyleSheet.create({
   },
   location: {
     fontSize: 12,
-    color: '#6b7280',
   },
   rating: {
     flexDirection: 'row',
@@ -236,7 +231,6 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 12,
-    color: '#1f2937',
     marginLeft: 4,
   },
   unsaveButton: {
@@ -252,19 +246,16 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#374151',
     marginTop: 20,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#6b7280',
     marginTop: 10,
     textAlign: 'center',
     lineHeight: 24,
   },
   exploreButton: {
-    backgroundColor: '#6366f1',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,

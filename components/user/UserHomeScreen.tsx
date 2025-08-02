@@ -115,6 +115,9 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
                 params: { business } 
               });
             }}
+            accessibilityRole="button"
+            accessibilityLabel={`${business.name} business`}
+            accessibilityHint={`View details for ${business.name}, a ${business.category} business with ${business.averageRating.toFixed(1)} star rating`}
           >
             <View style={styles.businessInfo}>
               <Text style={[styles.businessName, { color: colors.text }]}>{business.name}</Text>

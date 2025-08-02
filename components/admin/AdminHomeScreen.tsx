@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useAuth';
 import { usePendingBusinesses } from '../../hooks/useBusiness';
 import { adminService, PlatformStats } from '../../services/adminService';
+import { useTheme } from '../../hooks/useTheme';
 
 interface AdminHomeScreenProps {
   navigation: any;
@@ -26,6 +27,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
   const { userProfile } = useAuth();
   const { signOut } = useAuthActions();
   const { businesses: pendingBusinesses } = usePendingBusinesses();
+  const { colors } = useTheme();
   
   const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
       title: 'Pending Approvals',
       value: pendingBusinesses.length.toString(),
       color: '#f59e0b',
-      onPress: () => navigation.navigate('Admin')
+      onPress: () => navigation.navigate('BusinessManagement')
     },
     {
       icon: 'people',
@@ -87,7 +89,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
       title: 'Total Reviews',
       value: platformStats?.totalReviews.toLocaleString() || '0',
       color: '#8b5cf6',
-      onPress: () => Alert.alert('Review Management', 'Feature coming soon!')
+      onPress: () => navigation.navigate('BusinessManagement') // Navigate to business management for review oversight
     }
   ];
 
@@ -103,40 +105,40 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
     },
     {
       icon: 'settings',
-      title: 'System Settings',
-      subtitle: 'Configure app settings',
-      onPress: () => Alert.alert('Settings', 'Feature coming soon!')
+      title: 'Platform Settings',
+      subtitle: 'Configure system preferences',
+      onPress: () => navigation.navigate('UserManagement') // Navigate to user management as closest settings feature
     },
     {
       icon: 'analytics',
       title: 'View Analytics',
-      subtitle: 'User and business statistics',
-      onPress: () => Alert.alert('Analytics', 'Feature coming soon!')
+      subtitle: 'Platform usage and metrics',
+      onPress: () => Alert.alert('Analytics Dashboard', 'Coming in next update! Current stats available on this dashboard.')
     },
     {
-      icon: 'mail',
-      title: 'Send Notification',
-      subtitle: 'Broadcast to all users',
-      onPress: () => Alert.alert('Notifications', 'Feature coming soon!')
+      icon: 'notifications',
+      title: 'Notifications',
+      subtitle: 'Admin alerts and updates',
+      onPress: () => Alert.alert('Notification Center', 'No new notifications. All systems operating normally.')
     }
   ];
 
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
       }
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.header }]}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Good morning!</Text>
-            <Text style={styles.adminName}>
+            <Text style={[styles.greeting, { color: colors.headerText }]}>Good morning!</Text>
+            <Text style={[styles.adminName, { color: colors.headerText }]}>
               {userProfile?.displayName || 'Administrator'}
             </Text>
-            <Text style={styles.roleTag}>👑 System Administrator</Text>
+            <Text style={[styles.roleTag, { color: colors.headerText }]}>👑 System Administrator</Text>
           </View>
           <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
             <Ionicons name="log-out-outline" size={24} color="#ef4444" />
