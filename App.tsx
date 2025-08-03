@@ -50,7 +50,7 @@ import DebugDashboard from './components/admin/DebugDashboard';
 import AdminPortalScreen from './components/admin/AdminPortalScreen';
 
 // Hooks
-import { useAuth, useAuthActions, AuthProvider } from './hooks/useWebAuth';
+import { useAuth, AuthProvider } from './hooks/useFirebaseAuth';
 import { ThemeProvider } from './hooks/useTheme';
 
 // Profile Stack Navigator
@@ -409,12 +409,11 @@ function BusinessTabNavigator() {
 
 // Profile Screen Component
 function ProfileScreen({ navigation }: { navigation: any }) {
-  const { user } = useAuth();
-  const { signOut } = useAuthActions();
+  const { user, userProfile, logout } = useAuth();
   
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
     } catch (error: any) {
       Alert.alert('Sign Out Error', error.message);
     }
@@ -440,8 +439,8 @@ function ProfileScreen({ navigation }: { navigation: any }) {
           {user?.displayName || user?.email || 'User'}
         </Text>
         <Text style={styles.profileRole}>
-          {user?.userType === 'admin' ? '👑 Admin' : 
-           user?.userType === 'business' ? '🏢 Business Owner' : '👤 User'}
+          {userProfile?.role === 'admin' ? '👑 Admin' : 
+           userProfile?.role === 'business_owner' ? '🏢 Business Owner' : '👤 User'}
         </Text>
       </View>
       
@@ -489,9 +488,9 @@ function AppNavigator({ userType }: { userType: 'user' | 'business_owner' | 'adm
 // AppContent component to manage auth state and navigation
 function AppContent() {
   const [dbInitialized, setDbInitialized] = useState(false);
-  const { user, loading } = useAuth();
-  // Map userType from new auth service to legacy format
-  const userType = user?.userType === 'business' ? 'business_owner' : user?.userType;
+  const { user, userProfile, loading } = useAuth();
+  // Map userProfile role to legacy format
+  const userType = userProfile?.role;
 
   // Suppress known warnings from third-party libraries
   useEffect(() => {

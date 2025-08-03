@@ -19,7 +19,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useBusinessActions } from '../../hooks/useWebAuth';
+import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
 
 const { width: screenWidth } = Dimensions.get('window');
 

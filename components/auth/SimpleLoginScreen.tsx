@@ -7,7 +7,7 @@
 
     try {
       console.log('Login attempt for email:', email.trim()); // Debug log
-      await signIn(email.trim(), password);
+      await login(email.trim(), password);
       console.log('Login successful!'); // Debug log
       // Backend handles redirection based on user role
     } catch (error: any) {
@@ -30,7 +30,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface SimpleLoginScreenProps {
@@ -40,8 +40,7 @@ interface SimpleLoginScreenProps {
 export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { loading } = useAuth();
-  const { signIn } = useAuthActions();
+  const { loading, login, loginWithGoogle, error } = useAuth();
   const { colors } = useTheme();
 
   const handleLogin = async () => {
@@ -51,11 +50,21 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
     }
 
     try {
-      await signIn(email.trim(), password);
+      await login(email.trim(), password);
       // Backend handles redirection based on user role
     } catch (error: any) {
       console.error('Login error:', error);
       Alert.alert('Login Failed', error.message || 'Invalid credentials');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await loginWithGoogle();
+      // Navigation handled by auth state change
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      Alert.alert('Google Sign-In Failed', error.message || 'Failed to sign in with Google');
     }
   };
 
@@ -129,6 +138,29 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
               {loading ? 'Signing In...' : 'Sign In'}
             </Text>
           </TouchableOpacity>
+
+          {/* Google Sign-In Button */}
+          <TouchableOpacity
+            style={[styles.googleButton, loading && styles.disabledButton]}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in with Google"
+            accessibilityHint="Tap to sign in using your Google account"
+            accessibilityState={{ disabled: loading }}
+          >
+            <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.googleIcon} />
+            <Text style={styles.googleButtonText}>
+              {loading ? 'Signing In...' : 'Continue with Google'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          </View>
         </View>
 
         <View style={styles.footer}>
@@ -349,5 +381,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#dadce0',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    minHeight: 48,
+  },
+  googleIcon: {
+    marginRight: 12,
+  },
+  googleButtonText: {
+    color: '#3c4043',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
   },
 });

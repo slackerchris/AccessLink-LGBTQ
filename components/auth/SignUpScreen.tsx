@@ -16,7 +16,8 @@ import {
   ScrollView,
   Switch
 } from 'react-native';
-import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface SignUpScreenProps {
@@ -42,8 +43,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     agreeToTerms: false
   });
 
-  const { loading } = useAuth();
-  const { signUp } = useAuthActions();
+  const { loading, register, loginWithGoogle, error } = useAuth();
 
   const updateFormData = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -72,13 +72,13 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     }
 
     try {
-      const userType = formData.isBusinessOwner ? 'business' : 'user';
+      const role = formData.isBusinessOwner ? 'business_owner' : 'user';
 
-      await signUp(
+      await register(
         formData.email.trim(),
         formData.password,
         formData.displayName.trim(),
-        userType
+        role
       );
 
       Alert.alert(
@@ -88,6 +88,21 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       );
     } catch (err: any) {
       Alert.alert('Registration Failed', err.message || 'An error occurred during registration');
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      await loginWithGoogle();
+      // User will be redirected based on their account type
+      Alert.alert(
+        'Welcome!',
+        'Your account has been set up successfully with Google. You can complete your profile anytime.',
+        [{ text: 'OK', onPress: onSignUpSuccess }]
+      );
+    } catch (error: any) {
+      console.error('Google sign-up error:', error);
+      Alert.alert('Google Sign-Up Failed', error.message || 'Failed to sign up with Google');
     }
   };
 
@@ -248,6 +263,25 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               {loading ? 'Creating Account...' : 'Create Account'}
             </Text>
           </TouchableOpacity>
+
+          {/* Google Sign-Up Button */}
+          <TouchableOpacity
+            style={[styles.googleButton, loading && styles.disabledButton]}
+            onPress={handleGoogleSignUp}
+            disabled={loading}
+          >
+            <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.googleIcon} />
+            <Text style={styles.googleButtonText}>
+              {loading ? 'Signing Up...' : 'Continue with Google'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
         </View>
 
         <View style={styles.footer}>
@@ -390,5 +424,41 @@ const styles = StyleSheet.create({
     color: '#6c5ce7',
     fontSize: 14,
     fontWeight: '600',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#dadce0',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    minHeight: 48,
+  },
+  googleIcon: {
+    marginRight: 12,
+  },
+  googleButtonText: {
+    color: '#3c4043',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#dadce0',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: '#666',
   },
 });
