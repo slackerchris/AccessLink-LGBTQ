@@ -16,7 +16,7 @@ import {
   ScrollView,
   Switch
 } from 'react-native';
-import { useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface SignUpScreenProps {
@@ -42,7 +42,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     agreeToTerms: false
   });
 
-  const { signUp, loading, error, clearError } = useAuthActions();
+  const { loading } = useAuth();
+  const { signUp } = useAuthActions();
 
   const updateFormData = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -71,18 +72,13 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     }
 
     try {
-      const additionalInfo = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
-        location: formData.location
-      };
+      const userType = formData.isBusinessOwner ? 'business' : 'user';
 
       await signUp(
         formData.email.trim(),
         formData.password,
         formData.displayName.trim(),
-        additionalInfo
+        userType
       );
 
       Alert.alert(
@@ -90,8 +86,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
         'Please check your email to verify your account. You can start using the app right away.',
         [{ text: 'OK', onPress: onSignUpSuccess }]
       );
-    } catch (err) {
-      Alert.alert('Registration Failed', error || 'An error occurred during registration');
+    } catch (err: any) {
+      Alert.alert('Registration Failed', err.message || 'An error occurred during registration');
     }
   };
 
@@ -108,7 +104,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       isBusinessOwner: false,
       agreeToTerms: false
     });
-    clearError();
   };
 
   return (
@@ -243,12 +238,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               disabled={loading}
             />
           </View>
-
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
 
           <TouchableOpacity
             style={[styles.signUpButton, loading && styles.disabledButton]}

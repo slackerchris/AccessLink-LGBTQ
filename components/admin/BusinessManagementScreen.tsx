@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { businessService, BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useWebAuth';
 
 interface BusinessManagementScreenProps {
   navigation: any;
@@ -27,7 +27,7 @@ interface BusinessManagementScreenProps {
 type FilterStatus = 'all' | 'approved' | 'pending' | 'featured';
 
 export default function BusinessManagementScreen({ navigation }: BusinessManagementScreenProps) {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const [businesses, setBusinesses] = useState<BusinessListing[]>([]);
   const [filteredBusinesses, setFilteredBusinesses] = useState<BusinessListing[]>([]);
   const [loading, setLoading] = useState(true);

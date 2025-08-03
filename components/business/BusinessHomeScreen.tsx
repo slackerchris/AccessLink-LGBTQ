@@ -13,7 +13,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -22,13 +22,13 @@ interface BusinessHomeScreenProps {
 }
 
 export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const { signOut } = useAuthActions();
   const { businesses } = useBusinesses({}, 1); // Get just the business owner's business
   const { colors } = useTheme();
   
   // Find the business owned by this user
-  const myBusiness = businesses.find(b => b.id === (userProfile as any)?.businessId);
+  const myBusiness = businesses.find(b => b.ownerId === user?.id);
 
   const handleSignOut = async () => {
     try {
@@ -108,7 +108,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     }
   ];
 
-  const firstName = userProfile?.profile?.firstName || userProfile?.displayName?.split(' ')[0] || 'Business Owner';
+  const firstName = user?.displayName?.split(' ')[0] || 'Business Owner';
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>

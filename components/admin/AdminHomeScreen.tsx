@@ -14,7 +14,7 @@ import {
   RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 import { usePendingBusinesses } from '../../hooks/useBusiness';
 import { adminService, PlatformStats } from '../../services/adminService';
 import { useTheme } from '../../hooks/useTheme';
@@ -24,10 +24,10 @@ interface AdminHomeScreenProps {
 }
 
 export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const { signOut } = useAuthActions();
   const { businesses: pendingBusinesses } = usePendingBusinesses();
-  const { colors } = useTheme();
+  const { colors, theme, toggleTheme } = useTheme();
   
   const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,7 +136,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
           <View>
             <Text style={[styles.greeting, { color: colors.headerText }]}>Good morning!</Text>
             <Text style={[styles.adminName, { color: colors.headerText }]}>
-              {userProfile?.displayName || 'Administrator'}
+              {user?.displayName || 'Administrator'}
             </Text>
             <Text style={[styles.roleTag, { color: colors.headerText }]}>👑 System Administrator</Text>
           </View>

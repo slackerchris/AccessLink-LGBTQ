@@ -13,11 +13,11 @@ import {
   FlatList,
   RefreshControl,
   Alert,
-  Modal
 } from 'react-native';
+import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useBusinesses, useBusinessActions } from '../../hooks/useBusiness';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
 
@@ -127,8 +127,8 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   onNavigateToAddBusiness,
   onNavigateToBusinessDetails
 }) => {
-  const { userProfile } = useAuth();
-  const { saveBusiness, unsaveBusiness } = useAuthActions();
+  const { user } = useAuth();
+  const { } = useAuthActions();  // Will implement save functionality later
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | 'all'>(initialCategory || 'all');
@@ -166,29 +166,20 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   }, [refresh]);
 
   const handleToggleSaved = useCallback(async (businessId: string) => {
-    if (!userProfile) {
+    if (!user) {
       Alert.alert('Login Required', 'Please login to save businesses');
       return;
     }
 
-    const savedBusinesses = userProfile.profile?.savedBusinesses || [];
-    const isSaved = savedBusinesses.includes(businessId);
-
-    try {
-      if (isSaved) {
-        await unsaveBusiness(businessId);
-      } else {
-        await saveBusiness(businessId);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update saved businesses');
-    }
-  }, [userProfile, saveBusiness, unsaveBusiness]);
+    // TODO: Implement saved businesses functionality
+    console.log('Toggle saved for business:', businessId);
+    Alert.alert('Info', 'Save functionality will be implemented soon');
+  }, [user]);
 
   const isBusinessSaved = useCallback((businessId: string): boolean => {
-    const savedBusinesses = userProfile?.profile?.savedBusinesses || [];
-    return savedBusinesses.includes(businessId);
-  }, [userProfile]);
+    // TODO: Implement saved businesses check
+    return false;
+  }, [user]);
 
   const handleSearch = useCallback(async (query: string) => {
     if (query.trim().length > 0) {

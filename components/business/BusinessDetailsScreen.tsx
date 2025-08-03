@@ -17,7 +17,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing, BusinessReview as Review } from '../../services/businessService';
 
@@ -62,29 +62,27 @@ const ReviewItem = memo(({ item, colors }: { item: Review; colors: any }) => {
 
 export default function BusinessDetailsScreen({ navigation, route }: BusinessDetailsScreenProps) {
   const { business } = route.params;
-  const { userProfile } = useAuth();
-  const { saveBusiness, unsaveBusiness } = useAuthActions();
+  const { user } = useAuth();
+  const { } = useAuthActions();  // Will fix these functions separately
   const { colors } = useTheme();
-  const [isSaved, setIsSaved] = useState(() => {
-    const savedBusinesses = userProfile?.profile?.savedBusinesses || [];
-    return savedBusinesses.includes(business.id);
-  });
+  const [isSaved, setIsSaved] = useState(false);  // Will implement saved businesses later
 
   const handleToggleSaved = async () => {
-    if (!userProfile) {
+    if (!user) {
       Alert.alert('Login Required', 'Please login to save businesses');
       return;
     }
 
     try {
       if (isSaved) {
-        await unsaveBusiness(business.id);
+        // await unsaveBusiness(business.id);  // TODO: Implement unsave functionality
         setIsSaved(false);
       } else {
-        await saveBusiness(business.id);
+        // await saveBusiness(business.id);  // TODO: Implement save functionality
         setIsSaved(true);
       }
     } catch (error) {
+      console.error('Failed to toggle saved business:', error);
       Alert.alert('Error', 'Failed to update saved businesses');
     }
   };
@@ -108,11 +106,41 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
   };
 
   const handleWriteReview = () => {
-    if (!userProfile) {
+    console.log('🔍 DEBUG: Write Review button pressed');
+    console.log('🔍 DEBUG: user exists =', !!user);
+    console.log('🔍 DEBUG: business.id =', business.id);
+    console.log('🔍 DEBUG: business.name =', business.name);
+    
+    if (!user) {
+      console.log('⚠️ DEBUG: User not logged in, showing login alert');
       Alert.alert('Login Required', 'Please login to write reviews');
       return;
     }
+    
+    console.log('🔍 DEBUG: Navigating to CreateReview screen with params:', {
+      businessId: business.id,
+      businessName: business.name
+    });
+    
     navigation.navigate('CreateReview', { businessId: business.id, businessName: business.name });
+  };
+
+  const handleFeedback = () => {
+    console.log('📧 DEBUG: Feedback button pressed');
+    console.log('📧 DEBUG: user exists =', !!user);
+    console.log('📧 DEBUG: business.id =', business.id);
+    console.log('📧 DEBUG: business.name =', business.name);
+    
+    if (!user) {
+      Alert.alert('Login Required', 'Please login to send feedback');
+      return;
+    }
+    
+    navigation.navigate('Feedback', { 
+      businessId: business.id, 
+      businessName: business.name,
+      feedbackType: 'business'
+    });
   };
 
   const renderReviewItem = ({ item }: { item: Review }) => <ReviewItem item={item} colors={colors} />;
@@ -310,6 +338,12 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
         <TouchableOpacity style={[styles.writeReviewButton, { backgroundColor: colors.primary }]} onPress={handleWriteReview}>
           <Ionicons name="create" size={20} color="#ffffff" />
           <Text style={styles.writeReviewText}>Write a Review</Text>
+        </TouchableOpacity>
+
+        {/* Feedback Button */}
+        <TouchableOpacity style={[styles.feedbackButton, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={handleFeedback}>
+          <Ionicons name="chatbubble-outline" size={20} color={colors.primary} />
+          <Text style={[styles.feedbackButtonText, { color: colors.primary }]}>Send Feedback</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -519,6 +553,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+    marginLeft: 8,
+  },
+  feedbackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    paddingVertical: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  feedbackButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 8,
   },
 });

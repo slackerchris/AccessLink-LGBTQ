@@ -31,7 +31,13 @@
       "buildToolsVersion": "34.0.0"
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "template": "./web/index.html",
+      "config": {
+        "firebase": {
+          "measurementId": "G-XXXXXXXXXX"
+        }
+      }
     },
     "scheme": "accesslink",
     "owner": "chriseckman",

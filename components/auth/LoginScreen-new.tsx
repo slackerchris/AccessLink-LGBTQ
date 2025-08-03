@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 
 interface LoginScreenProps {
   navigation: any;
@@ -25,7 +25,8 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, loading, error } = useAuthActions();
+  const { loading } = useAuth();
+  const { signIn } = useAuthActions();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {

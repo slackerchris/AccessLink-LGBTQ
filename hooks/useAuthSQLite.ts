@@ -1,5 +1,5 @@
 /**
- * React Hooks for Authentication
+ * React Hooks for Authentication with SQLite
  * Custom hooks for managing auth state in React components
  */
 
@@ -44,64 +44,84 @@ export const useAuth = () => {
     initializeAuth();
   }, []);
 
-  return authState;
+  // Update auth state when user signs in/out
+  const updateAuthState = useCallback(() => {
+    const currentUser = sqliteAuthService.getCurrentUser();
+    setAuthState({
+      isAuthenticated: !!currentUser,
+      userProfile: currentUser,
+      loading: false
+    });
+  }, []);
+
+  return { ...authState, updateAuthState };
 };
 
 // Hook for authentication actions
 export const useAuthActions = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { updateAuthState } = useAuth();
 
   const signUp = useCallback(async (
     email: string,
     password: string,
     displayName: string,
-    role: string = 'user',
-    additionalInfo?: Partial<UserProfile['profile']>
+    userType: 'user' | 'business' = 'user',
+    additionalInfo?: { firstName?: string; lastName?: string }
   ) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.signUp(email, password, displayName, role, additionalInfo);
+      await sqliteAuthService.createUserWithEmailAndPassword(email, password, {
+        displayName,
+        userType,
+        firstName: additionalInfo?.firstName,
+        lastName: additionalInfo?.lastName
+      });
+      updateAuthState();
     } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updateAuthState]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.signIn(email, password);
+      await sqliteAuthService.signInWithEmailAndPassword(email, password);
+      updateAuthState();
     } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updateAuthState]);
 
   const signOut = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      await authService.signOut();
+      await sqliteAuthService.signOut();
+      updateAuthState();
     } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updateAuthState]);
 
   const resetPassword = useCallback(async (email: string) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.resetPassword(email);
+      // Mock password reset - in real app, this would send an email
+      console.log('Password reset requested for:', email);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -110,33 +130,26 @@ export const useAuthActions = () => {
     }
   }, []);
 
-  const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
+  const updateProfile = useCallback(async (updates: Partial<UserProfile['profile']>) => {
     setLoading(true);
     setError(null);
     try {
-      const currentState = authService.getCurrentAuthState();
-      if (currentState.user) {
-        await authService.updateProfile(updates);
-      } else {
-        throw new Error('No user logged in');
-      }
+      // For now, we'll implement this later as it requires more complex profile updating
+      console.log('Profile update requested:', updates);
     } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const clearError = useCallback(() => {
-    setError(null);
   }, []);
 
   const saveBusiness = useCallback(async (businessId: string) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.saveBusiness(businessId);
+      // For now, we'll implement this later
+      console.log('Save business requested:', businessId);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -149,7 +162,8 @@ export const useAuthActions = () => {
     setLoading(true);
     setError(null);
     try {
-      await authService.unsaveBusiness(businessId);
+      // For now, we'll implement this later
+      console.log('Unsave business requested:', businessId);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -159,20 +173,16 @@ export const useAuthActions = () => {
   }, []);
 
   const addReview = useCallback(async (
-    businessId: string, 
-    rating: number, 
+    businessId: string,
+    rating: number,
     comment: string,
-    photos?: Array<{
-      uri: string;
-      caption?: string;
-      category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
-    }>,
-    accessibilityTags?: string[]
+    photos: any[] = [],
+    accessibilityTags: string[] = []
   ) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.addReview(businessId, rating, comment, photos, accessibilityTags);
+      await sqliteAuthService.addReview(businessId, rating, comment, photos, accessibilityTags);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -190,9 +200,9 @@ export const useAuthActions = () => {
     saveBusiness,
     unsaveBusiness,
     addReview,
-    clearError,
     loading,
-    error
+    error,
+    clearError: () => setError(null)
   };
 };
 
@@ -220,31 +230,60 @@ export const usePermissions = () => {
     isAdmin,
     isBusinessOwner,
     canManageBusinesses,
-    canApproveBusinesses,
-    userRole: userProfile?.role || null
+    canApproveBusinesses
   };
 };
 
-// Hook for protected routes
-export const useAuthGuard = (requiredRole?: 'admin' | 'business_owner') => {
-  const { user, userProfile, loading } = useAuth();
-  const { isAdmin, isBusinessOwner } = usePermissions();
+// Hook for business operations
+export const useBusinessActions = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const isAuthenticated = !!user;
-  const hasRequiredRole = () => {
-    if (!requiredRole) return true;
-    if (requiredRole === 'admin') return isAdmin();
-    if (requiredRole === 'business_owner') return isBusinessOwner();
-    return false;
-  };
+  const getBusinesses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await sqliteAuthService.getBusinesses();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const canAccess = isAuthenticated && hasRequiredRole();
+  const getStats = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await sqliteAuthService.getStats();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clearAllData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await sqliteAuthService.clearAllData();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
-    isAuthenticated,
-    canAccess,
+    getBusinesses,
+    getStats,
+    clearAllData,
     loading,
-    user,
-    userProfile
+    error,
+    clearError: () => setError(null)
   };
 };

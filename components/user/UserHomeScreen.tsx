@@ -15,7 +15,7 @@ import {
   TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useWebAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing } from '../../services/mockBusinessService';
@@ -25,7 +25,7 @@ interface UserHomeScreenProps {
 }
 
 export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const { businesses } = useBusinesses({}, 6); // Get first 6 businesses
   const [searchQuery, setSearchQuery] = useState('');
   const { colors } = useTheme();
@@ -41,7 +41,7 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
     }
   };
 
-  const firstName = userProfile?.profile?.firstName || userProfile?.displayName?.split(' ')[0] || 'Friend';
+  const firstName = user?.displayName?.split(' ')[0] || 'Friend';
 
   return (
     <ScrollView 

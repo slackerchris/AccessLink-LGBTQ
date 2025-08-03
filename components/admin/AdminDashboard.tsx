@@ -15,7 +15,7 @@ import {
   FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, usePermissions } from '../../hooks/useAuth';
+import { useAuth, usePermissions } from '../../hooks/useWebAuth';
 import { usePendingBusinesses, useBusinessActions } from '../../hooks/useBusiness';
 import { BusinessListing } from '../../services/mockBusinessService';
 import { adminService, PlatformStats } from '../../services/adminService';
@@ -27,7 +27,7 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   navigation
 }) => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const { isAdmin } = usePermissions();
   const { businesses: pendingBusinesses, loading, refresh } = usePendingBusinesses();
   const { approveBusiness, rejectBusiness, loading: actionLoading } = useBusinessActions();
@@ -136,7 +136,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     </View>
   );
 
-  if (!isAdmin()) {
+  if (!isAdmin) {
     return (
       <View style={styles.container}>
         <View style={styles.accessDenied}>
@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.title}>🔧 Admin Dashboard</Text>
-          <Text style={styles.subtitle}>Welcome back, {userProfile?.displayName}</Text>
+          <Text style={styles.subtitle}>Welcome back, {user?.displayName}</Text>
         </View>
       </View>
 
@@ -209,6 +209,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>User Management</Text>
             <Text style={styles.actionDescription}>Manage user accounts and permissions</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate('DebugDashboard')}
+        >
+          <Text style={styles.actionIcon}>🔧</Text>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Debug Dashboard</Text>
+            <Text style={styles.actionDescription}>System monitoring, logs, and debugging tools</Text>
           </View>
         </TouchableOpacity>
       </View>

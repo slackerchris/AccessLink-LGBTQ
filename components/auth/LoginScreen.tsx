@@ -16,7 +16,9 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
+
+// Using webAuth to connect to IndexedDB database
 
 interface LoginScreenProps {
   navigation: any;
@@ -25,7 +27,9 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, loading, error } = useAuthActions();
+  const [loginError, setLoginError] = useState('');
+  const { loading } = useAuth();
+  const { signIn } = useAuthActions();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -33,12 +37,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       return;
     }
 
+    setLoginError(''); // Clear previous errors
     try {
       await signIn(email.trim(), password);
       // Navigation will be handled automatically by the App component
     } catch (err) {
-      // Error is handled by the hook
-      Alert.alert('Login Failed', error || 'An error occurred during login');
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
+      setLoginError(errorMessage);
+      Alert.alert('Login Failed', errorMessage);
     }
   };
 
@@ -75,6 +81,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             >
               <Text style={styles.demoButtonText}>👤 User Login</Text>
             </TouchableOpacity>
+            
+            {/* Business Login Section */}
+            <Text style={styles.businessSectionTitle}>📋 Business Login Options:</Text>
             <TouchableOpacity 
               style={[styles.demoButton, styles.businessButton]} 
               onPress={() => quickLogin('business@example.com', 'password123')}
@@ -86,6 +95,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               onPress={() => quickLogin('owner@pridehealth.com', 'password123')}
             >
               <Text style={styles.demoButtonText}>🏥 Pride Health</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('owner@pridefitness.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>💪 Pride Fitness</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('hello@inclusivebooks.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>📚 Inclusive Books</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -125,9 +146,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             />
           </View>
 
-          {error && (
+          {loginError && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>{loginError}</Text>
             </View>
           )}
 
@@ -206,6 +227,14 @@ const styles = StyleSheet.create({
     color: '#374151',
     textAlign: 'center',
     marginBottom: 20, // Increased spacing
+  },
+  businessSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 12,
   },
   demoButtons: {
     flexDirection: 'column', // Stack vertically on mobile for better touch targets

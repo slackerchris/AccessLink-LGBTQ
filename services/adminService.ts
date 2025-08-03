@@ -1,4 +1,5 @@
 import { UserProfile } from './authService';
+import { databaseService } from './webDatabaseService';
 
 // Admin-specific interfaces
 export interface AdminUser extends UserProfile {
@@ -78,6 +79,7 @@ export interface PlatformStats {
 
 export interface UserFilters {
   status?: 'active' | 'inactive' | 'suspended';
+  role?: 'user' | 'business_owner' | 'admin';
   verificationLevel?: 'unverified' | 'email' | 'phone' | 'full';
   registrationDateFrom?: Date;
   registrationDateTo?: Date;
@@ -157,72 +159,86 @@ class AdminService {
   // User Management
   async getUsers(page: number = 1, pageSize: number = 50, search?: string, filters?: UserFilters): Promise<{users: UserDetails[], totalCount: number}> {
     try {
-      // Mock implementation - replace with actual API call
-      const mockUsers: UserDetails[] = [
-        {
-          uid: 'user-1',
-          email: 'alex@example.com',
-          displayName: 'Alex Johnson',
-          role: 'user',
-          isEmailVerified: true,
-          createdAt: new Date('2025-06-15'),
-          updatedAt: new Date('2025-07-27'),
-          profile: {},
-          registrationDate: new Date('2025-06-15'),
-          lastLoginDate: new Date('2025-07-27'),
-          accountStatus: 'active',
-          verificationLevel: 'email',
-          reviewCount: 12,
-          businessCount: 0,
-          adminNotes: []
-        },
-        {
-          uid: 'user-2',
-          email: 'business@rainbowcafe.com',
-          displayName: 'Rainbow Café',
-          role: 'business_owner',
-          isEmailVerified: true,
-          createdAt: new Date('2025-05-20'),
-          updatedAt: new Date('2025-07-28'),
-          profile: {},
-          registrationDate: new Date('2025-05-20'),
-          lastLoginDate: new Date('2025-07-28'),
-          accountStatus: 'active',
-          verificationLevel: 'full',
-          reviewCount: 3,
-          businessCount: 1,
-          adminNotes: [
-            {
-              id: 'note-1',
-              adminId: 'admin-1',
-              adminName: 'System Administrator',
-              note: 'Verified business documentation',
-              timestamp: new Date('2025-05-21'),
-              severity: 'info'
-            }
-          ]
-        }
-      ];
-
+      // Get all users from database
+      const allUsers = await databaseService.getAllUsers();
+      
+      // Convert to UserDetails format and apply filters
+      let filteredUsers = allUsers.map(user => this.convertToUserDetails(user));
+      
+      // Apply search filter
+      if (search && search.trim()) {
+        const searchLower = search.toLowerCase();
+        filteredUsers = filteredUsers.filter(user => 
+          user.email.toLowerCase().includes(searchLower) ||
+          user.displayName.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Apply status filter
+      if (filters?.status) {
+        filteredUsers = filteredUsers.filter(user => user.accountStatus === filters.status);
+      }
+      
+      // Apply user type filter
+      if (filters?.role) {
+        filteredUsers = filteredUsers.filter(user => user.role === filters.role);
+      }
+      
+      const totalCount = filteredUsers.length;
+      
+      // Apply pagination
+      const startIndex = (page - 1) * pageSize;
+      const paginatedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
+      
       return {
-        users: mockUsers,
-        totalCount: mockUsers.length
+        users: paginatedUsers,
+        totalCount
       };
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error getting users:', error);
       throw error;
     }
   }
 
+  private convertToUserDetails(user: any): UserDetails {
+    // Parse admin notes if they exist
+    let adminNotes: AdminNote[] = [];
+    if (user.adminNotes) {
+      try {
+        adminNotes = JSON.parse(user.adminNotes);
+      } catch (e) {
+        console.warn('Failed to parse admin notes for user', user.id);
+        adminNotes = [];
+      }
+    }
+
+    return {
+      uid: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      role: user.userType as any,
+      isEmailVerified: true, // Assume verified for now
+      createdAt: new Date(user.createdAt),
+      updatedAt: new Date(user.lastModified || user.createdAt),
+      profile: {},
+      registrationDate: new Date(user.createdAt),
+      lastLoginDate: new Date(user.lastLoginAt),
+      accountStatus: user.accountStatus || 'active',
+      verificationLevel: 'email', // Default verification level
+      reviewCount: 0, // TODO: Calculate from reviews
+      businessCount: 0, // TODO: Calculate from businesses
+      adminNotes
+    };
+  }
+
   async getUserDetails(userId: string): Promise<UserDetails> {
     try {
-      // Mock implementation - replace with actual API call
-      const users = await this.getUsers();
-      const user = users.users.find(u => u.uid === userId);
+      // Get user from database
+      const user = await databaseService.getUserById(userId);
       if (!user) {
         throw new Error('User not found');
       }
-      return user;
+      return this.convertToUserDetails(user);
     } catch (error) {
       console.error('Error fetching user details:', error);
       throw error;
@@ -231,9 +247,25 @@ class AdminService {
 
   async updateUserStatus(userId: string, status: 'active' | 'inactive' | 'suspended'): Promise<void> {
     try {
-      // Mock implementation - replace with actual API call
       console.log(`Updating user ${userId} status to ${status}`);
-      // In real implementation, make API request to update user status
+      
+      // Get the current user data
+      const user = await databaseService.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Update the user with new status
+      const updatedUser = {
+        ...user,
+        accountStatus: status,
+        lastModified: new Date().toISOString()
+      };
+
+      // Save the updated user back to the database
+      await databaseService.updateUser(updatedUser);
+      
+      console.log(`✅ User ${userId} status updated to ${status}`);
     } catch (error) {
       console.error('Error updating user status:', error);
       throw error;
@@ -242,9 +274,54 @@ class AdminService {
 
   async addUserNote(userId: string, note: string, severity: 'info' | 'warning' | 'critical' = 'info'): Promise<void> {
     try {
-      // Mock implementation - replace with actual API call
       console.log(`Adding note to user ${userId}: ${note}`);
-      // In real implementation, make API request to add admin note
+      
+      // Get the current user data
+      const user = await databaseService.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Parse existing admin notes or create empty array
+      let adminNotes: AdminNote[] = [];
+      if (user.adminNotes) {
+        try {
+          adminNotes = JSON.parse(user.adminNotes);
+        } catch (e) {
+          console.warn('Failed to parse existing admin notes, starting fresh');
+          adminNotes = [];
+        }
+      }
+
+      // Create new admin note
+      const newNote: AdminNote = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        adminId: 'admin', // TODO: Get actual admin ID from auth context
+        adminName: 'Administrator', // TODO: Get actual admin name from auth context
+        note,
+        timestamp: new Date(),
+        severity
+      };
+
+      // Add the new note
+      adminNotes.unshift(newNote); // Add to beginning
+
+      // Keep only the last 20 notes to prevent excessive storage
+      if (adminNotes.length > 20) {
+        adminNotes = adminNotes.slice(0, 20);
+      }
+
+      // Update the user with new notes
+      const updatedUser = {
+        ...user,
+        adminNotes: JSON.stringify(adminNotes),
+        lastModified: new Date().toISOString()
+      };
+
+      // Save the updated user back to the database
+      await databaseService.updateUser(updatedUser);
+      
+      console.log(`✅ Note added to user ${userId}`);
     } catch (error) {
       console.error('Error adding user note:', error);
       throw error;

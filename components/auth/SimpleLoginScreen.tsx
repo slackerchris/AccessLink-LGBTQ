@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface SimpleLoginScreenProps {
@@ -26,7 +26,8 @@ interface SimpleLoginScreenProps {
 export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, loading, error } = useAuthActions();
+  const { loading } = useAuth();
+  const { signIn } = useAuthActions();
   const { colors } = useTheme();
 
   const handleLogin = async () => {
@@ -42,6 +43,11 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
       console.error('Login error:', error);
       Alert.alert('Login Failed', error.message || 'Invalid credentials');
     }
+  };
+
+  const quickLogin = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
   };
 
   return (
@@ -96,12 +102,6 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
             />
           </View>
 
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
           <TouchableOpacity
             style={[styles.loginButton, { backgroundColor: colors.primary }, loading && styles.disabledButton]}
             onPress={handleLogin}
@@ -127,12 +127,50 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
           </TouchableOpacity>
         </View>
 
-        {/* Simple test credentials note */}
-        <View style={styles.credentialsInfo}>
-          <Text style={styles.credentialsTitle}>Test Credentials:</Text>
-          <Text style={styles.credentialsText}>admin@accesslinklgbtq.app / adminpassword (Admin)</Text>
-          <Text style={styles.credentialsText}>admin@AccessLinkLGBTQ.app / adminpassword (Admin)</Text>
-          <Text style={styles.credentialsText}>user@example.com / password123 (User)</Text>
+        {/* Demo Accounts Section */}
+        <View style={styles.demoSection}>
+          <Text style={styles.demoTitle}>Quick Demo Login:</Text>
+          <View style={styles.demoButtons}>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.adminButton]} 
+              onPress={() => quickLogin('admin', 'accesslink1234')}
+            >
+              <Text style={styles.demoButtonText}>👑 Admin Login</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.userButton]} 
+              onPress={() => quickLogin('user@example.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>👤 User Login</Text>
+            </TouchableOpacity>
+            
+            {/* Business Login Section */}
+            <Text style={styles.businessSectionTitle}>📋 Business Login Options:</Text>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('business@example.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>☕ Rainbow Café</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('owner@pridehealth.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>🏥 Pride Health</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('owner@pridefitness.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>💪 Pride Fitness</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.businessButton]} 
+              onPress={() => quickLogin('hello@inclusivebooks.com', 'password123')}
+            >
+              <Text style={styles.demoButtonText}>📚 Inclusive Books</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -252,5 +290,50 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
     marginBottom: 2,
+  },
+  demoSection: {
+    marginTop: 30,
+    marginBottom: 20,
+  },
+  demoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  businessSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  demoButtons: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  demoButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    minHeight: 44,
+  },
+  adminButton: {
+    backgroundColor: '#6366f1',
+  },
+  userButton: {
+    backgroundColor: '#10b981',
+  },
+  businessButton: {
+    backgroundColor: '#f59e0b',
+  },
+  demoButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

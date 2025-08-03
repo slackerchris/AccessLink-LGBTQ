@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+
+// Suppress known warnings from third-party libraries
+import { suppressKnownWarnings } from './utils/suppressWarnings';
+
+// Web Database initialization
+import { databaseService } from './services/webDatabaseService';
 
 // Auth Components
 import { SimpleLoginScreen } from './components/auth/SimpleLoginScreen';
@@ -29,18 +35,22 @@ import { MediaGalleryScreen } from './components/business/MediaGalleryScreen';
 import { EventsManagementScreen } from './components/business/EventsManagementScreen';
 import BusinessDetailsScreen from './components/business/BusinessDetailsScreen';
 import AddBusinessScreen from './components/business/AddBusinessScreen';
+import { BusinessPortalScreen } from './components/business/BusinessPortalScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
+import { FeedbackScreen } from './components/common/FeedbackScreen';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Admin Components
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import UserManagementScreen from './components/admin/UserManagementScreen';
 import BusinessManagementScreen from './components/admin/BusinessManagementScreen';
+import DebugDashboard from './components/admin/DebugDashboard';
+import AdminPortalScreen from './components/admin/AdminPortalScreen';
 
 // Hooks
-import { useAuth, useAuthActions } from './hooks/useAuth';
+import { useAuth, useAuthActions, AuthProvider } from './hooks/useWebAuth';
 import { ThemeProvider } from './hooks/useTheme';
 
 // Profile Stack Navigator
@@ -74,6 +84,10 @@ function BusinessStackNavigator() {
       <BusinessStack.Screen 
         name="CreateReview" 
         component={CreateReviewScreen}
+      />
+      <BusinessStack.Screen 
+        name="Feedback" 
+        component={FeedbackScreen}
       />
     </BusinessStack.Navigator>
   );
@@ -113,6 +127,20 @@ function PortalStackNavigator() {
   );
 }
 
+// Business Portal Stack Navigator (Business-focused)
+const BusinessPortalStack = createStackNavigator();
+function BusinessPortalStackNavigator() {
+  return (
+    <BusinessPortalStack.Navigator screenOptions={{ headerShown: false }}>
+      <BusinessPortalStack.Screen name="BusinessPortalMain" component={BusinessPortalScreen} />
+      <BusinessPortalStack.Screen name="BusinessProfileEdit" component={BusinessProfileEditScreen} />
+      <BusinessPortalStack.Screen name="ServicesManagement" component={ServicesManagementScreen} />
+      <BusinessPortalStack.Screen name="MediaGallery" component={MediaGalleryScreen} />
+      <BusinessPortalStack.Screen name="EventsManagement" component={EventsManagementScreen} />
+    </BusinessPortalStack.Navigator>
+  );
+}
+
 // Admin Stack Navigator
 const AdminStack = createStackNavigator();
 function AdminStackNavigator() {
@@ -123,6 +151,8 @@ function AdminStackNavigator() {
       <AdminStack.Screen name="BusinessManagement" component={BusinessManagementScreen} />
       <AdminStack.Screen name="AddBusiness" component={AddBusinessScreen} />
       <AdminStack.Screen name="Admin" component={AdminDashboard} />
+      <AdminStack.Screen name="DebugDashboard" component={DebugDashboard} />
+      <AdminStack.Screen name="AdminPortal" component={AdminPortalScreen} />
     </AdminStack.Navigator>
   );
 }
@@ -153,8 +183,8 @@ function AdminTabNavigator() {
             iconName = focused ? 'business' : 'business-outline';
           } else if (route.name === 'Manage') {
             iconName = focused ? 'settings' : 'settings-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Portal') {
+            iconName = focused ? 'person-circle' : 'person-circle-outline';
           } else {
             iconName = 'help-outline';
           }
@@ -194,9 +224,9 @@ function AdminTabNavigator() {
       />
       
       <AdminTab.Screen 
-        name="Profile" 
-        component={ProfileStackNavigator}
-        options={{ title: 'Profile' }}
+        name="Portal" 
+        component={AdminPortalScreen}
+        options={{ title: 'Portal' }}
       />
     </AdminTab.Navigator>
   );
@@ -325,8 +355,8 @@ function BusinessTabNavigator() {
             iconName = focused ? 'business' : 'business-outline';
           } else if (route.name === 'Reviews') {
             iconName = focused ? 'star' : 'star-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Portal') {
+            iconName = focused ? 'apps' : 'apps-outline';
           } else {
             iconName = 'help-outline';
           }
@@ -366,9 +396,12 @@ function BusinessTabNavigator() {
       />
       
       <BusinessTab.Screen 
-        name="Profile" 
-        component={ProfileStackNavigator}
-        options={{ title: 'Profile' }}
+        name="Portal" 
+        component={BusinessPortalStackNavigator}
+        options={{ 
+          title: 'Portal',
+          headerShown: false
+        }}
       />
     </BusinessTab.Navigator>
   );
@@ -376,7 +409,7 @@ function BusinessTabNavigator() {
 
 // Profile Screen Component
 function ProfileScreen({ navigation }: { navigation: any }) {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const { signOut } = useAuthActions();
   
   const handleSignOut = async () => {
@@ -404,22 +437,12 @@ function ProfileScreen({ navigation }: { navigation: any }) {
       <View style={styles.profileHeader}>
         <Ionicons name="person-circle" size={80} color="#6366f1" />
         <Text style={styles.profileName}>
-          {userProfile?.displayName || userProfile?.email || 'User'}
+          {user?.displayName || user?.email || 'User'}
         </Text>
         <Text style={styles.profileRole}>
-          {userProfile?.role === 'admin' ? '👑 Admin' : 
-           userProfile?.role === 'business_owner' ? '🏢 Business Owner' : '👤 User'}
+          {user?.userType === 'admin' ? '👑 Admin' : 
+           user?.userType === 'business' ? '🏢 Business Owner' : '👤 User'}
         </Text>
-        {userProfile?.profile?.preferredPronouns && (
-          <Text style={styles.pronouns}>
-            {userProfile.profile.preferredPronouns}
-          </Text>
-        )}
-        {userProfile?.profile?.bio && (
-          <Text style={styles.bio}>
-            {userProfile.profile.bio}
-          </Text>
-        )}
       </View>
       
       <View style={styles.buttonContainer}>
@@ -465,8 +488,46 @@ function AppNavigator({ userType }: { userType: 'user' | 'business_owner' | 'adm
 
 // AppContent component to manage auth state and navigation
 function AppContent() {
-  const { user, loading, userProfile } = useAuth();
-  const userType = userProfile?.role;
+  const [dbInitialized, setDbInitialized] = useState(false);
+  const { user, loading } = useAuth();
+  // Map userType from new auth service to legacy format
+  const userType = user?.userType === 'business' ? 'business_owner' : user?.userType;
+
+  // Suppress known warnings from third-party libraries
+  useEffect(() => {
+    suppressKnownWarnings();
+  }, []);
+
+  // Initialize Web database (IndexedDB)
+  useEffect(() => {
+    const initDatabase = async () => {
+      try {
+        console.log('🗄️ Initializing IndexedDB database...');
+        await databaseService.initialize();
+        console.log('✅ IndexedDB database initialized successfully');
+        setDbInitialized(true);
+      } catch (error) {
+        console.error('❌ Failed to initialize database:', error);
+        Alert.alert(
+          'Database Error',
+          'Failed to initialize the database. Please restart the app.',
+          [{ text: 'OK' }]
+        );
+      }
+    };
+
+    initDatabase();
+  }, []);
+
+  // Show loading screen while database initializes
+  if (!dbInitialized) {
+    return (
+      <View style={[styles.centered, { flex: 1 }]}>
+        <Ionicons name="server-outline" size={48} color="#6366f1" />
+        <Text style={[styles.loadingText, { marginTop: 16 }]}>Setting up database...</Text>
+      </View>
+    );
+  }
 
   if (loading) {
     return (
@@ -488,7 +549,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

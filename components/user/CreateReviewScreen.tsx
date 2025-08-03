@@ -14,12 +14,12 @@ import {
   Image,
   TextInput,
   SafeAreaView,
-  Modal,
   FlatList,
   Dimensions,
 } from 'react-native';
+import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useReviewActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -43,15 +43,23 @@ interface CreateReviewScreenProps {
 
 export default function CreateReviewScreen({ navigation, route }: CreateReviewScreenProps) {
   const { businessId, businessName } = route.params;
-  const { userProfile } = useAuth();
-  const { addReview } = useAuthActions();
+  const { user } = useAuth();
+  const { addReview } = useReviewActions();
   const { colors } = useTheme();
+  
+  // Debug logging for route params and initial state
+  console.log('🔍 DEBUG: CreateReviewScreen mounted');
+  console.log('🔍 DEBUG: route.params =', route.params);
+  console.log('🔍 DEBUG: businessId =', businessId);
+  console.log('🔍 DEBUG: businessName =', businessName);
+  console.log('🔍 DEBUG: user =', user ? 'logged in' : 'not logged in');
   
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [photos, setPhotos] = useState<PhotoUpload[]>([]);
   const [accessibilityTags, setAccessibilityTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<PhotoUpload | null>(null);
 
@@ -83,7 +91,9 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
   ];
 
   const handleRatingPress = (selectedRating: number) => {
+    console.log('🔍 DEBUG: Rating selected =', selectedRating);
     setRating(selectedRating);
+    console.log('🔍 DEBUG: Rating state updated to =', selectedRating);
   };
 
   const handleAddPhoto = () => {
@@ -159,37 +169,85 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
   };
 
   const handleSubmitReview = async () => {
+    console.log('🔍 DEBUG: handleSubmitReview called');
+    console.log('🔍 DEBUG: rating =', rating);
+    console.log('🔍 DEBUG: comment =', comment);
+    console.log('🔍 DEBUG: businessId =', businessId);
+    console.log('🔍 DEBUG: businessName =', businessName);
+    console.log('🔍 DEBUG: isSubmitting =', isSubmitting);
+    
     if (rating === 0) {
+      console.log('⚠️ DEBUG: Validation failed - no rating selected');
       Alert.alert('Rating Required', 'Please select a rating before submitting your review.');
       return;
     }
 
     if (comment.trim().length === 0) {
+      console.log('⚠️ DEBUG: Validation failed - no comment entered');
       Alert.alert('Review Required', 'Please write a review before submitting.');
       return;
     }
 
+    console.log('✅ DEBUG: Validation passed, starting submission');
     setIsSubmitting(true);
     
     try {
-      // Convert photos to the expected format
-      const reviewPhotos = photos.map(photo => ({
-        uri: photo.uri,
-        caption: photo.caption,
-        category: photo.category
-      }));
+      // Convert photos to the expected format (just URLs)
+      const reviewPhotos = photos.map(photo => photo.uri);
 
-      await addReview(businessId, rating, comment.trim(), reviewPhotos, accessibilityTags);
+      console.log('🔍 DEBUG: Calling addReview service with:', {
+        businessId,
+        rating,
+        comment: comment.trim(),
+        photosCount: reviewPhotos.length
+      });
+
+      await addReview(businessId, rating, comment.trim(), reviewPhotos);
       
+      console.log('✅ DEBUG: addReview completed successfully');
+      console.log('🔍 DEBUG: About to show success alert');
+      
+      // Show visible success message
+      setShowSuccessMessage(true);
+      console.log('🔍 DEBUG: Success message state set to true');
+      
+      // Enhanced success notification with better visibility
       Alert.alert(
-        'Review Submitted! ⭐',
-        'Thank you for sharing your experience with the community. Your review helps other users find inclusive businesses.',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        '✅ Review Successfully Saved!',
+        `Your ${rating}-star review for ${businessName} has been saved and will help other community members discover inclusive businesses. Thank you for contributing to our community!`,
+        [
+          { 
+            text: 'Great!', 
+            style: 'default',
+            onPress: () => {
+              console.log('🔍 DEBUG: Success alert button pressed - navigating back');
+              setShowSuccessMessage(false);
+              navigation.goBack();
+            }
+          }
+        ],
+        { 
+          cancelable: false // Prevent accidental dismissal
+        }
       );
+      
+      console.log('🔍 DEBUG: Alert.alert called - should be showing now');
+      
+      // Fallback: Auto-navigate after 3 seconds if alert doesn't work
+      setTimeout(() => {
+        console.log('🔍 DEBUG: Fallback timeout - auto-navigating back');
+        setShowSuccessMessage(false);
+        navigation.goBack();
+      }, 3000);
     } catch (error) {
-      console.error('Error submitting review:', error);
-      Alert.alert('Submission Error', 'Failed to submit review. Please check your connection and try again.');
+      console.error('❌ DEBUG: addReview failed:', error);
+      Alert.alert(
+        'Submission Error', 
+        'Unable to save your review at this time. Please check your internet connection and try again.',
+        [{ text: 'Try Again', style: 'default' }]
+      );
     } finally {
+      console.log('🔍 DEBUG: Setting isSubmitting to false');
       setIsSubmitting(false);
     }
   };
@@ -269,6 +327,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
               <View style={styles.modalSection}>
                 <Text style={styles.modalSectionTitle}>Caption</Text>
                 <TextInput
+                  id="photo-caption-input"
                   style={styles.modalTextInput}
                   placeholder="Add a caption for this photo..."
                   value={editingPhoto.caption}
@@ -758,6 +817,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Review *</Text>
           <TextInput
+            id="review-comment-input"
             style={[styles.reviewInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
             placeholder="Share your experience with this business. How was the accessibility? What did you like most?"
             placeholderTextColor={colors.textSecondary}
@@ -834,16 +894,44 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
           style={[
             styles.submitButton, 
             { backgroundColor: colors.primary },
-            isSubmitting && { backgroundColor: colors.border }
+            isSubmitting && { 
+              backgroundColor: colors.border, 
+              opacity: 0.7 
+            }
           ]}
-          onPress={handleSubmitReview}
+          onPress={() => {
+            console.log('🔍 DEBUG: Submit button pressed!');
+            console.log('🔍 DEBUG: Button disabled state =', isSubmitting);
+            handleSubmitReview();
+          }}
           disabled={isSubmitting}
+          accessibilityRole="button"
+          accessibilityLabel={isSubmitting ? 'Submitting review' : 'Submit review'}
+          accessibilityHint={isSubmitting ? 'Please wait while your review is being saved' : 'Saves your review and returns to previous screen'}
+          accessibilityState={{ disabled: isSubmitting }}
         >
-          <Text style={[styles.submitButtonText, { color: '#ffffff' }]}>
-            {isSubmitting ? 'Submitting...' : 'Submit Review'}
+          <Text style={[
+            styles.submitButtonText, 
+            { color: '#ffffff' }
+          ]}>
+            {isSubmitting ? '💾 Saving Review...' : '📝 Submit Review'}
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Success Message Overlay */}
+      {showSuccessMessage && (
+        <View style={styles.successOverlay}>
+          <View style={styles.successMessage}>
+            <Ionicons name="checkmark-circle" size={48} color="#10B981" />
+            <Text style={styles.successTitle}>Review Saved Successfully! ✅</Text>
+            <Text style={styles.successSubtitle}>
+              Your {rating}-star review for {businessName} has been saved.
+            </Text>
+            <Text style={styles.successNote}>Returning to previous screen...</Text>
+          </View>
+        </View>
+      )}
 
       {renderPhotoModal()}
     </SafeAreaView>
@@ -1160,5 +1248,50 @@ const styles = StyleSheet.create({
   categoryItemTextSelected: {
     color: '#6366f1',
     fontWeight: '500',
+  },
+  // Success message styles
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  successMessage: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 32,
+    margin: 20,
+    alignItems: 'center',
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  successSubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  successNote: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

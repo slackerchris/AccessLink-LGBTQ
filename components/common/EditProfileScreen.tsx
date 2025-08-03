@@ -11,30 +11,26 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 export function EditProfileScreen({ navigation }: { navigation: any }) {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const { updateProfile } = useAuthActions();
   const { colors } = useTheme();
   
   const [formData, setFormData] = useState({
-    displayName: userProfile?.displayName || '',
-    firstName: userProfile?.profile?.firstName || '',
-    lastName: userProfile?.profile?.lastName || '',
-    phone: userProfile?.profile?.phone || '',
-    bio: userProfile?.profile?.bio || '',
-    preferredPronouns: userProfile?.profile?.preferredPronouns || '',
+    displayName: user?.displayName || '',
+    firstName: '',  // TODO: Implement detailed profile fields
+    lastName: '',
+    phone: '',
+    bio: '',
+    preferredPronouns: '',
   });
 
-  const [interests, setInterests] = useState<string[]>(
-    userProfile?.profile?.interests || []
-  );
+  const [interests, setInterests] = useState<string[]>([]);
 
-  const [accessibilityNeeds, setAccessibilityNeeds] = useState<string[]>(
-    userProfile?.profile?.accessibilityNeeds || []
-  );
+  const [accessibilityNeeds, setAccessibilityNeeds] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
 
@@ -48,8 +44,8 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
     try {
       await updateProfile({
         displayName: formData.displayName,
+        // TODO: Implement detailed profile fields in web auth service
         profile: {
-          ...userProfile?.profile,
           firstName: formData.firstName,
           lastName: formData.lastName,
           phone: formData.phone,

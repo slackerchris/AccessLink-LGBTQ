@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- 
+      This viewport works for phones with notches.
+      It's optimized for gestures by disabling global zoom.
+     -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1.00001, viewport-fit=cover, user-scalable=no"
+    />
+    <title>AccessLink LGBTQ+</title>
+    <style>
+      html, body, #root {
+        width: 100%;
+        /* To smooth any scrolling behavior */
+        -webkit-overflow-scrolling: touch;
+        margin: 0px;
+        padding: 0px;
+        /* Allows content to fill the viewport and go beyond the bottom */
+        min-height: 100%;
+      }
+      #root {
+        flex-shrink: 0;
+        flex-basis: auto;
+        flex-grow: 1;
+        display: flex;
+        flex: 1;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        /* Prevent text adjustment after orientation change */
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        /* Removes the default margin. */
+        margin: 0;
+        background-color: #6c5ce7;
+        /* Add support for backdrop-filter */
+        backdrop-filter: initial;
+      }
+    </style>
+    <!-- Content Security Policy allowing unsafe-eval for React Native Web -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
+      style-src 'self' 'unsafe-inline'; 
+      media-src *; 
+      img-src 'self' data: content:;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      connect-src 'self' ws: wss: http: https:;
+    ">
+</head>
+
+<body>
+    <!-- 
+      A generic no script element with a reload button and a message.
+      Feel free to customize this however you'd like.
+      -->
+    <noscript>
+      <form
+        action=""
+        style="
+          background-color: #fff;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 9999;
+        "
+      >
+        <div
+          style="
+            font-size: 18px;
+            font-family: Helvetica, sans-serif;
+            line-height: 24px;
+            margin: 10%;
+            width: 80%;
+          "
+        >
+          <p>Oh no! It looks like JavaScript is not enabled in your browser.</p>
+          <p style="margin: 20px 0;">
+            <button type="submit" style="background-color: #4630eb; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 16px; font-weight: bold; line-height: 20px; padding: 12px 24px;">
+              Reload
+            </button>
+          </p>
+        </div>
+      </form>
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+</body>
+</html>

@@ -16,7 +16,7 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useWebAuth';
 import { BusinessCategory, businessService } from '../../services/mockBusinessService';
 import { validators } from '../../utils/validators';
 
@@ -25,7 +25,7 @@ interface AddBusinessScreenProps {
 }
 
 export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps) {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   
   // Business basic info
@@ -129,7 +129,7 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
         services: [],
         mediaGallery: [],
         events: [],
-        ownerId: userProfile?.uid || 'anonymous',
+        ownerId: user?.id || 'anonymous',
         approved: true, // Auto-approve for demo
         featured: false,
         reviews: [],
