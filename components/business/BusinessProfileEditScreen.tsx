@@ -15,19 +15,38 @@ import {
   Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
-import { useBusinesses } from '../../hooks/useBusiness';
+import { useAuth, useBusinessActions } from '../../hooks/useWebAuth';
 
 interface BusinessProfileEditScreenProps {
   navigation: any;
 }
 
 export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
-  const { businesses } = useBusinesses();
+  const { user } = useAuth();
+  const { getMyBusinesses } = useBusinessActions();
   
-  // Find the current user's business
-  const userBusiness = businesses.find(b => b.id === (userProfile as any)?.businessId);
+  const [userBusiness, setUserBusiness] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Load user's business
+  useEffect(() => {
+    const loadBusiness = async () => {
+      try {
+        const businesses = await getMyBusinesses();
+        if (businesses.length > 0) {
+          setUserBusiness(businesses[0]); // Get the first business
+        }
+      } catch (error) {
+        console.error('Error loading business:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (user) {
+      loadBusiness();
+    }
+  }, [user, getMyBusinesses]);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -164,6 +183,16 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
     'Restaurant', 'Cafe', 'Bar/Club', 'Retail', 'Healthcare', 'Fitness', 
     'Beauty & Spa', 'Professional Services', 'Education', 'Entertainment', 'Other'
   ];
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (!userBusiness) {
     return (

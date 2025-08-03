@@ -522,19 +522,29 @@ class WebDatabaseService {
 
   // User operations
   async getUserByEmail(email: string): Promise<User | null> {
+    console.log('🗃️ webDatabaseService.getUserByEmail called with:', email);
     return new Promise((resolve, reject) => {
       if (!this.db) {
+        console.log('❌ Database not initialized in getUserByEmail');
         reject(new Error('Database not initialized'));
         return;
       }
 
+      console.log('🔍 Searching for user in IndexedDB...');
       const transaction = this.db.transaction(['users'], 'readonly');
       const store = transaction.objectStore('users');
       const index = store.index('email');
       const request = index.get(email);
 
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = request.result || null;
+        console.log('📋 IndexedDB query result:', result ? 'User found' : 'User not found', result ? { id: result.id, email: result.email } : null);
+        resolve(result);
+      };
+      request.onerror = () => {
+        console.log('❌ IndexedDB query error:', request.error);
+        reject(request.error);
+      };
     });
   }
 

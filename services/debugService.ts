@@ -4,7 +4,6 @@
  */
 
 import { databaseService } from './webDatabaseService';
-import { webAuthService } from './webAuthService';
 import type { User, Business, Review } from './webDatabaseService';
 
 export interface SystemInfo {
@@ -286,6 +285,7 @@ class DebugService {
         email: 'perf-test@example.com',
         displayName: 'Performance Test User',
         userType: 'user',
+        passwordHash: 'test-hash', // Add required field
         createdAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
         profileData: '{}'
@@ -298,15 +298,8 @@ class DebugService {
     const writeEnd = performance.now();
     const dbWriteTime = writeEnd - writeStart;
 
-    // Test auth service performance
-    const authStart = performance.now();
-    try {
-      await webAuthService.getCurrentUser();
-    } catch (error) {
-      // Expected if no user is logged in
-    }
-    const authEnd = performance.now();
-    const authTime = authEnd - authStart;
+    // Skip auth service test to avoid circular dependency
+    const authTime = 0; // Placeholder - we removed webAuthService import
 
     const results = {
       dbReadTime,
@@ -359,6 +352,7 @@ class DebugService {
           email: 'test-user-1@example.com',
           displayName: 'Test User 1',
           userType: 'user',
+          passwordHash: 'test-hash', // Add required field
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           profileData: '{}'
@@ -368,6 +362,7 @@ class DebugService {
           email: 'test-business-1@example.com',
           displayName: 'Test Business Owner 1',
           userType: 'business',
+          passwordHash: 'test-hash', // Add required field
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           profileData: '{}'

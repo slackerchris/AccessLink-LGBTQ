@@ -30,19 +30,26 @@ class WebAuthService {
   }
 
   async signInWithEmailAndPassword(email: string, password: string): Promise<AuthUser> {
+    console.log('🔐 webAuthService.signInWithEmailAndPassword called with:', email);
     debugService.info('Auth', 'Attempting to sign in', { email });
     
     // Get user from database
+    console.log('🔍 Looking up user in database...');
     const user = await databaseService.getUserByEmail(email);
+    console.log('👤 User lookup result:', user ? 'Found user' : 'No user found', user ? { id: user.id, email: user.email, userType: user.userType } : null);
     
     if (!user) {
+      console.log('❌ Login failed - user not found');
       debugService.warn('Auth', 'Login failed - user not found', { email });
       throw new Error('Invalid email or password');
     }
 
     // Verify password
+    console.log('🔑 Verifying password...');
     const isPasswordValid = await PasswordUtils.verifyPassword(password, user.passwordHash);
+    console.log('🔓 Password verification result:', isPasswordValid);
     if (!isPasswordValid) {
+      console.log('❌ Login failed - invalid password');
       debugService.warn('Auth', 'Login failed - invalid password', { email });
       throw new Error('Invalid email or password');
     }

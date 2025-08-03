@@ -19,22 +19,57 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
-import { useBusinesses } from '../../hooks/useBusiness';
-import { MediaItem, businessService } from '../../services/mockBusinessService';
+import { useAuth, useBusinessActions } from '../../hooks/useWebAuth';
 
 const { width: screenWidth } = Dimensions.get('window');
+
+interface MediaItem {
+  id: string;
+  uri: string;
+  title: string;
+  description: string;
+  category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
+  featured: boolean;
+  uploadedAt: string;
+}
 
 interface MediaGalleryScreenProps {
   navigation: any;
 }
 
 export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
-  const { businesses, refresh } = useBusinesses();
+  const { user } = useAuth();
+  const { getMyBusinesses } = useBusinessActions();
   
-  // Find the current user's business
-  const userBusiness = businesses.find(b => b.id === (userProfile as any)?.businessId);
+  const [userBusiness, setUserBusiness] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Load user's business
+  useEffect(() => {
+    const loadBusiness = async () => {
+      try {
+        console.log('Loading business for user:', user); // Debug log
+        const businesses = await getMyBusinesses();
+        console.log('Found businesses:', businesses); // Debug log
+        if (businesses.length > 0) {
+          setUserBusiness(businesses[0]); // Get the first business
+          console.log('Set userBusiness to:', businesses[0]); // Debug log
+        } else {
+          console.log('No businesses found for user'); // Debug log
+        }
+      } catch (error) {
+        console.error('Error loading business:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (user) {
+      loadBusiness();
+    } else {
+      console.log('No user found, cannot load business'); // Debug log
+    }
+  }, [user, getMyBusinesses]);
   
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -68,7 +103,9 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
   const loadMediaItems = async () => {
     if (userBusiness?.id) {
       try {
-        const businessMedia = await businessService.getBusinessMedia(userBusiness.id);
+        // For now, use placeholder media items
+        // In the future, this would fetch from the real database
+        const businessMedia: MediaItem[] = [];
         setMediaItems(businessMedia);
       } catch (error) {
         console.error('Error loading media:', error);
@@ -81,38 +118,127 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
     : mediaItems.filter(item => item.category === selectedCategory);
 
   const handleAddMedia = () => {
-    // In a real implementation, this would open the device's image/video picker
-    Alert.alert(
-      'Add Media',
-      'Choose media type to upload',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: () => handleMediaSelection('camera-photo') },
-        { text: 'Choose Photo', onPress: () => handleMediaSelection('photo') },
-        { text: 'Choose Video', onPress: () => handleMediaSelection('video') }
-      ]
-    );
+    console.log('Add Media button clicked!'); // Debug log
+    
+    // For web compatibility, let's implement proper file selection
+    if (typeof window !== 'undefined') {
+      // We're on web - create a file input element
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*,video/*'; // Accept both images and videos
+      input.multiple = false; // Single file selection for now
+      
+      input.onchange = (event: any) => {
+        const file = event.target.files[0];
+        if (file) {
+          console.log('File selected:', file.name, file.type, file.size);
+          handleFileUpload(file);
+        }
+      };
+      
+      input.click(); // Trigger file selection dialog
+    } else {
+      // Native - use Alert
+      Alert.alert(
+        'Add Media',
+        'Choose media type to upload',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Take Photo', onPress: () => handleMediaSelection('camera-photo') },
+          { text: 'Choose Photo', onPress: () => handleMediaSelection('photo') },
+          { text: 'Choose Video', onPress: () => handleMediaSelection('video') }
+        ]
+      );
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    console.log('Processing file upload:', file.name, file.type);
+    
+    if (!userBusiness?.id) {
+      console.log('No userBusiness found:', userBusiness);
+      Alert.alert('Error', 'No business account found. Please ensure you are logged in as a business owner.');
+      return;
+    }
+
+    // Validate file type
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    
+    if (!isImage && !isVideo) {
+      Alert.alert('Error', 'Please select an image or video file.');
+      return;
+    }
+
+    // Validate file size (limit to 10MB for demo)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      Alert.alert('Error', 'File size must be less than 10MB.');
+      return;
+    }
+
+    try {
+      // Create a preview URL for the file
+      const previewUrl = URL.createObjectURL(file);
+      
+      console.log('Creating new media item with preview URL:', previewUrl);
+      
+      // Create new media item
+      const newMediaItem: MediaItem = {
+        id: `media-${Date.now()}`,
+        uri: previewUrl,
+        title: file.name.split('.')[0] || 'New Media', // Use filename without extension as title
+        description: `Uploaded ${isImage ? 'image' : 'video'}: ${file.name}`,
+        category: 'other',
+        uploadedAt: new Date().toISOString(),
+        featured: false
+      };
+
+      // Add to local state (in a real app, this would upload to server/cloud storage)
+      setMediaItems(prev => [newMediaItem, ...prev]);
+      
+      // Open edit modal for the new item
+      setEditingItem(newMediaItem);
+      setFormData({
+        title: newMediaItem.title,
+        description: newMediaItem.description || '',
+        category: newMediaItem.category,
+        featured: newMediaItem.featured
+      });
+      setIsModalVisible(true);
+      
+      Alert.alert('Success', `${isImage ? 'Image' : 'Video'} uploaded successfully! You can now edit the details.`);
+      
+    } catch (error) {
+      console.error('Error processing file:', error);
+      Alert.alert('Error', 'Failed to process the selected file. Please try again.');
+    }
   };
 
   const handleMediaSelection = async (type: string) => {
-    if (!userBusiness?.id) return;
+    console.log('Media selection called with type:', type); // Debug log
+    if (!userBusiness?.id) {
+      console.log('No userBusiness found:', userBusiness); // Debug log
+      return;
+    }
 
+    console.log('Creating new media item...'); // Debug log
     // Simulate media selection and upload
     const newMediaItem: MediaItem = {
       id: `media-${Date.now()}`,
-      type: type.includes('video') ? 'video' : 'photo',
       uri: type.includes('video') 
         ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
         : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
       title: 'New Media',
       description: 'Recently uploaded',
       category: 'other',
-      uploadedAt: new Date(),
+      uploadedAt: new Date().toISOString(),
       featured: false
     };
 
     try {
-      await businessService.addBusinessMedia(userBusiness.id, newMediaItem);
+      // For now, just add to local state
+      // In the future, this would save to the real database
       setMediaItems(prev => [newMediaItem, ...prev]);
       
       // Open edit modal for the new item
@@ -161,7 +287,8 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
           featured: formData.featured
         };
         
-        await businessService.updateBusinessMedia(userBusiness.id, editingItem.id, updatedItem);
+        // For now, just update local state
+        // In the future, this would save to the real database
         setMediaItems(prev => prev.map(item => 
           item.id === editingItem.id ? updatedItem : item
         ));
@@ -190,7 +317,8 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
             if (!userBusiness?.id) return;
             
             try {
-              await businessService.deleteBusinessMedia(userBusiness.id, mediaId);
+              // For now, just remove from local state
+              // In the future, this would delete from the real database
               setMediaItems(prev => prev.filter(item => item.id !== mediaId));
               Alert.alert('Success', 'Media deleted successfully!');
             } catch (error) {
@@ -210,7 +338,8 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
     if (!mediaItem) return;
 
     try {
-      await businessService.setFeaturedMedia(userBusiness.id, mediaId, !mediaItem.featured);
+      // For now, just update local state
+      // In the future, this would save to the real database
       setMediaItems(prev => prev.map(item => 
         item.id === mediaId ? { ...item, featured: !item.featured } : item
       ));
@@ -221,7 +350,7 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
   };
 
   const renderMediaItem = ({ item }: { item: MediaItem }) => {
-    const isVideo = item.type === 'video';
+    const isVideo = item.uri.includes('.mp4') || item.uri.includes('video');
     
     if (viewMode === 'grid') {
       return (
@@ -272,7 +401,7 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
               {categories.find(c => c.key === item.category)?.label}
             </Text>
             <Text style={styles.listDate}>
-              {item.uploadedAt.toLocaleDateString()}
+              {new Date(item.uploadedAt).toLocaleDateString()}
             </Text>
           </View>
         </View>
@@ -285,6 +414,48 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
       </TouchableOpacity>
     );
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Media Gallery</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!userBusiness) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Media Gallery</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <Ionicons name="alert-circle" size={48} color="#ef4444" />
+          <Text style={styles.errorTitle}>No Business Found</Text>
+          <Text style={styles.errorText}>
+            You don't have a business profile associated with your account.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -877,5 +1048,28 @@ const styles = StyleSheet.create({
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

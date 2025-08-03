@@ -45,12 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log('useWebAuth signIn called with:', email); // Debug log
     setLoading(true);
     try {
       const authUser = await webAuthService.signInWithEmailAndPassword(email, password);
+      console.log('Auth service returned user:', authUser); // Debug log
       setUser(authUser);
+      console.log('User state updated successfully'); // Debug log
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('signIn error in useWebAuth:', error); // Debug log
       throw error;
     } finally {
       setLoading(false);

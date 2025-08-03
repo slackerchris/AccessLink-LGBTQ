@@ -1,6 +1,20 @@
 /**
- * Simple Login Screen Component
- * Clean login form with backend-driven redirection
+ * Simple Login Screen Compo  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      console.log('Login attempt for email:', email.trim()); // Debug log
+      await signIn(email.trim(), password);
+      console.log('Login successful!'); // Debug log
+      // Backend handles redirection based on user role
+    } catch (error: any) {
+      console.error('Login error:', error);
+      Alert.alert('Login Failed', error.message || 'Invalid credentials');
+    }
+  };login form with backend-driven redirection
  */
 
 import React, { useState } from 'react';
@@ -133,7 +147,7 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
           <View style={styles.demoButtons}>
             <TouchableOpacity 
               style={[styles.demoButton, styles.adminButton]} 
-              onPress={() => quickLogin('admin', 'accesslink1234')}
+              onPress={() => quickLogin('admin@accesslinklgbtq.app', 'password123')}
             >
               <Text style={styles.demoButtonText}>👑 Admin Login</Text>
             </TouchableOpacity>

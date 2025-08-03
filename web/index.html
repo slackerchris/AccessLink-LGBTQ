@@ -44,15 +44,8 @@
         backdrop-filter: initial;
       }
     </style>
-    <!-- Content Security Policy allowing unsafe-eval for React Native Web -->
-    <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-      style-src 'self' 'unsafe-inline'; 
-      media-src *; 
-      img-src 'self' data: content:;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval';
-      connect-src 'self' ws: wss: http: https:;
-    ">
+    <!-- Development-friendly Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: ws: wss: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline' data: blob:; img-src 'self' data: blob: http: https:; connect-src 'self' ws: wss: http: https: data: blob:; font-src 'self' data: http: https:; media-src 'self' data: blob: http: https:; object-src 'none'; frame-src 'self';">
 </head>
 
 <body>
