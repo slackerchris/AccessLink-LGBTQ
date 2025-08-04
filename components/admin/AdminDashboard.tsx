@@ -15,7 +15,7 @@ import {
   FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, usePermissions } from '../../hooks/useWebAuth';
+import { useAuth, usePermissions } from '../../hooks/useFirebaseAuth';
 import { usePendingBusinesses, useBusinessActions } from '../../hooks/useBusiness';
 import { BusinessListing } from '../../services/mockBusinessService';
 import { adminService, PlatformStats } from '../../services/adminService';

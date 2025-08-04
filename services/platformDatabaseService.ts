@@ -4,6 +4,7 @@
  */
 
 import { Platform } from 'react-native';
+import * as SQLite from 'expo-sqlite';
 
 // Type definitions
 export interface User {

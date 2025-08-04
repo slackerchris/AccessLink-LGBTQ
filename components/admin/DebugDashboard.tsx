@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useWebAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { debugService } from '../../services/debugService';
 import type { SystemInfo, DatabaseStats, LogEntry } from '../../services/debugService';
 

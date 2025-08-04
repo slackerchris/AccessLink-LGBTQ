@@ -16,7 +16,7 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useWebAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { BusinessCategory, businessService } from '../../services/mockBusinessService';
 import { validators } from '../../utils/validators';
 

@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
+import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
 
 // Using webAuth to connect to IndexedDB database
 

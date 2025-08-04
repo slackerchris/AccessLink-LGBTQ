@@ -10,7 +10,7 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface PortalScreenProps {
@@ -18,8 +18,7 @@ interface PortalScreenProps {
 }
 
 export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
-  const { signOut } = useAuthActions();
+  const { userProfile, logout } = useAuth();
   const { theme, toggleTheme, colors } = useTheme();
 
   const handleSignOut = async () => {
@@ -33,7 +32,7 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await signOut();
+              await logout();
             } catch (error: any) {
               Alert.alert('Sign Out Error', error.message);
             }
@@ -127,7 +126,7 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
             </View>
             <Text style={dynamicStyles.portalCardTitle}>Saved Places</Text>
             <Text style={dynamicStyles.portalCardSubtitle}>
-              {userProfile?.profile?.savedBusinesses?.length || 0} saved businesses
+              Your saved businesses
             </Text>
           </TouchableOpacity>
 
@@ -143,7 +142,7 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
             </View>
             <Text style={dynamicStyles.portalCardTitle}>My Reviews</Text>
             <Text style={dynamicStyles.portalCardSubtitle}>
-              {userProfile?.profile?.reviews?.length || 0} reviews written
+              View your reviews
             </Text>
           </TouchableOpacity>
 
@@ -173,7 +172,7 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
             </View>
             <Text style={dynamicStyles.portalCardTitle}>Identity Settings</Text>
             <Text style={dynamicStyles.portalCardSubtitle}>
-              {userProfile?.profile?.lgbtqIdentity?.visible ? 'Public profile' : 'Private profile'}
+              LGBTQ+ identity preferences
             </Text>
           </TouchableOpacity>
 

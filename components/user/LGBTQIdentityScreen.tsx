@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 const lgbtqIdentityOptions = [
@@ -46,18 +46,16 @@ const pronounOptions = [
 
 export default function LGBTQIdentityScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
-  const { updateProfile } = useAuthActions();
   const { colors } = useTheme();
   const [saving, setSaving] = useState(false);
   
-  const currentIdentity = userProfile?.profile?.lgbtqIdentity || {
+  // Simplified identity state - will be connected to Firebase later
+  const [identity, setIdentity] = useState({
     visible: false,
     pronouns: '',
     identities: [],
     preferredName: ''
-  };
-
-  const [identity, setIdentity] = useState(currentIdentity);
+  });
   const [customPronoun, setCustomPronoun] = useState('');
   const [customIdentity, setCustomIdentity] = useState('');
 
@@ -114,19 +112,14 @@ export default function LGBTQIdentityScreen({ navigation }: { navigation: any })
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
-      await updateProfile({
-        profile: {
-          ...userProfile?.profile,
-          lgbtqIdentity: identity
-        }
-      });
-      Alert.alert('Success', 'Your LGBTQ+ identity settings have been updated!');
+      // TODO: Implement profile update with Firebase
+      Alert.alert('Coming Soon', 'Identity settings will be saved in a future update!');
     } catch (error) {
       Alert.alert('Error', 'Failed to save identity settings. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [identity, updateProfile, userProfile]);
+  }, [identity]);
 
   const handleReset = useCallback(() => {
     Alert.alert(
@@ -150,7 +143,8 @@ export default function LGBTQIdentityScreen({ navigation }: { navigation: any })
     );
   }, []);
 
-  const hasChanges = JSON.stringify(identity) !== JSON.stringify(currentIdentity);
+  // Always show save button for now
+  const hasChanges = true;
 
   const styles = StyleSheet.create({
     container: {

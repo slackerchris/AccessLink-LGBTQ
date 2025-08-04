@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type Theme = 'light' | 'dark';
@@ -123,12 +123,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
+    // Save asynchronously without blocking UI
     saveTheme(newTheme);
   };
 
   const toggleHighVisibility = () => {
     const newValue = !highVisibility;
     setHighVisibility(newValue);
+    // Save asynchronously without blocking UI
     saveHighVisibility(newValue);
   };
 
@@ -139,11 +141,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return theme === 'light' ? lightTheme : darkTheme;
   };
 
-  const colors = getColors();
+  const colors = useMemo(() => getColors(), [theme, highVisibility]);
+
+  const contextValue = useMemo(() => ({
+    theme,
+    highVisibility,
+    toggleTheme,
+    toggleHighVisibility,
+    colors
+  }), [theme, highVisibility, colors]);
 
   return React.createElement(
     ThemeContext.Provider,
-    { value: { theme, highVisibility, toggleTheme, toggleHighVisibility, colors } },
+    { value: contextValue },
     children
   );
 };

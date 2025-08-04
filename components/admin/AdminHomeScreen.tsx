@@ -14,7 +14,7 @@ import {
   RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { usePendingBusinesses } from '../../hooks/useBusiness';
 import { adminService, PlatformStats } from '../../services/adminService';
 import { useTheme } from '../../hooks/useTheme';
@@ -24,8 +24,7 @@ interface AdminHomeScreenProps {
 }
 
 export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
-  const { signOut } = useAuthActions();
+  const { user, logout } = useAuth();
   const { businesses: pendingBusinesses } = usePendingBusinesses();
   const { colors, theme, toggleTheme } = useTheme();
   
@@ -56,7 +55,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
     } catch (error: any) {
       Alert.alert('Sign Out Error', error.message);
     }

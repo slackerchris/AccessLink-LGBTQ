@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { suppressKnownWarnings } from './utils/suppressWarnings';
 
 // Web Database initialization
-import { databaseService } from './services/webDatabaseService';
+// Using Firebase Firestore - no local database initialization needed
 
 // Auth Components
 import { SimpleLoginScreen } from './components/auth/SimpleLoginScreen';
@@ -497,25 +497,10 @@ function AppContent() {
     suppressKnownWarnings();
   }, []);
 
-  // Initialize Web database (IndexedDB)
+  // Firebase Firestore is ready to use - no initialization needed
   useEffect(() => {
-    const initDatabase = async () => {
-      try {
-        console.log('🗄️ Initializing IndexedDB database...');
-        await databaseService.initialize();
-        console.log('✅ IndexedDB database initialized successfully');
-        setDbInitialized(true);
-      } catch (error) {
-        console.error('❌ Failed to initialize database:', error);
-        Alert.alert(
-          'Database Error',
-          'Failed to initialize the database. Please restart the app.',
-          [{ text: 'OK' }]
-        );
-      }
-    };
-
-    initDatabase();
+    // Firebase Firestore is cloud-based and ready immediately
+    setDbInitialized(true);
   }, []);
 
   // Show loading screen while database initializes

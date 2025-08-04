@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { businessService, BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
-import { useAuth } from '../../hooks/useWebAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 
 interface BusinessManagementScreenProps {
   navigation: any;

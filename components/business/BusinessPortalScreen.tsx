@@ -9,15 +9,14 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 
 interface BusinessPortalScreenProps {
   navigation: any;
 }
 
 export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
-  const { signOut } = useAuthActions();
+  const { user, logout } = useAuth();
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -30,7 +29,7 @@ export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navi
           style: 'destructive',
           onPress: async () => {
             try {
-              await signOut();
+              await logout();
             } catch (error: any) {
               Alert.alert('Sign Out Error', error.message);
             }

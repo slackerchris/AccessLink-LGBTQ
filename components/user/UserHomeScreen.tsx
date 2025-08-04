@@ -3,7 +3,7 @@
  * Main dashboard for regular users
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
   TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useWebAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing } from '../../services/mockBusinessService';
@@ -26,12 +26,19 @@ interface UserHomeScreenProps {
 
 export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
-  const { businesses } = useBusinesses({}, 6); // Get first 6 businesses
   const [searchQuery, setSearchQuery] = useState('');
   const { colors } = useTheme();
 
-  // Debug business data
-  console.log('Businesses data:', businesses.map((b, i) => ({ index: i, name: b.name, id: b.id })));
+  // Memoize the filters to prevent infinite re-renders
+  const businessFilters = useMemo(() => ({}), []);
+  const { businesses } = useBusinesses(businessFilters, 6); // Get first 6 businesses
+
+  // Debug business data - only log when businesses actually change
+  useEffect(() => {
+    if (businesses.length > 0) {
+      console.log('Businesses data:', businesses.map((b, i) => ({ index: i, name: b.name, id: b.id })));
+    }
+  }, [businesses.length]); // Only log when count changes
 
   const handleSearch = () => {
     if (searchQuery.trim()) {

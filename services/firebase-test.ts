@@ -17,14 +17,14 @@ const testFirebaseConfig = {
   appId: "demo-app-id"
 };
 
-// Production Firebase configuration
+// Production Firebase configuration (updated to match new project)
 const prodFirebaseConfig = {
-  apiKey: "AIzaSyDQOnwLXW_PtQKtxhfxasWp2C4c7Bp2GKw",
-  authDomain: "acceinklgbtq-a1de8.firebaseapp.com",
-  projectId: "acceinklgbtq-a1de8",
-  storageBucket: "acceinklgbtq-a1de8.firebasestorage.app",
-  messagingSenderId: "580679166679",
-  appId: "1:580679166679:android:ea493c0f288e2f5cd65e92"
+  apiKey: "AIzaSyCIOMEqs_o2VTxj7HnVqGMtG5u2qRuT6TU",
+  authDomain: "acceslink-lgbtq.firebaseapp.com",
+  projectId: "acceslink-lgbtq",
+  storageBucket: "acceslink-lgbtq.firebasestorage.app",
+  messagingSenderId: "595597079040",
+  appId: "1:595597079040:android:598b0e16a92f0fb2c49ee5"
 };
 
 // Choose config based on environment

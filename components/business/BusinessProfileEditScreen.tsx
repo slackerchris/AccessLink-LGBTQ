@@ -15,7 +15,7 @@ import {
   Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useBusinessActions } from '../../hooks/useWebAuth';
+import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
 
 interface BusinessProfileEditScreenProps {
   navigation: any;

@@ -16,8 +16,8 @@ import {
 } from 'react-native';
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
-import { useBusinesses, useBusinessActions } from '../../hooks/useBusiness';
-import { useAuth, useAuthActions } from '../../hooks/useWebAuth';
+import { useBusinesses } from '../../hooks/useBusiness';
+import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
 
@@ -128,7 +128,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   onNavigateToBusinessDetails
 }) => {
   const { user } = useAuth();
-  const { } = useAuthActions();  // Will implement save functionality later
+  const { } = useBusinessActions();  // Will implement save functionality later
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | 'all'>(initialCategory || 'all');

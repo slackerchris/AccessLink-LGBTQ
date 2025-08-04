@@ -12,8 +12,7 @@ import {
   onAuthStateChanged,
   updateProfile,
   GoogleAuthProvider,
-  signInWithCredential,
-  signInWithPopup
+  signInWithCredential
 } from 'firebase/auth';
 import { 
   doc, 
@@ -28,6 +27,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
+import { Platform } from 'react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
@@ -204,45 +204,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       setError(null);
 
-      // Check if we're on web or mobile
-      if (typeof window !== 'undefined') {
-        // Web platform - use popup
-        const provider = new GoogleAuthProvider();
-        provider.addScope('email');
-        provider.addScope('profile');
-        
-        const result = await signInWithPopup(auth, provider);
-        const firebaseUser = result.user;
+      // React Native platform - use Expo AuthSession
+      const redirectUri = AuthSession.makeRedirectUri();
+      console.log('🔗 Google OAuth redirect URI:', redirectUri);
+      
+      const request = new AuthSession.AuthRequest({
+        clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
+        scopes: ['openid', 'profile', 'email'],
+        redirectUri,
+        responseType: AuthSession.ResponseType.IdToken,
+        extraParams: {},
+      });
+
+      const result = await request.promptAsync({
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      });
+
+      if (result.type === 'success' && result.params.id_token) {
+        const credential = GoogleAuthProvider.credential(result.params.id_token);
+        const userCredential = await signInWithCredential(auth, credential);
+        const firebaseUser = userCredential.user;
         
         // Create or update user profile
         await createOrUpdateUserProfile(firebaseUser, 'user');
-        
       } else {
-        // Mobile platform - use expo auth session
-        const redirectUri = AuthSession.makeRedirectUri();
-        
-        const request = new AuthSession.AuthRequest({
-          clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
-          scopes: ['openid', 'profile', 'email'],
-          redirectUri,
-          responseType: AuthSession.ResponseType.IdToken,
-          extraParams: {},
-        });
-
-        const result = await request.promptAsync({
-          authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-        });
-
-        if (result.type === 'success' && result.params.id_token) {
-          const credential = GoogleAuthProvider.credential(result.params.id_token);
-          const userCredential = await signInWithCredential(auth, credential);
-          const firebaseUser = userCredential.user;
-          
-          // Create or update user profile
-          await createOrUpdateUserProfile(firebaseUser, 'user');
-        } else {
-          throw new Error('Google sign-in was cancelled or failed');
-        }
+        throw new Error('Google sign-in was cancelled or failed');
       }
     } catch (err: any) {
       setError(err.message || 'Google sign-in failed');
