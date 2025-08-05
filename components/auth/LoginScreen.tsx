@@ -178,10 +178,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         <View style={styles.credentialsInfo}>
           <Text style={styles.credentialsTitle}>Demo Credentials:</Text>
           <Text style={styles.credentialsText}>Admin: admin@accesslinklgbtq.app / g0g0tr@!N!</Text>
-          <Text style={styles.credentialsText}>User: slackerchris#gmail.com / g0g0tr@!N!</Text>
+          <Text style={styles.credentialsText}>User: slackerchris@gmail.com / g0g0tr@!N!</Text>
           <Text style={styles.credentialsText}>Business Owner: alex.rainbow@example.com / rainbow123</Text>
           <Text style={styles.credentialsText}>Health Clinic: dr.maria.santos@inclusivehealth.com / health123</Text>
-          <Text style={styles.credentialsText}>Café Manager: jamie.manager@rainbowcafe.com / manager123</Text>
+          <Text style={styles.credentialsText}>Café Manager: jamie.manager@rainbowcafe.com / rainbow123</Text>
           <Text style={styles.credentialsText}>Fitness Trainer: sam.trainer@spectrumfitness.com / trainer123</Text>
         </View>
       </ScrollView>
