@@ -49,6 +49,9 @@ interface UserProfile {
     phoneNumber?: string;
     location?: string;
     bio?: string;
+    preferredPronouns?: string;
+    interests?: string[];
+    accessibilityNeeds?: string[];
   };
 }
 
@@ -363,22 +366,100 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     deleteBusiness
   };
 
+  // Implement update profile functionality
+  const handleUpdateProfile = async (profileUpdates: { displayName?: string; profile?: any }) => {
+    if (!user) throw new Error('User not authenticated');
+    
+    try {
+      setLoading(true);
+      
+      // Update Firebase display name if provided
+      if (profileUpdates.displayName) {
+        await updateProfile(user, { displayName: profileUpdates.displayName });
+      }
+      
+      // Update Firestore user profile
+      const userDocRef = doc(db, 'users', user.uid);
+      
+      const updateData: any = {
+        updatedAt: serverTimestamp()
+      };
+      
+      if (profileUpdates.displayName) {
+        updateData.displayName = profileUpdates.displayName;
+      }
+      
+      if (profileUpdates.profile) {
+        updateData.profile = {
+          ...(userProfile?.profile || {}),
+          ...profileUpdates.profile
+        };
+      }
+      
+      await updateDoc(userDocRef, updateData);
+      
+      // Update local state
+      if (userProfile) {
+        setUserProfile({
+          ...userProfile,
+          displayName: profileUpdates.displayName || userProfile.displayName,
+          profile: {
+            ...(userProfile.profile || {}),
+            ...(profileUpdates.profile || {})
+          }
+        });
+      }
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      throw new Error(err.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const authActionsValue: AuthActionsType = {
+    updateProfile: handleUpdateProfile
+  };
+
   return React.createElement(
     AuthContext.Provider,
     { value: authValue },
     React.createElement(
-      BusinessContext.Provider,
-      { value: businessValue },
-      children
+      AuthActionsContext.Provider,
+      { value: authActionsValue },
+      React.createElement(
+        BusinessContext.Provider,
+        { value: businessValue },
+        children
+      )
     )
   );
 };
+
+// Define AuthActions interface
+interface AuthActionsType {
+  updateProfile: (profileUpdates: {
+    displayName?: string;
+    profile?: any;
+  }) => Promise<void>;
+}
+
+// Create auth actions context
+const AuthActionsContext = createContext<AuthActionsType | undefined>(undefined);
 
 // Custom Hooks
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const useAuthActions = (): AuthActionsType => {
+  const context = useContext(AuthActionsContext);
+  if (context === undefined) {
+    throw new Error('useAuthActions must be used within an AuthProvider');
   }
   return context;
 };

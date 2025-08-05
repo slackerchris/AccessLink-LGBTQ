@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth, useAuthActions } from '../../hooks/useAuth';
 
 // Using webAuth to connect to IndexedDB database
 
@@ -28,7 +28,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const { loading, login } = useAuth();
+  const { loading } = useAuth();
+  const { signIn } = useAuthActions();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -38,7 +39,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     setLoginError(''); // Clear previous errors
     try {
-      await login(email.trim(), password);
+      await signIn(email.trim(), password);
       // Navigation will be handled automatically by the App component
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';

@@ -487,30 +487,78 @@ class BusinessService {
   public async searchBusinesses(searchQuery: string, filters: BusinessFilters = {}, pageLimit: number = 20): Promise<{ businesses: BusinessListing[], lastDoc: DocumentSnapshot | null }> {
     try {
       const businessesRef = collection(db, 'businesses');
-      let q = query(
+      let q;
+      
+      // Create a simple query first - this should work regardless of indexes
+      q = query(
         businessesRef,
-        where('approved', '==', true),
-        orderBy('createdAt', 'desc'),
-        limit(pageLimit)
+        where('status', '==', 'approved'),
+        limit(pageLimit * 5) // Get more to account for filtering
       );
 
       const snapshot = await getDocs(q);
       let businesses: BusinessListing[] = [];
       
       snapshot.forEach((doc) => {
-        const business = { id: doc.id, ...doc.data() } as BusinessListing;
+        // Properly cast document data to the expected type
+        const data = doc.data() as Partial<Omit<BusinessListing, 'id'>>;
+        const business: BusinessListing = {
+          id: doc.id,
+          name: data.name || '',
+          description: data.description || '',
+          category: data.category || 'other',
+          location: data.location || {
+            address: '',
+            city: '',
+            state: '',
+            zipCode: ''
+          },
+          contact: data.contact || {
+            phone: '',
+            email: ''
+          },
+          hours: data.hours || {},
+          lgbtqFriendly: data.lgbtqFriendly || {
+            verified: false,
+            certifications: [],
+            inclusivityFeatures: []
+          },
+          accessibility: data.accessibility || {
+            wheelchairAccessible: false,
+            brailleMenus: false,
+            signLanguageSupport: false,
+            quietSpaces: false,
+            accessibilityNotes: ''
+          },
+          ownerId: data.ownerId || '',
+          status: data.status || 'pending',
+          featured: data.featured || false,
+          images: data.images || [],
+          tags: data.tags || [],
+          averageRating: data.averageRating || 0,
+          totalReviews: data.totalReviews || 0,
+          createdAt: data.createdAt || null,
+          updatedAt: data.updatedAt || null
+        };
         
         // Filter by search query (case-insensitive)
         const searchLower = searchQuery.toLowerCase();
         const matchesSearch = 
           business.name.toLowerCase().includes(searchLower) ||
           business.description.toLowerCase().includes(searchLower) ||
-          business.tags?.some(tag => tag.toLowerCase().includes(searchLower)) ||
+          business.tags.some(tag => tag.toLowerCase().includes(searchLower)) ||
           business.location.city.toLowerCase().includes(searchLower);
         
         if (matchesSearch) {
           businesses.push(business);
         }
+      });
+
+      // Sort by creation date (most recent first)
+      businesses.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
       });
 
       // Apply additional filters
@@ -523,10 +571,22 @@ class BusinessService {
       if (filters.state) {
         businesses = businesses.filter(b => b.location.state.toLowerCase() === filters.state.toLowerCase());
       }
+      if (filters.lgbtqVerified) {
+        businesses = businesses.filter(b => b.lgbtqFriendly.verified);
+      }
+      if (filters.wheelchairAccessible) {
+        businesses = businesses.filter(b => b.accessibility.wheelchairAccessible);
+      }
+      if (filters.minRating) {
+        businesses = businesses.filter(b => b.averageRating >= filters.minRating);
+      }
+
+      // Finally, apply the page limit
+      businesses = businesses.slice(0, pageLimit);
 
       return {
         businesses,
-        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null
+        lastDoc: null // Can't use lastDoc with client-side filtering
       };
     } catch (error) {
       console.error('Error searching businesses:', error);
@@ -537,25 +597,64 @@ class BusinessService {
   public async getBusinessesByCategory(category: BusinessCategory, pageLimit: number = 20): Promise<{ businesses: BusinessListing[], lastDoc: DocumentSnapshot | null }> {
     try {
       const businessesRef = collection(db, 'businesses');
-      const q = query(
-        businessesRef,
-        where('approved', '==', true),
-        where('category', '==', category),
-        orderBy('createdAt', 'desc'),
-        limit(pageLimit)
-      );
-
-      const snapshot = await getDocs(q);
-      const businesses: BusinessListing[] = [];
       
-      snapshot.forEach((doc) => {
-        businesses.push({ id: doc.id, ...doc.data() } as BusinessListing);
-      });
-
-      return {
-        businesses,
-        lastDoc: snapshot.docs[snapshot.docs.length - 1] || null
-      };
+      // First try with the most efficient query
+      try {
+        const q = query(
+          businessesRef,
+          where('status', '==', 'approved'),
+          where('category', '==', category),
+          orderBy('createdAt', 'desc'),
+          limit(pageLimit)
+        );
+        
+        const snapshot = await getDocs(q);
+        const businesses: BusinessListing[] = [];
+        
+        snapshot.forEach((doc) => {
+          businesses.push({ id: doc.id, ...doc.data() } as BusinessListing);
+        });
+        
+        return {
+          businesses,
+          lastDoc: snapshot.docs[snapshot.docs.length - 1] || null
+        };
+      } catch (indexError) {
+        console.warn('Index error, falling back to client-side filtering:', indexError);
+        
+        // Fallback to a simpler query without complex indexes
+        // This gets all businesses and filters them client-side
+        const simpleQuery = query(
+          businessesRef,
+          where('status', '==', 'approved'),
+          limit(100) // Get more documents since we'll filter client-side
+        );
+        
+        const snapshot = await getDocs(simpleQuery);
+        let businesses: BusinessListing[] = [];
+        
+        snapshot.forEach((doc) => {
+          const business = { id: doc.id, ...doc.data() } as BusinessListing;
+          if (business.category === category) {
+            businesses.push(business);
+          }
+        });
+        
+        // Sort by createdAt desc (client-side)
+        businesses = businesses.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date(0);
+          const dateB = b.createdAt?.toDate?.() || new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        // Apply limit after sorting
+        businesses = businesses.slice(0, pageLimit);
+        
+        return {
+          businesses,
+          lastDoc: null // Can't use lastDoc with client-side filtering
+        };
+      }
     } catch (error) {
       console.error('Error getting businesses by category:', error);
       throw error;

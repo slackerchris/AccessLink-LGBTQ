@@ -15,17 +15,18 @@ import {
   TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing } from '../../services/mockBusinessService';
+import { prepareForNavigation } from '../../utils/navigationHelpers';
 
 interface UserHomeScreenProps {
   navigation: any;
 }
 
 export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const { colors, shadows } = useTheme();
 
@@ -48,7 +49,7 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
     }
   };
 
-  const firstName = user?.displayName?.split(' ')[0] || 'Friend';
+  const firstName = userProfile?.displayName?.split(' ')[0] || 'Friend';
 
   return (
     <ScrollView 
@@ -117,9 +118,11 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
             onPress={(e) => {
               e.stopPropagation();
               console.log('Business clicked:', business.name, 'Index:', index);
+              // Use prepareForNavigation to serialize Date objects to strings
+              const serializedBusiness = prepareForNavigation(business);
               navigation.navigate('Directory', { 
                 screen: 'BusinessDetails', 
-                params: { business } 
+                params: { business: serializedBusiness } 
               });
             }}
             accessibilityRole="button"

@@ -15,22 +15,24 @@ import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 export function EditProfileScreen({ navigation }: { navigation: any }) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { updateProfile } = useAuthActions();
   const { colors } = useTheme();
   
   const [formData, setFormData] = useState({
-    displayName: user?.displayName || '',
-    firstName: '',  // TODO: Implement detailed profile fields
-    lastName: '',
-    phone: '',
-    bio: '',
-    preferredPronouns: '',
+    displayName: userProfile?.displayName || user?.displayName || '',
+    firstName: userProfile?.profile?.firstName || '',
+    lastName: userProfile?.profile?.lastName || '',
+    phone: userProfile?.profile?.phoneNumber || '',
+    bio: userProfile?.profile?.bio || '',
+    preferredPronouns: userProfile?.profile?.preferredPronouns || '',
   });
 
-  const [interests, setInterests] = useState<string[]>([]);
-
-  const [accessibilityNeeds, setAccessibilityNeeds] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>(
+    userProfile?.profile?.interests || []
+  );
+  
+  // accessibilityNeeds state moved to AccessibilityPreferencesScreen
 
   const [loading, setLoading] = useState(false);
 
@@ -42,17 +44,29 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
 
     setLoading(true);
     try {
-      await updateProfile({
+      console.log('Updating profile with:', {
         displayName: formData.displayName,
-        // TODO: Implement detailed profile fields in web auth service
         profile: {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          phone: formData.phone,
+          phone: formData.phone, 
           bio: formData.bio,
           preferredPronouns: formData.preferredPronouns,
           interests,
-          accessibilityNeeds,
+          // accessibilityNeeds moved to AccessibilityPreferencesScreen
+        }
+      });
+      
+      await updateProfile({
+        displayName: formData.displayName,
+        profile: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phoneNumber: formData.phone, // Note: Changed from phone to phoneNumber to match UserProfile type
+          bio: formData.bio,
+          preferredPronouns: formData.preferredPronouns,
+          interests,
+          // accessibilityNeeds moved to AccessibilityPreferencesScreen
         }
       });
       
@@ -74,13 +88,7 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
     );
   };
 
-  const toggleAccessibilityNeed = (need: string) => {
-    setAccessibilityNeeds(prev => 
-      prev.includes(need) 
-        ? prev.filter(n => n !== need)
-        : [...prev, need]
-    );
-  };
+  // toggleAccessibilityNeed moved to AccessibilityPreferencesScreen
 
   const commonInterests = [
     'Arts & Culture', 'Music', 'Sports', 'Food & Dining', 'Nightlife',
@@ -88,11 +96,7 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
     'Travel', 'Technology', 'Books', 'Movies', 'Volunteering'
   ];
 
-  const commonAccessibilityNeeds = [
-    'Wheelchair Accessible', 'ASL Interpretation', 'Braille Menus',
-    'Large Print', 'Audio Assistance', 'Service Animal Friendly',
-    'Quiet Spaces', 'Gender Neutral Restrooms', 'Sensory Accommodations'
-  ];
+  // Accessibility needs moved to AccessibilityPreferencesScreen
 
   return (
     <KeyboardAvoidingView 
@@ -246,33 +250,7 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Accessibility Needs</Text>
-          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-            Help us find businesses that meet your accessibility requirements
-          </Text>
-          <View style={styles.tagContainer}>
-            {commonAccessibilityNeeds.map((need) => (
-              <TouchableOpacity
-                key={need}
-                style={[
-                  styles.tag,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                  accessibilityNeeds.includes(need) && { backgroundColor: colors.primary, borderColor: colors.primary }
-                ]}
-                onPress={() => toggleAccessibilityNeed(need)}
-              >
-                <Text style={[
-                  styles.tagText,
-                  { color: colors.text },
-                  accessibilityNeeds.includes(need) && { color: '#ffffff' }
-                ]}>
-                  {need}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        {/* Accessibility preferences moved to AccessibilityPreferencesScreen */}
 
         <View style={styles.bottomPadding} />
       </ScrollView>

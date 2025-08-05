@@ -19,7 +19,8 @@ import {
   serverTimestamp,
   DocumentSnapshot,
   QueryConstraint,
-  writeBatch
+  writeBatch,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { UserProfile } from './authService';
@@ -209,32 +210,54 @@ class ProperBusinessService {
     lastDoc?: DocumentSnapshot
   ): Promise<PaginatedResult<ApprovedBusiness>> {
     try {
-      const constraints: QueryConstraint[] = [
+      // Use a simpler query that doesn't require composite indexes
+      // and handle sorting in memory instead
+      const simpleConstraints: QueryConstraint[] = [
         where('category', '==', category),
-        orderBy('featured', 'desc'),
-        orderBy('averageRating', 'desc'),
-        limit(pageLimit)
+        limit(100) // Get more items to sort client-side
       ];
 
       if (lastDoc) {
-        constraints.push(startAfter(lastDoc));
+        simpleConstraints.push(startAfter(lastDoc));
       }
 
-      const q = query(collection(db, this.approvedBusinessesCollection), ...constraints);
+      const q = query(collection(db, this.approvedBusinessesCollection), ...simpleConstraints);
       const querySnapshot = await getDocs(q);
 
-      const businesses: ApprovedBusiness[] = [];
+      let businesses: ApprovedBusiness[] = [];
       let newLastDoc: DocumentSnapshot | null = null;
 
       querySnapshot.forEach((doc) => {
         businesses.push({ id: doc.id, ...doc.data() } as ApprovedBusiness);
-        newLastDoc = doc;
       });
+
+      // Sort in memory (featured first, then by rating)
+      businesses = businesses
+        .sort((a, b) => {
+          // First by featured (true comes before false)
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+          
+          // Then by rating (higher first)
+          return b.averageRating - a.averageRating;
+        })
+        .slice(0, pageLimit); // Limit to requested page size
+      
+      // Set the last document for pagination if we have results
+      if (businesses.length > 0) {
+        const lastBusinessId = businesses[businesses.length - 1].id;
+        for (const doc of querySnapshot.docs) {
+          if (doc.id === lastBusinessId) {
+            newLastDoc = doc;
+            break;
+          }
+        }
+      }
 
       return {
         items: businesses,
         lastDoc: newLastDoc,
-        hasMore: businesses.length === pageLimit
+        hasMore: querySnapshot.size > pageLimit // If we got more than we're returning, there are more
       };
     } catch (error) {
       console.error('Error getting businesses by category:', error);
@@ -281,12 +304,14 @@ class ProperBusinessService {
    */
   public async getFeaturedBusinesses(maxResults: number = 10): Promise<FeaturedBusiness[]> {
     try {
+      // Simplify query to avoid needing a composite index
+      const currentDate = new Date();
+      
+      // Just filter by featuredUntil without complex ordering
       const q = query(
         collection(db, this.featuredBusinessesCollection),
-        where('featuredUntil', '>', serverTimestamp()),
-        orderBy('featuredUntil', 'asc'),
-        orderBy('priority', 'desc'),
-        limit(maxResults)
+        where('featuredUntil', '>', currentDate),
+        limit(50) // Get more items to sort client-side
       );
 
       const querySnapshot = await getDocs(q);
@@ -295,8 +320,27 @@ class ProperBusinessService {
       querySnapshot.forEach((doc) => {
         businesses.push({ id: doc.id, ...doc.data() } as FeaturedBusiness);
       });
+      
+      // Sort in memory instead of using orderBy in the query
+      const sortedBusinesses = businesses
+        .sort((a, b) => {
+          // First by featuredUntil (asc)
+          const dateA = a.featuredUntil instanceof Timestamp 
+            ? a.featuredUntil.toDate()
+            : new Date(a.featuredUntil);
+          const dateB = b.featuredUntil instanceof Timestamp 
+            ? b.featuredUntil.toDate()
+            : new Date(b.featuredUntil);
+          
+          if (dateA < dateB) return -1;
+          if (dateA > dateB) return 1;
+          
+          // Then by priority (desc)
+          return (b.priority || 0) - (a.priority || 0);
+        })
+        .slice(0, maxResults);
 
-      return businesses;
+      return sortedBusinesses;
     } catch (error) {
       console.error('Error getting featured businesses:', error);
       throw error;

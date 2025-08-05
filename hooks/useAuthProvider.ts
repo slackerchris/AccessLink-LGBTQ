@@ -1,6 +1,7 @@
-import React, { ReactNode } from 'react';
-import AuthProviderInternal from './useFirebaseAuth';
+// Re-export AuthProvider from useFirebaseAuth
+import { AuthProvider } from './useFirebaseAuth';
+export { AuthProvider };
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <AuthProviderInternal>{children}</AuthProviderInternal>;
-};
+// Also re-export default
+import AuthProviderDefault from './useFirebaseAuth';
+export default AuthProviderDefault;

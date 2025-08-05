@@ -4,12 +4,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
+/* import { 
   businessService, 
   BusinessListing, 
   BusinessFilters,
   BusinessCategory 
-} from '../services/mockBusinessService';
+} from '../services/mockBusinessService'; */
 import { useAuth } from './useAuth';
 
 // Hook for business listings with pagination and filtering
