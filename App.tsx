@@ -12,7 +12,7 @@ import { suppressKnownWarnings } from './utils/suppressWarnings';
 // Using Firebase Firestore - no local database initialization needed
 
 // Auth Components
-import { SimpleLoginScreen } from './components/auth/SimpleLoginScreen';
+import { LoginScreen } from './components/auth/LoginScreen';
 import { SignUpScreen } from './components/auth/SignUpScreen';
 
 // Home Screen Components
@@ -50,7 +50,8 @@ import DebugDashboard from './components/admin/DebugDashboard';
 import AdminPortalScreen from './components/admin/AdminPortalScreen';
 
 // Hooks
-import { useAuth, AuthProvider } from './hooks/useFirebaseAuth';
+import { useAuth, useAuthActions } from './hooks/useAuth';
+import { AuthProvider } from './hooks/useAuthProvider';
 import { ThemeProvider } from './hooks/useTheme';
 
 // Profile Stack Navigator
@@ -155,7 +156,7 @@ const AuthStack = createStackNavigator();
 function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-      <AuthStack.Screen name="Login" component={SimpleLoginScreen} />
+      <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
     </AuthStack.Navigator>
   );
@@ -402,11 +403,12 @@ function BusinessTabNavigator() {
 
 // Profile Screen Component
 function ProfileScreen({ navigation }: { navigation: any }) {
-  const { user, userProfile, logout } = useAuth();
+  const { userProfile } = useAuth();
+  const { signOut } = useAuthActions();
   
   const handleSignOut = async () => {
     try {
-      await logout();
+      await signOut();
     } catch (error: any) {
       Alert.alert('Sign Out Error', error.message);
     }
@@ -429,7 +431,7 @@ function ProfileScreen({ navigation }: { navigation: any }) {
       <View style={styles.profileHeader}>
         <Ionicons name="person-circle" size={80} color="#6366f1" />
         <Text style={styles.profileName}>
-          {user?.displayName || user?.email || 'User'}
+          {userProfile?.displayName || userProfile?.email || 'User'}
         </Text>
         <Text style={styles.profileRole}>
           {userProfile?.role === 'admin' ? '👑 Admin' : 
@@ -481,7 +483,7 @@ function AppNavigator({ userType }: { userType: 'user' | 'business_owner' | 'adm
 // AppContent component to manage auth state and navigation
 function AppContent() {
   const [dbInitialized, setDbInitialized] = useState(false);
-  const { user, userProfile, loading } = useAuth();
+  const { isAuthenticated, userProfile, loading } = useAuth();
   // Map userProfile role to legacy format
   const userType = userProfile?.role;
 
@@ -516,7 +518,7 @@ function AppContent() {
 
   return (
     <NavigationContainer>
-      {user ? <AppNavigator userType={userType} /> : <AuthNavigator />}
+      {isAuthenticated ? <AppNavigator userType={userType} /> : <AuthNavigator />}
     </NavigationContainer>
   );
 }

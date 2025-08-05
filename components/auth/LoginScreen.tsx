@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 
 // Using webAuth to connect to IndexedDB database
 
@@ -28,8 +28,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const { loading } = useAuth();
-  const { signIn } = useAuthActions();
+  const { loading, login } = useAuth();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -39,18 +38,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     setLoginError(''); // Clear previous errors
     try {
-      await signIn(email.trim(), password);
+      await login(email.trim(), password);
       // Navigation will be handled automatically by the App component
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
       setLoginError(errorMessage);
       Alert.alert('Login Failed', errorMessage);
     }
-  };
-
-  const quickLogin = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
   };
 
   return (
@@ -63,58 +57,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <Ionicons name="heart" size={60} color="#6366f1" />
           <Text style={styles.title}>🏳️‍🌈 AccessLink LGBTQ+</Text>
           <Text style={styles.subtitle}>Sign in to connect with inclusive businesses</Text>
-        </View>
-
-        {/* Demo Accounts Section */}
-        <View style={styles.demoSection}>
-          <Text style={styles.demoTitle}>Quick Demo Login:</Text>
-          <View style={styles.demoButtons}>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.adminButton]} 
-              onPress={() => quickLogin('admin', 'accesslink1234')}
-            >
-              <Text style={styles.demoButtonText}>👑 Admin Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.userButton]} 
-              onPress={() => quickLogin('user@example.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>👤 User Login</Text>
-            </TouchableOpacity>
-            
-            {/* Business Login Section */}
-            <Text style={styles.businessSectionTitle}>📋 Business Login Options:</Text>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('business@example.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>☕ Rainbow Café</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('owner@pridehealth.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>🏥 Pride Health</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('owner@pridefitness.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>💪 Pride Fitness</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('hello@inclusivebooks.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>📚 Inclusive Books</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
         </View>
 
         <View style={styles.form}>
@@ -172,16 +114,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <Text style={styles.signUpText}>Sign Up</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Demo Credentials Info */}
-        <View style={styles.credentialsInfo}>
-          <Text style={styles.credentialsTitle}>Demo Credentials:</Text>
-          <Text style={styles.credentialsText}>Admin: admin / accesslink1234</Text>
-          <Text style={styles.credentialsText}>Admin2: admin@accesslinklgbtq.app / admin123</Text>
-          <Text style={styles.credentialsText}>User: user@example.com / password123</Text>
-          <Text style={styles.credentialsText}>Business: business@example.com / password123</Text>
-          <Text style={styles.credentialsText}>Health Center: owner@pridehealth.com / password123</Text>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -217,74 +149,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 10, // Prevent text from touching edges
-  },
-  demoSection: {
-    marginBottom: 30, // Increased spacing
-  },
-  demoTitle: {
-    fontSize: 20, // Larger for mobile
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    marginBottom: 20, // Increased spacing
-  },
-  businessSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  demoButtons: {
-    flexDirection: 'column', // Stack vertically on mobile for better touch targets
-    gap: 12, // Vertical gap between buttons
-  },
-  demoButton: {
-    paddingVertical: 16, // Larger touch target
-    paddingHorizontal: 20,
-    borderRadius: 12, // More rounded for modern feel
-    alignItems: 'center',
-    minHeight: 56, // Ensure good touch target
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  adminButton: {
-    backgroundColor: '#6366f1',
-  },
-  userButton: {
-    backgroundColor: '#10b981',
-  },
-  businessButton: {
-    backgroundColor: '#f59e0b',
-  },
-  demoButtonText: {
-    color: '#fff',
-    fontSize: 16, // Larger for mobile
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 30, // Increased spacing
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#d1d5db',
-  },
-  dividerText: {
-    color: '#6b7280',
-    paddingHorizontal: 20, // Increased padding
-    fontSize: 16, // Larger for mobile
-    fontWeight: '500',
   },
   form: {
     marginBottom: 40, // Increased spacing
@@ -373,28 +237,5 @@ const styles = StyleSheet.create({
     fontSize: 17, // Larger for mobile
     fontWeight: '700', // Bolder text
     textDecorationLine: 'underline', // Visual cue for link
-  },
-  credentialsInfo: {
-    backgroundColor: '#f8f9fa', // Slightly different color for better contrast
-    padding: 20, // Increased padding
-    borderRadius: 12, // More rounded
-    marginTop: 20, // Increased spacing
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  credentialsTitle: {
-    fontSize: 16, // Larger for mobile
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 12, // Increased spacing
-    textAlign: 'center',
-  },
-  credentialsText: {
-    fontSize: 14, // Larger for mobile readability
-    color: '#6b7280',
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', // Better font handling
-    marginBottom: 4, // Increased spacing
-    lineHeight: 20, // Better line height
   },
 });

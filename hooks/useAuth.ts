@@ -4,12 +4,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { sqliteAuthService, UserProfile, BusinessProfile } from '../services/sqliteAuthService';
+import { authService, UserProfile } from '../services/authService';
 
 // Auth state interface
 export interface AuthState {
   isAuthenticated: boolean;
-  userProfile: UserProfile | BusinessProfile | null;
+  userProfile: UserProfile | null;
   loading: boolean;
 }
 
@@ -22,26 +22,14 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        await sqliteAuthService.initialize();
-        const currentUser = sqliteAuthService.getCurrentUser();
-        setAuthState({
-          isAuthenticated: !!currentUser,
-          userProfile: currentUser,
-          loading: false
-        });
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        setAuthState({
-          isAuthenticated: false,
-          userProfile: null,
-          loading: false
-        });
-      }
-    };
-
-    initializeAuth();
+    const unsubscribe = authService.onAuthStateChange((state) => {
+      setAuthState({
+        isAuthenticated: !!state.user,
+        userProfile: state.userProfile,
+        loading: state.loading,
+      });
+    });
+    return unsubscribe;
   }, []);
 
   return authState;
@@ -56,13 +44,12 @@ export const useAuthActions = () => {
     email: string,
     password: string,
     displayName: string,
-    role: string = 'user',
     additionalInfo?: Partial<UserProfile['profile']>
   ) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.signUp(email, password, displayName, role, additionalInfo);
+      await authService.registerUser(email, password, displayName, additionalInfo);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -116,7 +103,7 @@ export const useAuthActions = () => {
     try {
       const currentState = authService.getCurrentAuthState();
       if (currentState.user) {
-        await authService.updateProfile(updates);
+        await authService.updateUserProfile(currentState.user.uid, updates);
       } else {
         throw new Error('No user logged in');
       }
@@ -132,54 +119,8 @@ export const useAuthActions = () => {
     setError(null);
   }, []);
 
-  const saveBusiness = useCallback(async (businessId: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await authService.saveBusiness(businessId);
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const unsaveBusiness = useCallback(async (businessId: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await authService.unsaveBusiness(businessId);
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const addReview = useCallback(async (
-    businessId: string, 
-    rating: number, 
-    comment: string,
-    photos?: Array<{
-      uri: string;
-      caption?: string;
-      category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
-    }>,
-    accessibilityTags?: string[]
-  ) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await authService.addReview(businessId, rating, comment, photos, accessibilityTags);
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // NOTE: Business-related actions like save/unsave/review should be in a dedicated service.
+  // They are removed from here to enforce separation of concerns.
 
   return {
     signUp,
@@ -187,9 +128,6 @@ export const useAuthActions = () => {
     signOut,
     resetPassword,
     updateProfile,
-    saveBusiness,
-    unsaveBusiness,
-    addReview,
     clearError,
     loading,
     error
@@ -227,10 +165,9 @@ export const usePermissions = () => {
 
 // Hook for protected routes
 export const useAuthGuard = (requiredRole?: 'admin' | 'business_owner') => {
-  const { user, userProfile, loading } = useAuth();
+  const { isAuthenticated, userProfile, loading } = useAuth();
   const { isAdmin, isBusinessOwner } = usePermissions();
 
-  const isAuthenticated = !!user;
   const hasRequiredRole = () => {
     if (!requiredRole) return true;
     if (requiredRole === 'admin') return isAdmin();
@@ -244,7 +181,7 @@ export const useAuthGuard = (requiredRole?: 'admin' | 'business_owner') => {
     isAuthenticated,
     canAccess,
     loading,
-    user,
+    user: null, // user object is not directly available here, use userProfile
     userProfile
   };
 };
