@@ -1,6 +1,6 @@
 /**
- * React Hooks for Business Management (Mock Version)
- * Custom hooks for managing business listings and reviews with mock data
+ * React Hooks for Business Management
+ * Custom hooks for managing business listings and reviews with Firebase
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -9,7 +9,8 @@ import {
   BusinessListing, 
   BusinessFilters,
   BusinessCategory 
-} from '../services/mockBusinessService';
+} from '../services/businessService';
+import { UserProfile as FirebaseUserProfile } from '../services/authService';
 import { useAuth } from './useAuth';
 
 // Hook for business listings with pagination and filtering
@@ -96,7 +97,7 @@ export const usePendingBusinesses = () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await businessService.getPendingBusinesses();
+      const result = await businessService.getPendingBusinesses(userProfile as unknown as FirebaseUserProfile);
       setBusinesses(result);
     } catch (err: any) {
       setError(err.message);
@@ -130,7 +131,7 @@ export const useBusinessActions = () => {
     
     setLoading(true);
     try {
-      await businessService.approveBusiness(businessId);
+      await businessService.approveBusiness(businessId, userProfile as unknown as FirebaseUserProfile);
     } catch (error: any) {
       console.error('Error approving business:', error);
       throw error;
@@ -146,7 +147,7 @@ export const useBusinessActions = () => {
     
     setLoading(true);
     try {
-      await businessService.rejectBusiness(businessId);
+      await businessService.rejectBusiness(businessId, userProfile as unknown as FirebaseUserProfile);
     } catch (error: any) {
       console.error('Error rejecting business:', error);
       throw error;

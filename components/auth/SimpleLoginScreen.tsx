@@ -191,30 +191,32 @@ export const SimpleLoginScreen: React.FC<SimpleLoginScreenProps> = ({ navigation
             </TouchableOpacity>
             
             {/* Business Login Section */}
-            <Text style={styles.businessSectionTitle}>📋 Business Login Options:</Text>
+            <Text style={styles.businessSectionTitle}>📋 Business Owner Login Options:</Text>
             <TouchableOpacity 
               style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('business@example.com', 'password123')}
+              onPress={() => quickLogin('alex.rainbow@example.com', 'rainbow123')}
             >
-              <Text style={styles.demoButtonText}>☕ Rainbow Café</Text>
+              <Text style={styles.demoButtonText}>☕ Rainbow Café Owner</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('owner@pridehealth.com', 'password123')}
+              onPress={() => quickLogin('dr.maria.santos@inclusivehealth.com', 'health123')}
             >
-              <Text style={styles.demoButtonText}>🏥 Pride Health</Text>
+              <Text style={styles.demoButtonText}>🏥 Inclusive Health Clinic</Text>
+            </TouchableOpacity>
+            
+            <Text style={styles.businessSectionTitle}>👥 Business Manager Login Options:</Text>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.managerButton]} 
+              onPress={() => quickLogin('jamie.manager@rainbowcafe.com', 'manager123')}
+            >
+              <Text style={styles.demoButtonText}>� Rainbow Café Manager</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('owner@pridefitness.com', 'password123')}
+              style={[styles.demoButton, styles.managerButton]} 
+              onPress={() => quickLogin('sam.trainer@spectrumfitness.com', 'trainer123')}
             >
-              <Text style={styles.demoButtonText}>💪 Pride Fitness</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('hello@inclusivebooks.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>📚 Inclusive Books</Text>
+              <Text style={styles.demoButtonText}>🏋️ Spectrum Fitness Trainer</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -375,6 +377,9 @@ const styles = StyleSheet.create({
   },
   businessButton: {
     backgroundColor: '#f59e0b',
+  },
+  managerButton: {
+    backgroundColor: '#8b5cf6',
   },
   demoButtonText: {
     color: '#fff',

@@ -16,9 +16,10 @@ import {
 } from 'react-native';
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
-import { debugService } from '../../services/debugService';
-import type { SystemInfo, DatabaseStats, LogEntry } from '../../services/debugService';
+import { useAuth, usePermissions } from '../../hooks/useFirebaseAuth';
+// Temporarily comment out debug service until we fix it
+// import { debugService } from '../../services/debugService';
+// import type { SystemInfo, DatabaseStats, LogEntry } from '../../services/debugService';
 
 interface DebugDashboardProps {
   navigation: any;
@@ -26,6 +27,7 @@ interface DebugDashboardProps {
 
 const DebugDashboard: React.FC<DebugDashboardProps> = ({ navigation }) => {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'database' | 'performance' | 'tools'>('overview');
@@ -44,9 +46,6 @@ const DebugDashboard: React.FC<DebugDashboardProps> = ({ navigation }) => {
   // Log filtering
   const [logLevel, setLogLevel] = useState<string>('all');
   const [logCategory, setLogCategory] = useState<string>('');
-
-  // Check if user is admin
-  const isAdmin = user?.userType === 'admin';
 
   useEffect(() => {
     if (isAdmin) {
@@ -302,7 +301,7 @@ const DebugDashboard: React.FC<DebugDashboardProps> = ({ navigation }) => {
           <Text style={styles.cardTitle}>Recent Users ({databaseStats.recentUsers.length})</Text>
           {databaseStats.recentUsers.slice(0, 5).map(user => (
             <Text key={user.id} style={styles.infoText}>
-              {user.displayName} ({user.userType}) - {user.email}
+              {user.displayName} ({(user as any).userType || (user as any).role || 'user'}) - {user.email}
             </Text>
           ))}
         </View>

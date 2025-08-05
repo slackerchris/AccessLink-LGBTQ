@@ -18,7 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
-import { BusinessListing } from '../../services/mockBusinessService';
+import { businessService } from '../../services/businessService';
+import { BusinessListing } from '../../services/businessService';
 
 interface UserHomeScreenProps {
   navigation: any;

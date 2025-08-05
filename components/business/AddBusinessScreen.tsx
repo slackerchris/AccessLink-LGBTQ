@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useFirebaseAuth';
-import { BusinessCategory, businessService } from '../../services/mockBusinessService';
+import { BusinessCategory, businessService } from '../../services/businessService';
 import { validators } from '../../utils/validators';
 
 interface AddBusinessScreenProps {
@@ -25,7 +25,7 @@ interface AddBusinessScreenProps {
 }
 
 export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   
   // Business basic info
@@ -60,7 +60,7 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
     { value: 'beauty', label: 'Beauty & Wellness' },
     { value: 'fitness', label: 'Fitness' },
     { value: 'retail', label: 'Retail' },
-    { value: 'legal', label: 'Legal Services' },
+    { value: 'professional_services', label: 'Professional Services' },
     { value: 'entertainment', label: 'Entertainment' },
     { value: 'education', label: 'Education' },
     { value: 'nonprofit', label: 'Non-Profit' },
@@ -95,10 +95,11 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
 
     setLoading(true);
     try {
+      // Create business data with new structure
       const businessData = {
         name: name.trim(),
         description: description.trim(),
-        category,
+        category: category as BusinessCategory,
         location: {
           address: address.trim(),
           city: city.trim(),
@@ -110,32 +111,35 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
           email: email.trim() || undefined,
           website: website.trim() || undefined,
         },
+        hours: {
+          monday: { open: '09:00', close: '17:00', closed: false },
+          tuesday: { open: '09:00', close: '17:00', closed: false },
+          wednesday: { open: '09:00', close: '17:00', closed: false },
+          thursday: { open: '09:00', close: '17:00', closed: false },
+          friday: { open: '09:00', close: '17:00', closed: false },
+          saturday: { open: '10:00', close: '16:00', closed: false },
+          sunday: { open: '', close: '', closed: true },
+        },
+        lgbtqFriendly: {
+          verified: lgbtqVerified,
+          certifications: [],
+          inclusivityFeatures: lgbtqVerified ? ['Safe space policy'] : [],
+        },
         accessibility: {
           wheelchairAccessible,
-          visuallyImpairedFriendly: brailleMenus,
-          hearingImpairedFriendly: signLanguageSupport,
-          notes: accessibilityNotes.trim() || undefined,
+          brailleMenus,
+          signLanguageSupport,
+          quietSpaces: false,
+          accessibilityNotes: accessibilityNotes.trim(),
         },
-        lgbtqInfo: {
-          safeSpaceCertified: lgbtqVerified,
-          lgbtqOwned: false,
-          supportsPrideEvents: false,
-          lgbtqStaffTraining: false,
-          genderNeutralBathrooms: false,
-        },
-        hours: {},
-        tags: [],
-        images: [],
-        services: [],
-        mediaGallery: [],
-        events: [],
-        ownerId: user?.id || 'anonymous',
-        approved: true, // Auto-approve for demo
+        ownerId: userProfile?.uid || user?.uid || 'anonymous',
+        status: 'pending' as const,
         featured: false,
-        reviews: [],
+        images: [],
+        tags: [],
       };
 
-      const businessId = await businessService.createBusiness(businessData);
+      const businessId = await businessService.createBusiness(businessData, userProfile as any);
       
       Alert.alert(
         'Success',

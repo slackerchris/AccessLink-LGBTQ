@@ -191,7 +191,7 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ navigation }) 
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         <View style={styles.activityCard}>
           <Text style={styles.activityText}>
-            🏢 Rainbow Café submitted for approval
+            🏢 New business submitted for approval
           </Text>
           <Text style={styles.activityTime}>2 hours ago</Text>
         </View>

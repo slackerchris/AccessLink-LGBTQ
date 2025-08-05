@@ -17,7 +17,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { businessService, BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
+import { businessService, BusinessListing, BusinessCategory } from '../../services/businessService';
 import { useAuth } from '../../hooks/useFirebaseAuth';
 
 interface BusinessManagementScreenProps {
@@ -49,7 +49,7 @@ export default function BusinessManagementScreen({ navigation }: BusinessManagem
     try {
       setLoading(true);
       // Load all businesses (we'll need to modify the service to get all businesses)
-      const result = await businessService.getAllBusinesses();
+      const result = await businessService.getBusinesses({}, 100); // Get first 100 businesses
       setBusinesses(result.businesses);
     } catch (error) {
       console.error('Error loading businesses:', error);
@@ -73,9 +73,9 @@ export default function BusinessManagementScreen({ navigation }: BusinessManagem
       filtered = filtered.filter(business => {
         switch (filterStatus) {
           case 'approved':
-            return business.approved;
+            return business.status === 'approved';
           case 'pending':
-            return !business.approved;
+            return business.status === 'pending';
           case 'featured':
             return business.featured;
           default:

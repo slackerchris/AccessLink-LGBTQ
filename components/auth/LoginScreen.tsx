@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 
 // Using webAuth to connect to IndexedDB database
 
@@ -28,8 +28,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const { loading } = useAuth();
-  const { signIn } = useAuthActions();
+  const { loading, login } = useAuth();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -39,7 +38,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     setLoginError(''); // Clear previous errors
     try {
-      await signIn(email.trim(), password);
+      await login(email.trim(), password);
       // Navigation will be handled automatically by the App component
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
@@ -83,30 +82,32 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
             
             {/* Business Login Section */}
-            <Text style={styles.businessSectionTitle}>📋 Business Login Options:</Text>
+            <Text style={styles.businessSectionTitle}>📋 Business Owner Login Options:</Text>
             <TouchableOpacity 
               style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('business@example.com', 'password123')}
+              onPress={() => quickLogin('alex.rainbow@example.com', 'rainbow123')}
             >
-              <Text style={styles.demoButtonText}>☕ Rainbow Café</Text>
+              <Text style={styles.demoButtonText}>☕ Rainbow Café Owner</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('owner@pridehealth.com', 'password123')}
+              onPress={() => quickLogin('dr.maria.santos@inclusivehealth.com', 'health123')}
             >
-              <Text style={styles.demoButtonText}>🏥 Pride Health</Text>
+              <Text style={styles.demoButtonText}>🏥 Inclusive Health Clinic</Text>
+            </TouchableOpacity>
+            
+            <Text style={styles.businessSectionTitle}>👥 Business Manager Login Options:</Text>
+            <TouchableOpacity 
+              style={[styles.demoButton, styles.managerButton]} 
+              onPress={() => quickLogin('jamie.manager@rainbowcafe.com', 'manager123')}
+            >
+              <Text style={styles.demoButtonText}>� Rainbow Café Manager</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('owner@pridefitness.com', 'password123')}
+              style={[styles.demoButton, styles.managerButton]} 
+              onPress={() => quickLogin('sam.trainer@spectrumfitness.com', 'trainer123')}
             >
-              <Text style={styles.demoButtonText}>💪 Pride Fitness</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.demoButton, styles.businessButton]} 
-              onPress={() => quickLogin('hello@inclusivebooks.com', 'password123')}
-            >
-              <Text style={styles.demoButtonText}>📚 Inclusive Books</Text>
+              <Text style={styles.demoButtonText}>🏋️ Spectrum Fitness Trainer</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -176,11 +177,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         {/* Demo Credentials Info */}
         <View style={styles.credentialsInfo}>
           <Text style={styles.credentialsTitle}>Demo Credentials:</Text>
-          <Text style={styles.credentialsText}>Admin: admin / accesslink1234</Text>
-          <Text style={styles.credentialsText}>Admin2: admin@accesslinklgbtq.app / admin123</Text>
-          <Text style={styles.credentialsText}>User: user@example.com / password123</Text>
-          <Text style={styles.credentialsText}>Business: business@example.com / password123</Text>
-          <Text style={styles.credentialsText}>Health Center: owner@pridehealth.com / password123</Text>
+          <Text style={styles.credentialsText}>Admin: admin@accesslinklgbtq.app / g0g0tr@!N!</Text>
+          <Text style={styles.credentialsText}>User: slackerchris#gmail.com / g0g0tr@!N!</Text>
+          <Text style={styles.credentialsText}>Business Owner: alex.rainbow@example.com / rainbow123</Text>
+          <Text style={styles.credentialsText}>Health Clinic: dr.maria.santos@inclusivehealth.com / health123</Text>
+          <Text style={styles.credentialsText}>Café Manager: jamie.manager@rainbowcafe.com / manager123</Text>
+          <Text style={styles.credentialsText}>Fitness Trainer: sam.trainer@spectrumfitness.com / trainer123</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -263,6 +265,9 @@ const styles = StyleSheet.create({
   },
   businessButton: {
     backgroundColor: '#f59e0b',
+  },
+  managerButton: {
+    backgroundColor: '#8b5cf6',
   },
   demoButtonText: {
     color: '#fff',

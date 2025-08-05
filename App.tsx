@@ -46,7 +46,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import UserManagementScreen from './components/admin/UserManagementScreen';
 import BusinessManagementScreen from './components/admin/BusinessManagementScreen';
-import DebugDashboard from './components/admin/DebugDashboard';
+import SimpleDebugDashboard from './components/admin/SimpleDebugDashboard';
 import AdminPortalScreen from './components/admin/AdminPortalScreen';
 
 // Hooks
@@ -151,7 +151,7 @@ function AdminStackNavigator() {
       <AdminStack.Screen name="BusinessManagement" component={BusinessManagementScreen} />
       <AdminStack.Screen name="AddBusiness" component={AddBusinessScreen} />
       <AdminStack.Screen name="Admin" component={AdminDashboard} />
-      <AdminStack.Screen name="DebugDashboard" component={DebugDashboard} />
+      <AdminStack.Screen name="SimpleDebugDashboard" component={SimpleDebugDashboard} />
       <AdminStack.Screen name="AdminPortal" component={AdminPortalScreen} />
     </AdminStack.Navigator>
   );
