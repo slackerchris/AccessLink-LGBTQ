@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
 
 interface LoginScreenProps {
   navigation: any;
@@ -25,7 +25,8 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { loading, login, error } = useAuth();
+  const { loading } = useAuth();
+  const { signIn } = useAuthActions();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -34,7 +35,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
 
     try {
-      await login(email.trim(), password);
+      await signIn(email.trim(), password);
       // Navigation will be handled automatically by the App component
     } catch (err) {
       // Error is handled by the hook

@@ -11,7 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface Review {
@@ -37,9 +37,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
   const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   
-  // TODO: Implement reviews in Firebase user profile
-  // For now, use empty array until reviews are implemented
-  const reviews: Review[] = [];
+  const reviews = userProfile?.profile?.reviews || [];
   const sortedReviews = reviews.sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -194,10 +192,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
       <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         Start exploring businesses and share your experiences with the community!
       </Text>
-      <TouchableOpacity 
-        style={[styles.exploreButton, { backgroundColor: colors.primary }]}
-        onPress={() => navigation.navigate('Directory')}
-      >
+      <TouchableOpacity style={[styles.exploreButton, { backgroundColor: colors.primary }]}>
         <Text style={styles.exploreButtonText}>Explore Businesses</Text>
         <Ionicons name="arrow-forward" size={16} color="#fff" />
       </TouchableOpacity>

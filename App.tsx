@@ -28,7 +28,7 @@ import CreateReviewScreen from './components/user/CreateReviewScreen';
 import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
 
 // Business Components  
-import { BusinessListScreen } from './components/business/BusinessListScreen';
+import OptimizedBusinessListScreen from './components/business/OptimizedBusinessListScreen';
 import { BusinessProfileEditScreen } from './components/business/BusinessProfileEditScreen';
 import { ServicesManagementScreen } from './components/business/ServicesManagementScreen';
 import { MediaGalleryScreen } from './components/business/MediaGalleryScreen';
@@ -46,7 +46,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import UserManagementScreen from './components/admin/UserManagementScreen';
 import BusinessManagementScreen from './components/admin/BusinessManagementScreen';
-import SimpleDebugDashboard from './components/admin/SimpleDebugDashboard';
+import DebugDashboard from './components/admin/DebugDashboard';
 import AdminPortalScreen from './components/admin/AdminPortalScreen';
 
 // Hooks
@@ -98,15 +98,8 @@ function BusinessListWrapper({ navigation, route }: { navigation: any; route: an
   const initialCategory = route.params?.initialCategory;
   
   return (
-    <BusinessListScreen
-      initialCategory={initialCategory}
-      onNavigateToAddBusiness={() => {
-        // Navigate to add business screen
-        navigation.navigate('AddBusiness');
-      }}
-      onNavigateToBusinessDetails={(business) => {
-        navigation.navigate('BusinessDetails', { business });
-      }}
+    <OptimizedBusinessListScreen
+      navigation={navigation}
     />
   );
 }
@@ -151,7 +144,7 @@ function AdminStackNavigator() {
       <AdminStack.Screen name="BusinessManagement" component={BusinessManagementScreen} />
       <AdminStack.Screen name="AddBusiness" component={AddBusinessScreen} />
       <AdminStack.Screen name="Admin" component={AdminDashboard} />
-      <AdminStack.Screen name="SimpleDebugDashboard" component={SimpleDebugDashboard} />
+      <AdminStack.Screen name="DebugDashboard" component={DebugDashboard} />
       <AdminStack.Screen name="AdminPortal" component={AdminPortalScreen} />
     </AdminStack.Navigator>
   );

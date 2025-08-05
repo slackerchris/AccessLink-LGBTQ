@@ -13,23 +13,18 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { adminService, UserDetails, UserFilters } from '../../services/adminService';
-import { useAuth, usePermissions } from '../../hooks/useFirebaseAuth';
 
 interface UserManagementScreenProps {
   navigation: any;
 }
 
 const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation }) => {
-  const { makeUserAdmin, removeAdminRole } = useAuth();
-  const { isAdmin } = usePermissions();
   const [users, setUsers] = useState<UserDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
-  const [showAdminPrompt, setShowAdminPrompt] = useState(false);
-  const [adminEmailInput, setAdminEmailInput] = useState('');
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<UserFilters>({});
@@ -121,75 +116,6 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
     );
   };
 
-  const handleMakeAdmin = async (userEmail: string) => {
-    Alert.alert(
-      'Make Admin',
-      `Are you sure you want to make ${userEmail} an admin? This will give them full administrative privileges.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Make Admin',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await makeUserAdmin(userEmail);
-              Alert.alert('Success', `${userEmail} is now an admin`);
-              loadUsers(true);
-              setShowUserModal(false);
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to make user admin');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleRemoveAdmin = async (userEmail: string) => {
-    Alert.alert(
-      'Remove Admin',
-      `Are you sure you want to remove admin privileges from ${userEmail}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove Admin',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await removeAdminRole(userEmail);
-              Alert.alert('Success', `Removed admin privileges from ${userEmail}`);
-              loadUsers(true);
-              setShowUserModal(false);
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to remove admin role');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const showMakeAdminPrompt = () => {
-    setShowAdminPrompt(true);
-  };
-
-  const handleMakeAdminFromPrompt = async () => {
-    if (!adminEmailInput.trim()) {
-      Alert.alert('Error', 'Please enter an email address');
-      return;
-    }
-
-    try {
-      await makeUserAdmin(adminEmailInput.trim());
-      Alert.alert('Success', `${adminEmailInput.trim()} is now an admin`);
-      setAdminEmailInput('');
-      setShowAdminPrompt(false);
-      loadUsers(true);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to make user admin');
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return '#10b981';
@@ -263,14 +189,7 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Role:</Text>
-                <View style={styles.roleContainer}>
-                  <Text style={[styles.detailValue, { color: selectedUser.role === 'admin' ? '#ef4444' : '#1f2937' }]}>
-                    {selectedUser.role}
-                  </Text>
-                  {selectedUser.role === 'admin' && (
-                    <Text style={styles.adminBadge}>👑</Text>
-                  )}
-                </View>
+                <Text style={styles.detailValue}>{selectedUser.role}</Text>
               </View>
             </View>
 
@@ -334,24 +253,6 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
               <Text style={styles.actionButtonText}>Add Note</Text>
             </TouchableOpacity>
             
-            {selectedUser.role !== 'admin' && (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.adminButton]}
-                onPress={() => handleMakeAdmin(selectedUser.email)}
-              >
-                <Text style={styles.actionButtonText}>Make Admin</Text>
-              </TouchableOpacity>
-            )}
-            
-            {selectedUser.role === 'admin' && (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.removeAdminButton]}
-                onPress={() => handleRemoveAdmin(selectedUser.email)}
-              >
-                <Text style={styles.actionButtonText}>Remove Admin</Text>
-              </TouchableOpacity>
-            )}
-            
             {selectedUser.accountStatus === 'active' && (
               <TouchableOpacity
                 style={[styles.actionButton, styles.suspendButton]}
@@ -388,12 +289,6 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
           <Text style={styles.headerTitle}>User Management</Text>
           <Text style={styles.headerSubtitle}>{totalCount} total users</Text>
         </View>
-        <TouchableOpacity
-          style={styles.adminButton}
-          onPress={showMakeAdminPrompt}
-        >
-          <Text style={styles.adminButtonText}>👑 Make Admin</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
@@ -426,51 +321,6 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
       />
 
       {renderUserModal()}
-      
-      {/* Make Admin Prompt Modal */}
-      <Modal
-        visible={showAdminPrompt}
-        animationType="fade"
-        transparent={true}
-      >
-        <View style={styles.promptOverlay}>
-          <View style={styles.promptContainer}>
-            <Text style={styles.promptTitle}>Make User Admin</Text>
-            <Text style={styles.promptSubtitle}>
-              Enter the email address of the user you want to make an admin:
-            </Text>
-            
-            <TextInput
-              style={styles.promptInput}
-              placeholder="user@example.com"
-              value={adminEmailInput}
-              onChangeText={setAdminEmailInput}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            
-            <View style={styles.promptActions}>
-              <TouchableOpacity
-                style={[styles.promptButton, styles.promptCancelButton]}
-                onPress={() => {
-                  setShowAdminPrompt(false);
-                  setAdminEmailInput('');
-                }}
-              >
-                <Text style={styles.promptCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.promptButton, styles.promptConfirmButton]}
-                onPress={handleMakeAdminFromPrompt}
-              >
-                <Text style={styles.promptConfirmText}>👑 Make Admin</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
     </View>
   );
 };
@@ -717,92 +567,6 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  // Admin-specific styles
-  roleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  adminBadge: {
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  adminButton: {
-    backgroundColor: '#fbbf24',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  adminButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  removeAdminButton: {
-    backgroundColor: '#f59e0b',
-  },
-  // Prompt modal styles
-  promptOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  promptContainer: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
-  },
-  promptTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  promptSubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  promptInput: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  promptActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  promptButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  promptCancelButton: {
-    backgroundColor: '#f3f4f6',
-  },
-  promptConfirmButton: {
-    backgroundColor: '#fbbf24',
-  },
-  promptCancelText: {
-    color: '#374151',
-    fontWeight: 'bold',
-  },
-  promptConfirmText: {
-    color: 'white',
     fontWeight: 'bold',
   },
 });

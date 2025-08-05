@@ -170,7 +170,7 @@ class BusinessService {
     }
   }
 
-  // Get Businesses with Filters and Pagination
+  // Get Businesses with Filters and Pagination  
   public async getBusinesses(
     filters: BusinessFilters = {},
     pageLimit: number = 20,
@@ -179,36 +179,44 @@ class BusinessService {
     try {
       const constraints: QueryConstraint[] = [];
 
-      // Apply filters
-      if (filters.category) {
-        constraints.push(where('category', '==', filters.category));
-      }
-      if (filters.city) {
-        constraints.push(where('location.city', '==', filters.city));
-      }
-      if (filters.state) {
-        constraints.push(where('location.state', '==', filters.state));
-      }
-      if (filters.lgbtqVerified) {
-        constraints.push(where('lgbtqFriendly.verified', '==', true));
-      }
-      if (filters.wheelchairAccessible) {
-        constraints.push(where('accessibility.wheelchairAccessible', '==', true));
-      }
-      if (filters.minRating) {
-        constraints.push(where('averageRating', '>=', filters.minRating));
-      }
-      if (filters.featured) {
-        constraints.push(where('featured', '==', true));
-      }
+      // Check if any filters are actually being used
+      const hasFilters = Object.keys(filters).length > 0 && Object.values(filters).some(v => v !== undefined && v !== '');
+      
+      if (hasFilters) {
+        // Only use complex queries when user applies filters
+        // You'll need to create indexes for these combinations
+        constraints.push(where('status', '==', 'approved'));
+        
+        if (filters.category) {
+          constraints.push(where('category', '==', filters.category));
+        }
+        if (filters.city) {
+          constraints.push(where('location.city', '==', filters.city));
+        }
+        if (filters.state) {
+          constraints.push(where('location.state', '==', filters.state));
+        }
+        if (filters.lgbtqVerified) {
+          constraints.push(where('lgbtqFriendly.verified', '==', true));
+        }
+        if (filters.wheelchairAccessible) {
+          constraints.push(where('accessibility.wheelchairAccessible', '==', true));
+        }
+        if (filters.minRating) {
+          constraints.push(where('averageRating', '>=', filters.minRating));
+        }
+        if (filters.featured) {
+          constraints.push(where('featured', '==', true));
+        }
 
-      // Only show approved businesses to regular users
-      constraints.push(where('status', '==', 'approved'));
-
-      // Add ordering
-      constraints.push(orderBy('featured', 'desc'));
-      constraints.push(orderBy('averageRating', 'desc'));
-      constraints.push(orderBy('createdAt', 'desc'));
+        // Complex ordering only when filters are applied
+        constraints.push(orderBy('featured', 'desc'));
+        constraints.push(orderBy('averageRating', 'desc'));
+        constraints.push(orderBy('createdAt', 'desc'));
+      } else {
+        // ULTRA SIMPLE - no where clauses, no ordering, just get documents
+        // This should work without any custom indexes
+      }
 
       // Add pagination
       constraints.push(limit(pageLimit));
@@ -223,11 +231,25 @@ class BusinessService {
       let newLastDoc: DocumentSnapshot | null = null;
 
       querySnapshot.forEach((doc) => {
-        businesses.push({ id: doc.id, ...doc.data() } as BusinessListing);
+        const businessData = { id: doc.id, ...doc.data() } as BusinessListing;
+        // Always filter to approved businesses client-side
+        if (businessData.status === 'approved') {
+          businesses.push(businessData);
+        }
         newLastDoc = doc;
       });
 
-      // Apply text search filter (Firestore doesn't support full-text search natively)
+      // Sort client-side if no filters (since we can't do it in the query)
+      if (!hasFilters) {
+        businesses.sort((a, b) => {
+          // Sort by createdAt descending (newest first)
+          const aTime = a.createdAt?.toDate?.() || new Date(0);
+          const bTime = b.createdAt?.toDate?.() || new Date(0);
+          return bTime.getTime() - aTime.getTime();
+        });
+      }
+
+      // Apply text search filter
       let filteredBusinesses = businesses;
       if (filters.searchTerm) {
         const searchTerm = filters.searchTerm.toLowerCase();

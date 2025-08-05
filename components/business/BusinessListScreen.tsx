@@ -19,8 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { businessService } from '../../services/businessService';
-import { BusinessListing, BusinessCategory } from '../../services/businessService';
+import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
 
 interface BusinessListScreenProps {
   initialCategory?: BusinessCategory;
@@ -95,7 +94,7 @@ const BusinessListItem = memo(({
         {item.averageRating > 0 && (
           <View style={styles.ratingContainer}>
             <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
-              {renderRating(item.averageRating)} ({item.totalReviews || 0})
+              {renderRating(item.averageRating)} ({item.reviewCount || 0})
             </Text>
           </View>
         )}
@@ -150,7 +149,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
     { key: 'all', label: 'All Categories', icon: '🏢' },
     { key: 'restaurant', label: 'Restaurants', icon: '🍽️' },
     { key: 'healthcare', label: 'Healthcare', icon: '🏥' },
-    { key: 'professional_services', label: 'Professional Services', icon: '⚖️' },
+    { key: 'legal', label: 'Legal Services', icon: '⚖️' },
     { key: 'retail', label: 'Retail', icon: '🛍️' },
     { key: 'entertainment', label: 'Entertainment', icon: '🎭' },
     { key: 'fitness', label: 'Fitness', icon: '💪' },

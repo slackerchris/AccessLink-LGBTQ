@@ -1,6 +1,6 @@
 /**
- * React Hooks for Business Management
- * Custom hooks for managing business listings and reviews with Firebase
+ * React Hooks for Business Management (Mock Version)
+ * Custom hooks for managing business listings and reviews with mock data
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -9,8 +9,7 @@ import {
   BusinessListing, 
   BusinessFilters,
   BusinessCategory 
-} from '../services/businessService';
-import { UserProfile as FirebaseUserProfile } from '../services/authService';
+} from '../services/mockBusinessService';
 import { useAuth } from './useAuth';
 
 // Hook for business listings with pagination and filtering
@@ -39,7 +38,7 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
     } finally {
       setLoading(false);
     }
-  }, [JSON.stringify(filters), pageLimit]); // Use JSON.stringify to avoid infinite rerenders
+  }, [filters, pageLimit]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -97,7 +96,7 @@ export const usePendingBusinesses = () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await businessService.getPendingBusinesses(userProfile as unknown as FirebaseUserProfile);
+      const result = await businessService.getPendingBusinesses();
       setBusinesses(result);
     } catch (err: any) {
       setError(err.message);
@@ -131,7 +130,7 @@ export const useBusinessActions = () => {
     
     setLoading(true);
     try {
-      await businessService.approveBusiness(businessId, userProfile as unknown as FirebaseUserProfile);
+      await businessService.approveBusiness(businessId);
     } catch (error: any) {
       console.error('Error approving business:', error);
       throw error;
@@ -147,7 +146,7 @@ export const useBusinessActions = () => {
     
     setLoading(true);
     try {
-      await businessService.rejectBusiness(businessId, userProfile as unknown as FirebaseUserProfile);
+      await businessService.rejectBusiness(businessId);
     } catch (error: any) {
       console.error('Error rejecting business:', error);
       throw error;

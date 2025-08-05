@@ -27,7 +27,7 @@ interface BusinessManagementScreenProps {
 type FilterStatus = 'all' | 'approved' | 'pending' | 'featured';
 
 export default function BusinessManagementScreen({ navigation }: BusinessManagementScreenProps) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [businesses, setBusinesses] = useState<BusinessListing[]>([]);
   const [filteredBusinesses, setFilteredBusinesses] = useState<BusinessListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,7 @@ export default function BusinessManagementScreen({ navigation }: BusinessManagem
     try {
       setLoading(true);
       // Load all businesses (we'll need to modify the service to get all businesses)
-      const result = await businessService.getBusinesses({}, 100); // Get first 100 businesses
+      const result = await businessService.getAllBusinesses();
       setBusinesses(result.businesses);
     } catch (error) {
       console.error('Error loading businesses:', error);
@@ -73,9 +73,9 @@ export default function BusinessManagementScreen({ navigation }: BusinessManagem
       filtered = filtered.filter(business => {
         switch (filterStatus) {
           case 'approved':
-            return business.status === 'approved';
+            return business.approved;
           case 'pending':
-            return business.status === 'pending';
+            return !business.approved;
           case 'featured':
             return business.featured;
           default:
@@ -104,8 +104,8 @@ export default function BusinessManagementScreen({ navigation }: BusinessManagem
 
   const handleApproveBusiness = async (businessId: string) => {
     try {
-      // We'll need to add this method to the business service
-      await businessService.approveBusiness(businessId);
+      if (!userProfile) return;
+      await businessService.approveBusiness(businessId, userProfile);
       await loadBusinesses();
       setActionModalVisible(false);
       Alert.alert('Success', 'Business approved successfully');
@@ -222,15 +222,15 @@ export default function BusinessManagementScreen({ navigation }: BusinessManagem
           <View
             style={[
               styles.statusBadge,
-              { backgroundColor: getStatusColor(business.approved, business.featured) }
+              { backgroundColor: getStatusColor(business.status === 'approved', business.featured) }
             ]}
           >
             <Text style={styles.statusText}>
-              {getStatusText(business.approved, business.featured)}
+              {getStatusText(business.status === 'approved', business.featured)}
             </Text>
           </View>
           <Text style={styles.businessRating}>
-            ⭐ {business.averageRating.toFixed(1)} ({business.reviewCount})
+            ⭐ {business.averageRating.toFixed(1)} ({business.totalReviews})
           </Text>
         </View>
       </View>
@@ -250,8 +250,8 @@ export default function BusinessManagementScreen({ navigation }: BusinessManagem
 
   const filterCounts = {
     all: businesses.length,
-    approved: businesses.filter(b => b.approved).length,
-    pending: businesses.filter(b => !b.approved).length,
+    approved: businesses.filter(b => b.status === 'approved').length,
+    pending: businesses.filter(b => b.status === 'pending').length,
     featured: businesses.filter(b => b.featured).length,
   };
 

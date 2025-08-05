@@ -214,7 +214,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => navigation.navigate('SimpleDebugDashboard')}
+          onPress={() => navigation.navigate('DebugDashboard')}
         >
           <Text style={styles.actionIcon}>🔧</Text>
           <View style={styles.actionContent}>

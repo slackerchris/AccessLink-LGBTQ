@@ -17,7 +17,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { ServiceItem, businessService } from '../../services/mockBusinessService';
 

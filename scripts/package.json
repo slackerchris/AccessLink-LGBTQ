@@ -1,0 +1,17 @@
+{
+  "name": "accesslink-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "add-sample": "node --loader ts-node/esm scripts/addSampleData.ts",
+    "migrate": "node --loader ts-node/esm scripts/migrateBusinesData.ts"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.0.0"
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
+}

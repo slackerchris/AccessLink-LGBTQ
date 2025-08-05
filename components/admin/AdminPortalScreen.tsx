@@ -15,7 +15,7 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface AdminPortalScreenProps {
@@ -23,7 +23,8 @@ interface AdminPortalScreenProps {
 }
 
 export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({ navigation }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { signOut } = useAuthActions();
   const { theme, toggleTheme, colors } = useTheme();
 
   const handleSignOut = async () => {
@@ -37,7 +38,7 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({ navigation
           style: 'destructive',
           onPress: async () => {
             try {
-              await logout();
+              await signOut();
             } catch (error: any) {
               Alert.alert('Sign Out Error', error.message);
             }
@@ -93,14 +94,14 @@ export const AdminPortalScreen: React.FC<AdminPortalScreenProps> = ({ navigation
           title: 'Debug Dashboard',
           subtitle: 'System monitoring and debugging tools',
           icon: 'bug-outline',
-          onPress: () => navigation.navigate('SimpleDebugDashboard'),
+          onPress: () => navigation.navigate('DebugDashboard'),
           color: '#f59e0b'
         },
         {
           title: 'Database Tools',
           subtitle: 'Direct database management and queries',
           icon: 'server-outline',
-          onPress: () => navigation.navigate('SimpleDebugDashboard'),
+          onPress: () => navigation.navigate('DebugDashboard'),
           color: '#ef4444'
         },
         {
