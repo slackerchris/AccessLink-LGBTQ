@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -60,7 +60,7 @@ const accessibilityOptions: AccessibilityPreference[] = [
 ];
 
 export default function AccessibilityPreferencesScreen({ navigation }: { navigation: any }) {
-  const { userProfile } = useAuth();
+  const { userProfile, updateUserProfile } = useAuth();
   const { colors, highVisibility, toggleHighVisibility } = useTheme();
   const [saving, setSaving] = useState(false);
   
@@ -74,6 +74,37 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
   };
 
   const [preferences, setPreferences] = useState(currentPreferences);
+  const [initialPreferences, setInitialPreferences] = useState(currentPreferences);
+
+  // Load existing accessibility preferences from user profile
+  useEffect(() => {
+    if (userProfile?.profile?.accessibilityNeeds) {
+      const savedPrefs = { ...currentPreferences };
+      
+      // Convert saved accessibility needs array to preference object
+      if (userProfile.profile.accessibilityNeeds.includes('Wheelchair Access')) {
+        savedPrefs.wheelchairAccess = true;
+      }
+      if (userProfile.profile.accessibilityNeeds.includes('Visual Impairment Support')) {
+        savedPrefs.visualImpairment = true;
+      }
+      if (userProfile.profile.accessibilityNeeds.includes('Hearing Impairment Support')) {
+        savedPrefs.hearingImpairment = true;
+      }
+      if (userProfile.profile.accessibilityNeeds.includes('Cognitive Support')) {
+        savedPrefs.cognitiveSupport = true;
+      }
+      if (userProfile.profile.accessibilityNeeds.includes('Mobility Support')) {
+        savedPrefs.mobilitySupport = true;
+      }
+      if (userProfile.profile.accessibilityNeeds.includes('Sensory Friendly')) {
+        savedPrefs.sensoryFriendly = true;
+      }
+      
+      setPreferences(savedPrefs);
+      setInitialPreferences(savedPrefs);
+    }
+  }, [userProfile]);
 
   const handleTogglePreference = useCallback((key: string) => {
     setPreferences(prev => ({
@@ -85,16 +116,34 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
-      // TODO: Implement save functionality with Firebase
-      console.log('Saving preferences:', preferences);
+      
+      // Convert preferences object to accessibility needs array
+      const accessibilityNeeds: string[] = [];
+      
+      if (preferences.wheelchairAccess) accessibilityNeeds.push('Wheelchair Access');
+      if (preferences.visualImpairment) accessibilityNeeds.push('Visual Impairment Support');
+      if (preferences.hearingImpairment) accessibilityNeeds.push('Hearing Impairment Support');
+      if (preferences.cognitiveSupport) accessibilityNeeds.push('Cognitive Support');
+      if (preferences.mobilitySupport) accessibilityNeeds.push('Mobility Support');
+      if (preferences.sensoryFriendly) accessibilityNeeds.push('Sensory Friendly');
+      
+      // Update user profile with accessibility preferences
+      await updateUserProfile({
+        profile: {
+          ...userProfile?.profile,
+          accessibilityNeeds
+        }
+      });
+      
       Alert.alert('Success', 'Your accessibility preferences have been updated!');
       navigation.goBack();
     } catch (error) {
+      console.error('Error saving accessibility preferences:', error);
       Alert.alert('Error', 'Failed to save preferences. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [preferences, navigation]);
+  }, [preferences, navigation, updateUserProfile, userProfile]);
 
   const handleReset = useCallback(() => {
     Alert.alert(
@@ -140,7 +189,7 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
     </View>
   );
 
-  const hasChanges = JSON.stringify(preferences) !== JSON.stringify(currentPreferences);
+  const hasChanges = JSON.stringify(preferences) !== JSON.stringify(initialPreferences);
 
   const styles = StyleSheet.create({
     container: {
@@ -158,8 +207,6 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
     backButton: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 12,

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -17,7 +17,6 @@ export function SavedPlacesScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { userProfile } = useAuth();
-  const { unsaveBusiness } = useAuthActions();
   const { businesses } = useBusinesses();
   const { colors } = useTheme();
 
@@ -25,15 +24,12 @@ export function SavedPlacesScreen() {
   const canGoBack = navigation.canGoBack();
   const showBackButton = canGoBack && route.name === 'SavedPlaces';
 
-  // Get saved businesses
+  // Get saved businesses - for now using mock data since we need to implement savedBusinesses in userProfile
   const savedBusinesses = useMemo(() => {
-    const savedIds = userProfile?.profile?.savedBusinesses || [];
-    // Add safety check for businesses array
-    if (!businesses || !Array.isArray(businesses)) {
-      return [];
-    }
-    return businesses.filter(business => savedIds.includes(business.id));
-  }, [businesses, userProfile?.profile?.savedBusinesses]);
+    // TODO: Implement savedBusinesses in Firebase user profile
+    // For now, return empty array until this is implemented
+    return [];
+  }, [businesses, userProfile]);
 
   const handleGoToDirectory = () => {
     navigation.navigate('Directory' as never);
@@ -50,7 +46,8 @@ export function SavedPlacesScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await unsaveBusiness(businessId);
+              // TODO: Implement unsaveBusiness in Firebase auth hook
+              Alert.alert('Info', 'Save/unsave functionality will be implemented in the next update');
             } catch (error) {
               Alert.alert('Error', 'Failed to remove business from saved places');
             }

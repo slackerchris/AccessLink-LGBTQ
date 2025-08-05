@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createOptimizedShadows } from '../utils/performanceStyles';
 
 export type Theme = 'light' | 'dark';
 
@@ -19,6 +20,12 @@ interface ThemeContextType {
     header: string;
     headerText: string;
     shadow: string;
+  };
+  shadows: {
+    card: any;
+    button: any;
+    modal: any;
+    none: any;
   };
 }
 
@@ -45,7 +52,7 @@ const darkTheme = {
   primary: '#818cf8',
   header: '#1e293b',
   headerText: '#f8fafc',
-  shadow: '#000000',
+  shadow: '#ffffff', // Use white shadows in dark mode for better performance
 };
 
 // High visibility themes with enhanced contrast and larger elements
@@ -142,14 +149,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const colors = useMemo(() => getColors(), [theme, highVisibility]);
+  const shadows = useMemo(() => createOptimizedShadows(theme), [theme]);
 
   const contextValue = useMemo(() => ({
     theme,
     highVisibility,
     toggleTheme,
     toggleHighVisibility,
-    colors
-  }), [theme, highVisibility, colors]);
+    colors,
+    shadows
+  }), [theme, highVisibility, colors, shadows]);
 
   return React.createElement(
     ThemeContext.Provider,

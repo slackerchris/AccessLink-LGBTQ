@@ -24,7 +24,8 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
-  serverTimestamp 
+  serverTimestamp,
+  deleteField 
 } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { Platform } from 'react-native';
@@ -49,6 +50,9 @@ interface UserProfile {
     phoneNumber?: string;
     location?: string;
     bio?: string;
+    interests?: string[];
+    accessibilityNeeds?: string[];
+    preferredPronouns?: string;
   };
 }
 
@@ -83,6 +87,9 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
+  updateUserProfile: (profileData: Partial<UserProfile>) => Promise<void>;
+  makeUserAdmin: (userEmail: string) => Promise<void>;
+  removeAdminRole: (userEmail: string) => Promise<void>;
 }
 
 interface BusinessContextType {
@@ -102,6 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cleanupCompleted, setCleanupCompleted] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -114,7 +122,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
-            setUserProfile(userDoc.data() as UserProfile);
+            const profileData = userDoc.data() as UserProfile;
+            setUserProfile(profileData);
+            
+            // Check if we need to clean up duplicate data (legacy fields) - only once
+            if (!cleanupCompleted) {
+              const legacyData = userDoc.data() as any;
+              if (legacyData.firstName || legacyData.lastName || legacyData.bio) {
+                console.log('Found duplicate profile data, cleaning up...');
+                cleanupDuplicateProfileData();
+                setCleanupCompleted(true);
+              }
+            }
           } else {
             // Create a basic profile if none exists
             const basicProfile: UserProfile = {
@@ -344,6 +363,137 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await deleteDoc(businessRef);
   };
 
+  const updateUserProfile = async (profileData: Partial<UserProfile>): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+    
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      
+      // Prepare update data
+      const updateData: any = {
+        updatedAt: serverTimestamp()
+      };
+      
+      // Handle top-level fields
+      if (profileData.displayName !== undefined) {
+        updateData.displayName = profileData.displayName;
+      }
+      
+      // Handle nested profile updates by merging with existing data
+      if (profileData.profile) {
+        updateData.profile = profileData.profile;
+      }
+      
+      // Update Firestore document
+      await updateDoc(userDocRef, updateData);
+      
+      // Update local state
+      setUserProfile(prev => prev ? { 
+        ...prev, 
+        ...profileData,
+        profile: {
+          ...prev.profile,
+          ...profileData.profile
+        }
+      } : prev);
+      
+      // If displayName is being updated, also update Firebase Auth
+      if (profileData.displayName && profileData.displayName !== user.displayName) {
+        await updateProfile(user, { displayName: profileData.displayName });
+      }
+    } catch (err) {
+      console.error('Error updating user profile:', err);
+      throw err;
+    }
+  };
+
+  const cleanupDuplicateProfileData = async (): Promise<void> => {
+    if (!user || !userProfile) return;
+    
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      
+      // Remove duplicate top-level fields that should only be in profile object
+      const cleanupData: any = {
+        firstName: deleteField(),
+        lastName: deleteField(),
+        bio: deleteField(),
+        updatedAt: serverTimestamp()
+      };
+      
+      await updateDoc(userDocRef, cleanupData);
+      console.log('Cleaned up duplicate profile data');
+    } catch (err) {
+      console.error('Error cleaning up duplicate data:', err);
+    }
+  };
+
+  const makeUserAdmin = async (userEmail: string): Promise<void> => {
+    if (!user || userProfile?.role !== 'admin') {
+      throw new Error('Only admins can promote users to admin');
+    }
+    
+    try {
+      // Find user by email
+      const usersQuery = query(
+        collection(db, 'users'),
+        where('email', '==', userEmail)
+      );
+      
+      const querySnapshot = await getDocs(usersQuery);
+      
+      if (querySnapshot.empty) {
+        throw new Error('User not found');
+      }
+      
+      const userDoc = querySnapshot.docs[0];
+      const userDocRef = doc(db, 'users', userDoc.id);
+      
+      await updateDoc(userDocRef, {
+        role: 'admin',
+        updatedAt: serverTimestamp()
+      });
+      
+      console.log(`Made user ${userEmail} an admin`);
+    } catch (err) {
+      console.error('Error making user admin:', err);
+      throw err;
+    }
+  };
+
+  const removeAdminRole = async (userEmail: string): Promise<void> => {
+    if (!user || userProfile?.role !== 'admin') {
+      throw new Error('Only admins can remove admin privileges');
+    }
+    
+    try {
+      // Find user by email
+      const usersQuery = query(
+        collection(db, 'users'),
+        where('email', '==', userEmail)
+      );
+      
+      const querySnapshot = await getDocs(usersQuery);
+      
+      if (querySnapshot.empty) {
+        throw new Error('User not found');
+      }
+      
+      const userDoc = querySnapshot.docs[0];
+      const userDocRef = doc(db, 'users', userDoc.id);
+      
+      await updateDoc(userDocRef, {
+        role: 'user',
+        updatedAt: serverTimestamp()
+      });
+      
+      console.log(`Removed admin role from user ${userEmail}`);
+    } catch (err) {
+      console.error('Error removing admin role:', err);
+      throw err;
+    }
+  };
+
   const authValue: AuthContextType = {
     user,
     userProfile,
@@ -353,7 +503,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     register,
     loginWithGoogle,
     logout,
-    clearError
+    clearError,
+    updateUserProfile,
+    makeUserAdmin,
+    removeAdminRole
   };
 
   const businessValue: BusinessContextType = {
@@ -381,6 +534,17 @@ export const useAuth = (): AuthContextType => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+export const usePermissions = () => {
+  const { userProfile } = useAuth();
+  
+  return {
+    isAdmin: userProfile?.role === 'admin',
+    isBusinessOwner: userProfile?.role === 'business_owner',
+    isUser: userProfile?.role === 'user',
+    role: userProfile?.role || 'user'
+  };
 };
 
 export const useBusinessActions = (): BusinessContextType => {

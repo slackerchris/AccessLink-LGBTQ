@@ -38,7 +38,7 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
     } finally {
       setLoading(false);
     }
-  }, [filters, pageLimit]);
+  }, [JSON.stringify(filters), pageLimit]); // Use JSON.stringify to avoid infinite rerenders
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {

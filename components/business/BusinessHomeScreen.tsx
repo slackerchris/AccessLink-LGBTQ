@@ -13,7 +13,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -22,17 +22,16 @@ interface BusinessHomeScreenProps {
 }
 
 export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
-  const { signOut } = useAuthActions();
+  const { user, logout } = useAuth();
   const { businesses } = useBusinesses({}, 1); // Get just the business owner's business
   const { colors } = useTheme();
   
   // Find the business owned by this user
-  const myBusiness = businesses.find(b => b.ownerId === user?.id);
+  const myBusiness = businesses.find(b => b.ownerId === user?.uid);
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
     } catch (error: any) {
       Alert.alert('Sign Out Error', error.message);
     }

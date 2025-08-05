@@ -17,9 +17,9 @@ interface PortalScreenProps {
   navigation: any;
 }
 
-export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
-  const { userProfile, logout } = useAuth();
-  const { theme, toggleTheme, colors } = useTheme();
+export default function PortalScreen({ navigation }: { navigation: any }) {
+  const { user, userProfile, logout } = useAuth();
+  const { theme, toggleTheme, colors, shadows } = useTheme();
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -47,11 +47,13 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
   const dynamicStyles = StyleSheet.create({
     portalCard: {
       ...styles.portalCard,
+      ...shadows.button, // Use optimized shadows
       backgroundColor: colors.card,
       borderColor: colors.border,
     },
     portalIconContainer: {
       ...styles.portalIconContainer,
+      ...shadows.card, // Use optimized shadows for icon container
       backgroundColor: colors.surface,
     },
     portalCardTitle: {
@@ -72,6 +74,7 @@ export const PortalScreen: React.FC<PortalScreenProps> = ({ navigation }) => {
     },
     accountCard: {
       ...styles.accountCard,
+      ...shadows.card, // Use optimized shadows
       backgroundColor: colors.card,
       borderColor: colors.border,
     },
@@ -276,11 +279,6 @@ const styles = StyleSheet.create({
     minHeight: 120, // Ensure adequate touch target height
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
     borderWidth: 1,
   },
   portalIconContainer: {
@@ -326,11 +324,6 @@ const styles = StyleSheet.create({
   accountCard: {
     borderRadius: 12,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
     borderWidth: 1,
   },
   accountRow: {

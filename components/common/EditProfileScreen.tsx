@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,17 +11,17 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { updateProfile } from 'firebase/auth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 export function EditProfileScreen({ navigation }: { navigation: any }) {
-  const { user } = useAuth();
-  const { updateProfile } = useAuthActions();
+  const { user, userProfile, updateUserProfile } = useAuth();
   const { colors } = useTheme();
   
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
-    firstName: '',  // TODO: Implement detailed profile fields
+    firstName: '',
     lastName: '',
     phone: '',
     bio: '',
@@ -30,37 +30,54 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
 
   const [interests, setInterests] = useState<string[]>([]);
 
-  const [accessibilityNeeds, setAccessibilityNeeds] = useState<string[]>([]);
-
   const [loading, setLoading] = useState(false);
 
-  const handleSave = async () => {
-    if (!formData.displayName.trim()) {
-      Alert.alert('Error', 'Display name is required');
-      return;
+  // Load existing profile data when component mounts
+  useEffect(() => {
+    if (userProfile) {
+      setFormData({
+        displayName: userProfile.displayName || user?.displayName || '',
+        firstName: userProfile.profile?.firstName || '',
+        lastName: userProfile.profile?.lastName || '',
+        phone: userProfile.profile?.phoneNumber || '',
+        bio: userProfile.profile?.bio || '',
+        preferredPronouns: userProfile.profile?.preferredPronouns || '',
+      });
+      
+      // Load interests
+      if (userProfile.profile?.interests) {
+        setInterests(userProfile.profile.interests);
+      }
     }
+  }, [userProfile, user]);
 
-    setLoading(true);
+    const handleSave = async () => {
+    if (!user) return;
+
     try {
-      await updateProfile({
+      setLoading(true);
+      
+      // Update Firebase Auth display name
+      await updateProfile(user, { displayName: formData.displayName });
+      
+      // Update user profile in Firestore - store all data in nested profile object
+      await updateUserProfile({
         displayName: formData.displayName,
-        // TODO: Implement detailed profile fields in web auth service
         profile: {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          phone: formData.phone,
           bio: formData.bio,
+          interests: interests.filter(interest => interest.trim() !== ''),
           preferredPronouns: formData.preferredPronouns,
-          interests,
-          accessibilityNeeds,
+          phoneNumber: formData.phone
         }
       });
       
-      Alert.alert('Success', 'Profile updated successfully!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update profile');
+      Alert.alert('Success', 'Profile updated successfully!');
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -74,24 +91,10 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
     );
   };
 
-  const toggleAccessibilityNeed = (need: string) => {
-    setAccessibilityNeeds(prev => 
-      prev.includes(need) 
-        ? prev.filter(n => n !== need)
-        : [...prev, need]
-    );
-  };
-
   const commonInterests = [
     'Arts & Culture', 'Music', 'Sports', 'Food & Dining', 'Nightlife',
     'Shopping', 'Health & Wellness', 'Education', 'Community Events',
     'Travel', 'Technology', 'Books', 'Movies', 'Volunteering'
-  ];
-
-  const commonAccessibilityNeeds = [
-    'Wheelchair Accessible', 'ASL Interpretation', 'Braille Menus',
-    'Large Print', 'Audio Assistance', 'Service Animal Friendly',
-    'Quiet Spaces', 'Gender Neutral Restrooms', 'Sensory Accommodations'
   ];
 
   return (
@@ -246,32 +249,27 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
           </View>
         </View>
 
+        {/* Accessibility Preferences Link */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Accessibility Needs</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Accessibility</Text>
           <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-            Help us find businesses that meet your accessibility requirements
+            Manage your accessibility preferences and needs
           </Text>
-          <View style={styles.tagContainer}>
-            {commonAccessibilityNeeds.map((need) => (
-              <TouchableOpacity
-                key={need}
-                style={[
-                  styles.tag,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                  accessibilityNeeds.includes(need) && { backgroundColor: colors.primary, borderColor: colors.primary }
-                ]}
-                onPress={() => toggleAccessibilityNeed(need)}
-              >
-                <Text style={[
-                  styles.tagText,
-                  { color: colors.text },
-                  accessibilityNeeds.includes(need) && { color: '#ffffff' }
-                ]}>
-                  {need}
+          <TouchableOpacity
+            style={[styles.linkButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => navigation.navigate('AccessibilityPreferences')}
+          >
+            <View style={styles.linkButtonContent}>
+              <Ionicons name="accessibility" size={24} color={colors.primary} />
+              <View style={styles.linkButtonText}>
+                <Text style={[styles.linkButtonTitle, { color: colors.text }]}>Accessibility Preferences</Text>
+                <Text style={[styles.linkButtonSubtitle, { color: colors.textSecondary }]}>
+                  Set your accessibility needs and preferences
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.bottomPadding} />
@@ -419,6 +417,29 @@ const styles = StyleSheet.create({
   },
   selectedTagText: {
     color: '#fff',
+  },
+  linkButton: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  linkButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  linkButtonText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  linkButtonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  linkButtonSubtitle: {
+    fontSize: 14,
+    lineHeight: 18,
   },
   bottomPadding: {
     height: 50,
