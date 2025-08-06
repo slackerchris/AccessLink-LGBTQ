@@ -24,3 +24,4 @@ package.json.temp
 !/.env.example
 !/.env.production
 !/.env.development
+service-account.json
