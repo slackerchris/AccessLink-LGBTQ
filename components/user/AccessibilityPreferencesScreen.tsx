@@ -278,11 +278,14 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
         mobilitySupport: preferences.serviceAnimalFriendly,
         sensoryFriendly: preferences.sensoryAccommodations || preferences.quietSpaces
       };
-      // Merge with existing profile fields to avoid overwriting
+      // Merge with existing profile fields to avoid overwriting other fields
       await updateProfile({
         profile: {
           ...userProfile?.profile,
-          accessibilityPreferences
+          accessibilityPreferences: {
+            ...userProfile?.profile?.accessibilityPreferences,
+            ...accessibilityPreferences
+          }
         }
       });
       Alert.alert('Success', 'Your accessibility preferences have been updated!');
