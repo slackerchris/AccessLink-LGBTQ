@@ -19,7 +19,8 @@ import {
 } from 'react-native';
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useReviewActions } from '../../hooks/useFirebaseAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useReviewActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 const { width: screenWidth } = Dimensions.get('window');

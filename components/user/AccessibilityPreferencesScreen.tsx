@@ -258,6 +258,11 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
 
   const [preferences, setPreferences] = useState<PreferenceState>(currentPreferences);
 
+  // Sync preferences with userProfile changes
+  React.useEffect(() => {
+    setPreferences(currentPreferences);
+  }, [userProfile]);
+
   const handleTogglePreference = useCallback((key: string) => {
     setPreferences(prev => ({
       ...prev,
