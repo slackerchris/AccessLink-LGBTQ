@@ -52,28 +52,27 @@ export default function LGBTQIdentityScreen({ navigation }: { navigation: any })
 
   // Initialize from userProfile if available
   const [identity, setIdentity] = useState(() => {
-        const [identity, setIdentity] = useState(() => {
-          const identityData = userProfile?.profile?.identity || {};
-          return {
-            visible: identityData.visible ?? false,
-            pronouns: identityData.pronouns ?? '',
-            identities: identityData.identities ?? [],
-            preferredName: identityData.preferredName ?? ''
-          };
-        });
+    const identityData = userProfile?.profile?.identity || {};
+    return {
+      visible: identityData.visible ?? false,
+      pronouns: identityData.pronouns ?? '',
+      identities: identityData.identities ?? [],
+      preferredName: identityData.preferredName ?? ''
+    };
+  });
+  const [customPronoun, setCustomPronoun] = useState('');
+  const handlePronounSelect = useCallback((pronoun: string) => {
+    setIdentity(prev => ({
+      ...prev,
+      pronouns: prev.pronouns === pronoun ? '' : pronoun
+    }));
+  }, []);
   const [customIdentity, setCustomIdentity] = useState('');
 
   const handleToggleVisibility = useCallback(() => {
     setIdentity(prev => ({
       ...prev,
       visible: !prev.visible
-                        identity: {
-                            ...((userProfile?.profile?.identity && typeof userProfile.profile.identity === 'object') ? userProfile.profile.identity : {}),
-                            visible: identity.visible,
-                            pronouns: identity.pronouns,
-                            identities: identity.identities,
-                            preferredName: identity.preferredName
-                        }
     }));
   }, []);
 
@@ -118,9 +117,9 @@ export default function LGBTQIdentityScreen({ navigation }: { navigation: any })
       setSaving(true);
       await updateProfile({
         profile: {
-          details: {
-            ...((userProfile?.profile?.details && typeof userProfile.profile.details === 'object') ? userProfile.profile.details : {}),
-            identityVisible: identity.visible,
+          identity: {
+            ...((userProfile?.profile?.identity && typeof userProfile.profile.identity === 'object') ? userProfile.profile.identity : {}),
+            visible: identity.visible,
             pronouns: identity.pronouns,
             identities: identity.identities,
             preferredName: identity.preferredName

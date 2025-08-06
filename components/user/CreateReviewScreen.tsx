@@ -44,10 +44,33 @@ interface CreateReviewScreenProps {
 
 export default function CreateReviewScreen({ navigation, route }: CreateReviewScreenProps) {
   const { businessId, businessName } = route.params;
-  const { user } = useAuth();
-  const { addReview } = useReviewActions();
-  const { colors } = useTheme();
-  
+  // Debug: check if inside React context
+  let user, addReview, colors;
+  try {
+    user = useAuth().user;
+    addReview = useReviewActions().addReview;
+    colors = useTheme().colors;
+    if (!colors) {
+      throw new Error('colors is undefined from useTheme()');
+    }
+    console.log('🔍 DEBUG: CreateReviewScreen rendered inside AuthProvider.');
+    console.log('🔍 DEBUG: colors object:', colors);
+  } catch (e) {
+    console.error('❌ DEBUG: CreateReviewScreen context or theme error!', e);
+    // Fallback colors to prevent crash
+    colors = {
+      background: '#fff',
+      card: '#fff',
+      text: '#1f2937',
+      textSecondary: '#6b7280',
+      border: '#d1d5db',
+      primary: '#6366f1',
+      surface: '#ede9fe',
+      header: '#fff',
+      headerText: '#1f2937',
+    };
+    console.log('🔍 DEBUG: Using fallback colors:', colors);
+  }
   // Debug logging for route params and initial state
   console.log('🔍 DEBUG: CreateReviewScreen mounted');
   console.log('🔍 DEBUG: route.params =', route.params);
@@ -782,6 +805,51 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
     },
     tagTextSelected: {
       color: '#FFFFFF',
+    },
+    // Success message styles
+    successOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    successMessage: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 32,
+      margin: 20,
+      alignItems: 'center',
+      maxWidth: 320,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    successTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.text,
+      textAlign: 'center',
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    successSubtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    successNote: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      fontStyle: 'italic',
     },
   });
 

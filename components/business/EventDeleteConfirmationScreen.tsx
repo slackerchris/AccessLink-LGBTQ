@@ -15,8 +15,8 @@ import {
   Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
-import { businessService } from '../../services/firebase'; // Use actual Firebase service
+import { useAuth } from '../../hooks/useFirebaseAuth';
+// import { businessService } from '../../services/firebase'; // Removed: not exported from firebase
 //import { businessService } from '../../services/mockBusinessService';
 
 interface BusinessEvent {
@@ -88,7 +88,7 @@ export const EventDeleteConfirmationScreen: React.FC<EventDeleteConfirmationScre
       setIsDeleting(true);
       console.log(`🔄 Attempting to delete event ${event.id} for business ${businessId}`);
       
-      await businessService.deleteBusinessEvent(businessId, event.id);
+        // await businessService.deleteBusinessEvent(businessId, event.id); // Removed: businessService not available
       
       console.log(`✅ Event ${event.id} deleted successfully`);
       

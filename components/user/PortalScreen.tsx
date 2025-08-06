@@ -93,16 +93,31 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.header }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <View style={[styles.header, { backgroundColor: colors.header }]}> 
         <Text style={[styles.headerTitle, { color: colors.headerText }]}>Portal</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}>
+        <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}> 
           Welcome back, {firstName}! Manage your account and preferences
         </Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.portalGrid}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}> 
+        <View style={styles.portalGrid}> 
+          {/* TEMP: Button to test AuthProvider context */}
+          <TouchableOpacity
+            style={[dynamicStyles.portalCard, { borderColor: '#10b981', borderWidth: 2 }]}
+            onPress={() => navigation.navigate('MinimalAuthTest')}
+            accessibilityRole="button"
+            accessibilityLabel="Test Auth Context"
+            accessibilityHint="Navigate to minimal auth context test screen"
+          >
+            <View style={dynamicStyles.portalIconContainer}>
+              <Ionicons name="bug-outline" size={28} color="#10b981" />
+            </View>
+            <Text style={dynamicStyles.portalCardTitle}>Test Auth Context</Text>
+            <Text style={dynamicStyles.portalCardSubtitle}>Debug AuthProvider context</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={() => navigation.navigate('EditProfile')}

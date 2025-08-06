@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useAuth, useAuthActions } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -17,7 +17,7 @@ export function SavedPlacesScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { userProfile } = useAuth();
-  const { unsaveBusiness } = useAuthActions();
+  // Removed: unsaveBusiness is not available. You may need to implement this in the future.
   const { businesses } = useBusinesses();
   const { colors } = useTheme();
 
@@ -26,39 +26,20 @@ export function SavedPlacesScreen() {
   const showBackButton = canGoBack && route.name === 'SavedPlaces';
 
   // Get saved businesses
+  // Adjusted: savedBusinesses now expected under userProfile?.profile?.details?.savedBusinesses
   const savedBusinesses = useMemo(() => {
-    const savedIds = userProfile?.profile?.savedBusinesses || [];
-    // Add safety check for businesses array
+    const savedIds = userProfile?.profile?.details?.savedBusinesses || [];
     if (!businesses || !Array.isArray(businesses)) {
       return [];
     }
     return businesses.filter(business => savedIds.includes(business.id));
-  }, [businesses, userProfile?.profile?.savedBusinesses]);
+  }, [businesses, userProfile?.profile?.details?.savedBusinesses]);
 
   const handleGoToDirectory = () => {
     navigation.navigate('Directory' as never);
   };
 
-  const handleUnsaveBusiness = async (businessId: string) => {
-    Alert.alert(
-      'Remove from Saved Places',
-      'Are you sure you want to remove this business from your saved places?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await unsaveBusiness(businessId);
-            } catch (error) {
-              Alert.alert('Error', 'Failed to remove business from saved places');
-            }
-          }
-        }
-      ]
-    );
-  };
+  // Removed: handleUnsaveBusiness and unsaveBusiness functionality is not implemented.
 
   const renderSavedBusiness = ({ item }: { item: any }) => (
     <TouchableOpacity 
@@ -89,7 +70,7 @@ export function SavedPlacesScreen() {
           style={styles.unsaveButton}
           onPress={(e) => {
             e.stopPropagation();
-            handleUnsaveBusiness(item.id);
+            // handleUnsaveBusiness(item.id); // Removed: unsaveBusiness not implemented
           }}
         >
           <Ionicons name="bookmark" size={24} color="#ef4444" />

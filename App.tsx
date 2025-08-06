@@ -22,6 +22,7 @@ import { SavedPlacesScreen } from './components/user/SavedPlacesScreen';
 import { EventsScreen } from './components/user/EventsScreen';
 import PortalScreen from './components/user/PortalScreen';
 import AccessibilityPreferencesScreen from './components/user/AccessibilityPreferencesScreen';
+import MinimalAuthTestScreen from './components/user/MinimalAuthTestScreen';
 import LGBTQIdentityScreen from './components/user/LGBTQIdentityScreen';
 import ReviewHistoryScreen from './components/user/ReviewHistoryScreen';
 import CreateReviewScreen from './components/user/CreateReviewScreen';
@@ -117,6 +118,7 @@ function PortalStackNavigator() {
       <PortalStack.Screen name="CreateReview" component={CreateReviewScreen} />
       <PortalStack.Screen name="AccessibilityPreferences" component={AccessibilityPreferencesScreen} />
       <PortalStack.Screen name="LGBTQIdentity" component={LGBTQIdentityScreen} />
+      <PortalStack.Screen name="MinimalAuthTest" component={MinimalAuthTestScreen} />
     </PortalStack.Navigator>
   );
 }

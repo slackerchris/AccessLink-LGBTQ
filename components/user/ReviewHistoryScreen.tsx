@@ -11,7 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface Review {
@@ -37,7 +37,8 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
   const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   
-  const reviews = userProfile?.profile?.reviews || [];
+  // Adjusted: reviews now expected under userProfile?.profile?.details?.reviews
+  const reviews = userProfile?.profile?.details?.reviews || [];
   const sortedReviews = reviews.sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );

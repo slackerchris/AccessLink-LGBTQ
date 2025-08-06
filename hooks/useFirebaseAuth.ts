@@ -44,6 +44,13 @@ interface UserProfile {
   createdAt: any;
   updatedAt: any;
   profile: {
+    details: any;
+    identity?: {
+      visible?: boolean;
+      pronouns?: string;
+      identities?: string[];
+      preferredName?: string;
+    };
     firstName?: string;
     lastName?: string;
     phoneNumber?: string;
@@ -128,7 +135,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               isEmailVerified: firebaseUser.emailVerified,
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
-              profile: {}
+              profile: { details: {} }
             };
             
             await setDoc(userDocRef, basicProfile);
@@ -188,7 +195,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isEmailVerified: firebaseUser.emailVerified,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        profile: {}
+        profile: { details: {} }
       };
       
       const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -255,7 +262,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isEmailVerified: firebaseUser.emailVerified,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        profile: {}
+        profile: { details: {} }
       };
       
       await setDoc(userDocRef, userProfile);
@@ -390,8 +397,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       if (profileUpdates.profile) {
+        // Remove identity-related fields from details before merging
+        const { details = {}, ...restProfile } = userProfile?.profile || {};
+        // Remove unwanted keys from details
+        const {
+          preferredName: _pn,
+          pronouns: _pr,
+          preferredPronouns: _pp,
+          identityVisible: _iv,
+          identities: _ids,
+          ...cleanDetails
+        } = details;
         updateData.profile = {
-          ...(userProfile?.profile || {}),
+          ...restProfile,
+          details: cleanDetails,
           ...profileUpdates.profile
         };
       }
@@ -400,11 +419,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Update local state
       if (userProfile) {
+        // Remove identity-related fields from details before merging in local state
+        const { details = {}, ...restProfile } = userProfile.profile || {};
+        const {
+          preferredName: _pn,
+          pronouns: _pr,
+          preferredPronouns: _pp,
+          identityVisible: _iv,
+          identities: _ids,
+          ...cleanDetails
+        } = details;
         setUserProfile({
           ...userProfile,
           displayName: profileUpdates.displayName || userProfile.displayName,
           profile: {
-            ...(userProfile.profile || {}),
+            ...restProfile,
+            details: cleanDetails,
             ...(profileUpdates.profile || {})
           }
         });

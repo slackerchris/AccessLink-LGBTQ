@@ -15,10 +15,10 @@ import {
   TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
-import { BusinessListing } from '../../services/mockBusinessService';
+// import { BusinessListing } from '../../services/mockBusinessService'; // Removed: file is empty and not needed
 import { prepareForNavigation } from '../../utils/navigationHelpers';
 
 interface UserHomeScreenProps {

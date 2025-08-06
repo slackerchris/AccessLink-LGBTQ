@@ -6,7 +6,7 @@
 
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from './useFirebaseAuth';
 import { getFirestore, collection, query, where, limit, getDocs, DocumentData, updateDoc, doc } from 'firebase/firestore';
 import firebaseApp from '../services/firebase';
 
@@ -46,10 +46,13 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
         q = query(collection(db, 'businesses'), where('category', '==', filters.category), limit(pageLimit));
       }
       const snapshot = await getDocs(q);
-      const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        ...docSnap.data()
-      } as BusinessListing));
+      const result: BusinessListing[] = snapshot.docs.map(docSnap => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          ...(typeof data === 'object' && data !== null ? data : {})
+        } as BusinessListing;
+      });
       setBusinesses(result);
       setHasMore(result.length === pageLimit);
     } catch (err: any) {
@@ -82,28 +85,43 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
     hasMore,
     loadMore,
     refresh,
-    search: async (query: string) => {
+    search: async (searchTerm: string) => {
       try {
-        const q = query(collection(db, 'businesses'), where('name', '>=', query), where('name', '<=', query + '\uf8ff'), limit(pageLimit));
+        const q = query(
+          collection(db, 'businesses'),
+          where('name', '>=', searchTerm),
+          where('name', '<=', searchTerm + '\uf8ff'),
+          limit(pageLimit)
+        );
         const snapshot = await getDocs(q);
-        const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
-          id: docSnap.id,
-          ...docSnap.data()
-        } as BusinessListing));
+        const result: BusinessListing[] = snapshot.docs.map(docSnap => {
+          const data = docSnap.data(); 
+          return { 
+            id: docSnap.id, 
+            ...(typeof data === 'object' && data !== null ? data : {}) 
+          } as BusinessListing; 
+        });
         setBusinesses(result);
         setHasMore(result.length === pageLimit);
       } catch (err: any) {
         setError(err.message);
       }
     },
-    filterByCategory: async (category: BusinessCategory) => {
+    filterByCategory: async (categoryValue: BusinessCategory) => {
       try {
-        const q = query(collection(db, 'businesses'), where('category', '==', category), limit(pageLimit));
+        const q = query(
+          collection(db, 'businesses'),
+          where('category', '==', categoryValue),
+          limit(pageLimit)
+        );
         const snapshot = await getDocs(q);
-        const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
-          id: docSnap.id,
-          ...docSnap.data()
-        } as BusinessListing));
+        const result: BusinessListing[] = snapshot.docs.map(docSnap => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            ...(typeof data === 'object' && data !== null ? data : {})
+          } as BusinessListing;
+        });
         setBusinesses(result);
         setHasMore(result.length === pageLimit);
       } catch (err: any) {
@@ -128,10 +146,13 @@ export const usePendingBusinesses = () => {
     try {
       const q = query(collection(db, 'businesses'), where('status', '==', 'pending'));
       const snapshot = await getDocs(q);
-      const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        ...docSnap.data()
-      } as BusinessListing));
+      const result: BusinessListing[] = snapshot.docs.map(docSnap => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          ...(typeof data === 'object' && data !== null ? data : {})
+        } as BusinessListing;
+      });
       setBusinesses(result);
     } catch (err: any) {
       setError(err.message);

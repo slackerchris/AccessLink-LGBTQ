@@ -17,7 +17,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinessActions } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 import { BusinessListing, BusinessReview } from '../../services/businessService';
