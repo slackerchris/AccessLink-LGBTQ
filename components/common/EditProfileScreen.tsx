@@ -14,25 +14,41 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
+
 export function EditProfileScreen({ navigation }: { navigation: any }) {
   const { user, userProfile } = useAuth();
   const { updateProfile } = useAuthActions();
   const { colors } = useTheme();
-  
+
   const [formData, setFormData] = useState({
     displayName: userProfile?.displayName || user?.displayName || '',
-    firstName: userProfile?.profile?.firstName || '',
-    lastName: userProfile?.profile?.lastName || '',
-    phone: userProfile?.profile?.phoneNumber || '',
-    bio: userProfile?.profile?.bio || '',
-    preferredPronouns: userProfile?.profile?.preferredPronouns || '',
+    firstName: userProfile?.profile?.details?.firstName ?? userProfile?.profile?.firstName ?? '',
+    lastName: userProfile?.profile?.details?.lastName ?? userProfile?.profile?.lastName ?? '',
+    phone: userProfile?.profile?.details?.phoneNumber ?? userProfile?.profile?.phoneNumber ?? '',
+    bio: userProfile?.profile?.details?.bio ?? userProfile?.profile?.bio ?? '',
+    preferredPronouns: userProfile?.profile?.details?.preferredPronouns ?? userProfile?.profile?.preferredPronouns ?? '',
   });
 
   const [interests, setInterests] = useState<string[]>(
-    userProfile?.profile?.interests || []
+    userProfile?.profile?.details?.interests ?? userProfile?.profile?.interests ?? []
   );
-  
+
+  // Sync form fields with userProfile when it changes
+  React.useEffect(() => {
+    setFormData({
+      displayName: userProfile?.displayName || user?.displayName || '',
+      firstName: userProfile?.profile?.details?.firstName ?? userProfile?.profile?.firstName ?? '',
+      lastName: userProfile?.profile?.details?.lastName ?? userProfile?.profile?.lastName ?? '',
+      phone: userProfile?.profile?.details?.phoneNumber ?? userProfile?.profile?.phoneNumber ?? '',
+      bio: userProfile?.profile?.details?.bio ?? userProfile?.profile?.bio ?? '',
+      preferredPronouns: userProfile?.profile?.details?.preferredPronouns ?? userProfile?.profile?.preferredPronouns ?? '',
+    });
+    setInterests(userProfile?.profile?.details?.interests ?? userProfile?.profile?.interests ?? []);
+  }, [userProfile]);
+
   // accessibilityNeeds state moved to AccessibilityPreferencesScreen
+
+  // Accessibility preferences logic moved to AccessibilityPreferencesScreen
 
   const [loading, setLoading] = useState(false);
 
@@ -60,13 +76,16 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
       await updateProfile({
         displayName: formData.displayName,
         profile: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phoneNumber: formData.phone, // Note: Changed from phone to phoneNumber to match UserProfile type
-          bio: formData.bio,
-          preferredPronouns: formData.preferredPronouns,
-          interests,
-          // accessibilityNeeds moved to AccessibilityPreferencesScreen
+          ...userProfile?.profile, // preserve all other profile fields, including accessibilityPreferences
+          details: {
+          ...((userProfile?.profile && typeof userProfile.profile === 'object' && 'details' in userProfile.profile && userProfile.profile.details && typeof userProfile.profile.details === 'object') ? userProfile.profile.details : {}),
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phoneNumber: formData.phone, // Note: Changed from phone to phoneNumber to match UserProfile type
+            bio: formData.bio,
+            preferredPronouns: formData.preferredPronouns,
+            interests,
+          }
         }
       });
       
@@ -251,6 +270,16 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
         </View>
 
         {/* Accessibility preferences moved to AccessibilityPreferencesScreen */}
+        {/* Example: Button to demonstrate safe accessibility update (remove in real app) */}
+        {/*
+        <TouchableOpacity
+          style={[styles.saveButton, { backgroundColor: colors.primary }, loading && styles.disabledButton]}
+          onPress={() => handleSaveAccessibilityNeeds(['Wheelchair Accessible', 'Gender Neutral Restroom'])}
+          disabled={loading}
+        >
+          <Text style={styles.saveButtonText}>Update Accessibility Needs (Demo)</Text>
+        </TouchableOpacity>
+        */}
 
         <View style={styles.bottomPadding} />
       </ScrollView>

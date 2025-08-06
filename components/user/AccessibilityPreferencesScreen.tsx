@@ -265,10 +265,10 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
     }));
   }, []);
 
+  // Helper to safely merge accessibility preferences with existing profile fields
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
-      
       // Map UI preferences to backend structure
       const accessibilityPreferences = {
         wheelchairAccess: preferences.wheelchairAccess,
@@ -278,14 +278,13 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
         mobilitySupport: preferences.serviceAnimalFriendly,
         sensoryFriendly: preferences.sensoryAccommodations || preferences.quietSpaces
       };
-      
-      // Update the user profile with selected accessibility preferences
+      // Merge with existing profile fields to avoid overwriting
       await updateProfile({
         profile: {
+          ...userProfile?.profile,
           accessibilityPreferences
         }
       });
-      
       Alert.alert('Success', 'Your accessibility preferences have been updated!');
       navigation.goBack();
     } catch (error) {
@@ -294,7 +293,7 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
     } finally {
       setSaving(false);
     }
-  }, [preferences, navigation, updateProfile]);
+  }, [preferences, navigation, updateProfile, userProfile]);
 
   const handleReset = useCallback(() => {
     Alert.alert(
