@@ -18,7 +18,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
-import { businessService } from '../../services/businessService';
+import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import EventDeleteConfirmationScreen from './EventDeleteConfirmationScreen';
 
 export interface BusinessEvent {
@@ -123,47 +124,57 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
   ];
 
   useEffect(() => {
-    loadUserBusiness();
+    // Find the user's business by ownerId
+    const fetchBusinessAndEvents = async () => {
+      if (!userProfile?.uid) return;
+      try {
+        const q = query(collection(db, 'businesses'), where('ownerId', '==', userProfile.uid));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const businessDoc = snapshot.docs[0];
+          const business = { id: businessDoc.id, ...businessDoc.data() };
+          setUserBusiness(business);
+          // Now load events for this business
+          const eventsCol = collection(db, 'businesses', businessDoc.id, 'events');
+          const eventsSnap = await getDocs(eventsCol);
+          const loadedEvents = eventsSnap.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              title: data.title || '',
+              description: data.description || '',
+              date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
+              startTime: data.startTime || '',
+              endTime: data.endTime || '',
+              location: data.location || '',
+              category: data.category || 'community',
+              isAccessible: data.isAccessible ?? true,
+              accessibilityFeatures: data.accessibilityFeatures || [],
+              maxAttendees: data.maxAttendees,
+              currentAttendees: data.currentAttendees ?? 0,
+              isPublic: data.isPublic ?? true,
+              registrationRequired: data.registrationRequired ?? false,
+              registrationDeadline: data.registrationDeadline?.toDate ? data.registrationDeadline.toDate() : data.registrationDeadline ? new Date(data.registrationDeadline) : undefined,
+              ticketPrice: data.ticketPrice,
+              contactEmail: data.contactEmail || '',
+              contactPhone: data.contactPhone || '',
+              imageUri: data.imageUri,
+              tags: data.tags || [],
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+              updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date()
+            };
+          });
+          setEvents(loadedEvents);
+        } else {
+          setUserBusiness(null);
+          setEvents([]);
+        }
+      } catch (error) {
+        console.error('Error loading business/events:', error);
+      }
+    };
+    fetchBusinessAndEvents();
   }, [userProfile]);
-
-  useEffect(() => {
-    loadEvents();
-  }, [userBusiness]);
-
-  // Debug effect to monitor state changes
-  useEffect(() => {
-    console.log('🔍 Component state updated:', {
-      eventsCount: events.length,
-      isLoading: isLoading,
-      isModalVisible: isModalVisible,
-      deletingEventId: deletingEventId,
-      hasUserBusiness: !!userBusiness,
-      businessId: userBusiness?.id
-    });
-  }, [events, isLoading, isModalVisible, deletingEventId, userBusiness]);
-
-  const loadUserBusiness = async () => {
-    if (userProfile?.businessId) {
-      try {
-        const result = await businessService.getBusinesses();
-        const business = result.businesses.find(b => b.id === userProfile.businessId);
-        setUserBusiness(business);
-      } catch (error) {
-        console.error('Error loading business:', error);
-      }
-    }
-  };
-
-  const loadEvents = async () => {
-    if (userBusiness?.id) {
-      try {
-        const businessEvents = await businessService.getBusinessEvents(userBusiness.id);
-        setEvents(businessEvents);
-      } catch (error) {
-        console.error('Error loading events:', error);
-      }
-    }
-  };
 
   const getFilteredEvents = () => {
     const now = new Date();
@@ -235,109 +246,59 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
       Alert.alert('Error', 'Please provide a title for this event');
       return;
     }
-
     if (!formData.description.trim()) {
       Alert.alert('Error', 'Please provide a description for this event');
       return;
     }
-
     // Validate event date is not in the past
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to start of today
+    today.setHours(0, 0, 0, 0);
     const eventDate = new Date(formData.date);
-    eventDate.setHours(0, 0, 0, 0); // Set to start of event date
-    
+    eventDate.setHours(0, 0, 0, 0);
     if (eventDate < today) {
       Alert.alert('Error', 'Event date cannot be in the past. Please select a future date.');
       return;
     }
-
-    // Validate start time is before end time
     if (formData.startTime >= formData.endTime) {
       Alert.alert('Error', 'Start time must be before end time');
       return;
     }
-
-    // Validate registration deadline if registration is required
     if (formData.registrationRequired && formData.registrationDeadline) {
       const deadlineDate = new Date(formData.registrationDeadline);
       deadlineDate.setHours(0, 0, 0, 0);
-      
       if (deadlineDate > eventDate) {
         Alert.alert('Error', 'Registration deadline cannot be after the event date');
         return;
       }
-      
       if (deadlineDate < today) {
         Alert.alert('Error', 'Registration deadline cannot be in the past');
         return;
       }
     }
-
     if (!userBusiness?.id) return;
-
     setIsLoading(true);
     try {
+      const eventsCol = collection(db, 'businesses', userBusiness.id, 'events');
       if (editingEvent) {
         // Update existing event
+        const eventRef = doc(eventsCol, editingEvent.id);
         const updates = {
-          title: formData.title,
-          description: formData.description,
-          date: formData.date,
-          startTime: formData.startTime,
-          endTime: formData.endTime,
-          location: formData.location,
-          category: formData.category,
-          isAccessible: formData.isAccessible,
-          accessibilityFeatures: formData.accessibilityFeatures,
-          maxAttendees: formData.maxAttendees,
-          isPublic: formData.isPublic,
-          registrationRequired: formData.registrationRequired,
-          registrationDeadline: formData.registrationDeadline,
-          ticketPrice: formData.ticketPrice,
-          contactEmail: formData.contactEmail,
-          contactPhone: formData.contactPhone,
-          tags: formData.tags
+          ...formData,
+          updatedAt: new Date()
         };
-
-        await businessService.updateBusinessEvent(userBusiness.id, editingEvent.id, updates);
-        
-        // Update local state
-        setEvents(prev => prev.map(event => 
-          event.id === editingEvent.id 
-            ? { ...event, ...updates, updatedAt: new Date() }
-            : event
-        ));
+        await updateDoc(eventRef, updates);
+        setEvents(prev => prev.map(event => event.id === editingEvent.id ? { ...event, ...updates } : event));
       } else {
         // Create new event
-        const newEvent: BusinessEvent = {
-          id: `event-${Date.now()}`,
-          title: formData.title,
-          description: formData.description,
-          date: formData.date,
-          startTime: formData.startTime,
-          endTime: formData.endTime,
-          location: formData.location,
-          category: formData.category,
-          isAccessible: formData.isAccessible,
-          accessibilityFeatures: formData.accessibilityFeatures,
-          maxAttendees: formData.maxAttendees,
+        const newEvent = {
+          ...formData,
           currentAttendees: 0,
-          isPublic: formData.isPublic,
-          registrationRequired: formData.registrationRequired,
-          registrationDeadline: formData.registrationDeadline,
-          ticketPrice: formData.ticketPrice,
-          contactEmail: formData.contactEmail,
-          contactPhone: formData.contactPhone,
-          tags: formData.tags,
           createdAt: new Date(),
           updatedAt: new Date()
         };
-
-        await businessService.addBusinessEvent(userBusiness.id, newEvent);
-        setEvents(prev => [newEvent, ...prev]);
+        const docRef = await addDoc(eventsCol, newEvent);
+        setEvents(prev => [{ ...newEvent, id: docRef.id }, ...prev]);
       }
-
       setIsModalVisible(false);
       Alert.alert('Success', `Event ${editingEvent ? 'updated' : 'created'} successfully!`);
     } catch (error) {
@@ -358,24 +319,19 @@ export const EventsManagementScreen: React.FC<EventsManagementScreenProps> = ({ 
 
   const handleConfirmDelete = async () => {
     if (!eventToDelete || !userBusiness?.id) return;
-
     try {
+      // Delete from Firestore
+      const eventRef = doc(db, 'businesses', userBusiness.id, 'events', eventToDelete.id);
+      await deleteDoc(eventRef);
       // Update local state immediately
       setEvents(prev => prev.filter(event => event.id !== eventToDelete.id));
-      
       // Close the edit modal if we were editing this event
       if (editingEvent?.id === eventToDelete.id) {
         setIsModalVisible(false);
         setEditingEvent(null);
       }
-      
-      // Reload events from server to ensure sync
-      await loadEvents();
-      
     } catch (error) {
       console.error('Error in handleConfirmDelete:', error);
-      // Reload events to restore state if there was an error
-      await loadEvents();
     } finally {
       setEventToDelete(null);
       setShowDeleteConfirmation(false);
