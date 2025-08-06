@@ -63,8 +63,6 @@ interface BusinessDetails {
   totalReviews: number;
   createdAt: any;
   updatedAt: any;
-  
-  // Additional properties that might be in the response
   reviews?: Array<{
     id?: string;
     userName?: string;

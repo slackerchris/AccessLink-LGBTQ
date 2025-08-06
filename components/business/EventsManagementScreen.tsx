@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
-import { businessService } from '../../services/mockBusinessService';
+import { businessService } from '../../services/businessService';
 import EventDeleteConfirmationScreen from './EventDeleteConfirmationScreen';
 
 export interface BusinessEvent {

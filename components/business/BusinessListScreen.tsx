@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
+//import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
 
 interface BusinessListScreenProps {
   initialCategory?: BusinessCategory;

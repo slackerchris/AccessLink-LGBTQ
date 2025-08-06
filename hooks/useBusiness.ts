@@ -1,44 +1,64 @@
+
 /**
- * React Hooks for Business Management (Mock Version)
- * Custom hooks for managing business listings and reviews with mock data
+ * React Hooks for Business Management (Firebase Version)
+ * Custom hooks for managing business listings and reviews with real Firebase data
  */
 
+
 import { useState, useEffect, useCallback } from 'react';
-/* import { 
-  businessService, 
-  BusinessListing, 
-  BusinessFilters,
-  BusinessCategory 
-} from '../services/mockBusinessService'; */
 import { useAuth } from './useAuth';
+import { getFirestore, collection, query, where, limit, getDocs, DocumentData, updateDoc, doc } from 'firebase/firestore';
+import firebaseApp from '../services/firebase';
+
+export interface BusinessListing {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  averageRating: number;
+  location: { address: string };
+  status?: string;
+  // Add other fields as needed
+}
+
+export type BusinessFilters = {
+  category?: string;
+  // Add other filters as needed
+};
+
+export type BusinessCategory = string;
 
 // Hook for business listings with pagination and filtering
+
 export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number = 20) => {
   const [businesses, setBusinesses] = useState<BusinessListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const db = getFirestore(firebaseApp);
 
   const loadBusinesses = useCallback(async (reset: boolean = false) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await businessService.getBusinesses(filters, pageLimit);
-      
-      if (reset) {
-        setBusinesses(result.businesses);
-      } else {
-        setBusinesses(prev => [...prev, ...result.businesses]);
+      let q = query(collection(db, 'businesses'), limit(pageLimit));
+      if (filters.category) {
+        q = query(collection(db, 'businesses'), where('category', '==', filters.category), limit(pageLimit));
       }
-      
-      setHasMore(result.businesses.length === pageLimit);
+      const snapshot = await getDocs(q);
+      const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      } as BusinessListing));
+      setBusinesses(result);
+      setHasMore(result.length === pageLimit);
     } catch (err: any) {
       setError(err.message);
       console.error('Error loading businesses:', err);
     } finally {
       setLoading(false);
     }
-  }, [filters, pageLimit]);
+  }, [filters, pageLimit, db]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -64,18 +84,28 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
     refresh,
     search: async (query: string) => {
       try {
-        const result = await businessService.searchBusinesses(query, filters, pageLimit);
-        setBusinesses(result.businesses);
-        setHasMore(result.businesses.length === pageLimit);
+        const q = query(collection(db, 'businesses'), where('name', '>=', query), where('name', '<=', query + '\uf8ff'), limit(pageLimit));
+        const snapshot = await getDocs(q);
+        const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        } as BusinessListing));
+        setBusinesses(result);
+        setHasMore(result.length === pageLimit);
       } catch (err: any) {
         setError(err.message);
       }
     },
     filterByCategory: async (category: BusinessCategory) => {
       try {
-        const result = await businessService.getBusinessesByCategory(category, pageLimit);
-        setBusinesses(result.businesses);
-        setHasMore(result.businesses.length === pageLimit);
+        const q = query(collection(db, 'businesses'), where('category', '==', category), limit(pageLimit));
+        const snapshot = await getDocs(q);
+        const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        } as BusinessListing));
+        setBusinesses(result);
+        setHasMore(result.length === pageLimit);
       } catch (err: any) {
         setError(err.message);
       }
@@ -89,14 +119,19 @@ export const usePendingBusinesses = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { userProfile } = useAuth();
+  const db = getFirestore(firebaseApp);
 
   const loadPendingBusinesses = useCallback(async () => {
     if (!userProfile || userProfile.role !== 'admin') return;
-    
     setLoading(true);
     setError(null);
     try {
-      const result = await businessService.getPendingBusinesses();
+      const q = query(collection(db, 'businesses'), where('status', '==', 'pending'));
+      const snapshot = await getDocs(q);
+      const result: BusinessListing[] = snapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      } as BusinessListing));
       setBusinesses(result);
     } catch (err: any) {
       setError(err.message);
@@ -104,7 +139,7 @@ export const usePendingBusinesses = () => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile]);
+  }, [userProfile, db]);
 
   useEffect(() => {
     loadPendingBusinesses();
@@ -122,38 +157,39 @@ export const usePendingBusinesses = () => {
 export const useBusinessActions = () => {
   const [loading, setLoading] = useState(false);
   const { userProfile } = useAuth();
+  const db = getFirestore(firebaseApp);
 
   const approveBusiness = useCallback(async (businessId: string) => {
     if (!userProfile || userProfile.role !== 'admin') {
       throw new Error('Admin privileges required');
     }
-    
     setLoading(true);
     try {
-      await businessService.approveBusiness(businessId);
+      const businessRef = doc(db, 'businesses', businessId);
+      await updateDoc(businessRef, { status: 'approved' });
     } catch (error: any) {
       console.error('Error approving business:', error);
       throw error;
     } finally {
       setLoading(false);
     }
-  }, [userProfile]);
+  }, [userProfile, db]);
 
   const rejectBusiness = useCallback(async (businessId: string) => {
     if (!userProfile || userProfile.role !== 'admin') {
       throw new Error('Admin privileges required');
     }
-    
     setLoading(true);
     try {
-      await businessService.rejectBusiness(businessId);
+      const businessRef = doc(db, 'businesses', businessId);
+      await updateDoc(businessRef, { status: 'rejected' });
     } catch (error: any) {
       console.error('Error rejecting business:', error);
       throw error;
     } finally {
       setLoading(false);
     }
-  }, [userProfile]);
+  }, [userProfile, db]);
 
   return {
     approveBusiness,

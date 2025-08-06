@@ -19,7 +19,20 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
-import { ServiceItem, businessService } from '../../services/mockBusinessService';
+// import { ServiceItem, businessService } from '../../services/mockBusinessService';
+import { getFirestore, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import firebaseApp from '../../services/firebase';
+
+// Define ServiceItem type locally (adjust fields as needed)
+interface ServiceItem {
+  id: string;
+  name: string;
+  description: string;
+  price?: string;
+  duration?: string;
+  category?: string;
+  available: boolean;
+}
 
 interface ServicesManagementScreenProps {
   navigation: any;
@@ -45,20 +58,29 @@ export const ServicesManagementScreen: React.FC<ServicesManagementScreenProps> =
     available: true
   });
 
-  useEffect(() => {
-    loadServices();
-  }, [userBusiness]);
 
+  const db = getFirestore(firebaseApp);
+
+  // Load services from Firestore
   const loadServices = async () => {
     if (userBusiness?.id) {
       try {
-        const businessServices = await businessService.getBusinessServices(userBusiness.id);
+        const q = query(collection(db, 'businesses', userBusiness.id, 'services'));
+        const snapshot = await getDocs(q);
+        const businessServices: ServiceItem[] = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }) as ServiceItem);
         setServices(businessServices);
       } catch (error) {
         console.error('Error loading services:', error);
       }
     }
   };
+
+  useEffect(() => {
+    loadServices();
+  }, [userBusiness]);
 
   const handleAddService = () => {
     setEditingService(null);
@@ -86,6 +108,7 @@ export const ServicesManagementScreen: React.FC<ServicesManagementScreenProps> =
     setIsModalVisible(true);
   };
 
+
   const handleSaveService = async () => {
     if (!formData.name.trim() || !formData.description.trim()) {
       Alert.alert('Error', 'Please fill in service name and description');
@@ -99,23 +122,21 @@ export const ServicesManagementScreen: React.FC<ServicesManagementScreenProps> =
 
     setIsLoading(true);
     try {
+      const servicesCol = collection(db, 'businesses', userBusiness.id, 'services');
       if (editingService) {
         // Update existing service
-        await businessService.updateBusinessService(
-          userBusiness.id,
-          editingService.id,
-          {
-            name: formData.name,
-            description: formData.description,
-            price: formData.price || undefined,
-            duration: formData.duration || undefined,
-            category: formData.category || undefined,
-            available: formData.available
-          }
-        );
+        const serviceRef = doc(db, 'businesses', userBusiness.id, 'services', editingService.id);
+        await updateDoc(serviceRef, {
+          name: formData.name,
+          description: formData.description,
+          price: formData.price || undefined,
+          duration: formData.duration || undefined,
+          category: formData.category || undefined,
+          available: formData.available
+        });
       } else {
         // Add new service
-        await businessService.addBusinessService(userBusiness.id, {
+        await addDoc(servicesCol, {
           name: formData.name,
           description: formData.description,
           price: formData.price || undefined,
@@ -137,6 +158,7 @@ export const ServicesManagementScreen: React.FC<ServicesManagementScreenProps> =
     }
   };
 
+
   const handleDeleteService = (serviceId: string) => {
     if (!userBusiness?.id) return;
 
@@ -151,7 +173,8 @@ export const ServicesManagementScreen: React.FC<ServicesManagementScreenProps> =
           onPress: async () => {
             setIsLoading(true);
             try {
-              await businessService.deleteBusinessService(userBusiness.id, serviceId);
+              const serviceRef = doc(db, 'businesses', userBusiness.id, 'services', serviceId);
+              await deleteDoc(serviceRef);
               await loadServices();
               refresh(); // Refresh the businesses list
               Alert.alert('Success', 'Service deleted successfully!');
@@ -175,11 +198,8 @@ export const ServicesManagementScreen: React.FC<ServicesManagementScreenProps> =
 
     setIsLoading(true);
     try {
-      await businessService.updateBusinessService(
-        userBusiness.id,
-        serviceId,
-        { available: !service.available }
-      );
+      const serviceRef = doc(db, 'businesses', userBusiness.id, 'services', serviceId);
+      await updateDoc(serviceRef, { available: !service.available });
       await loadServices();
       refresh(); // Refresh the businesses list
     } catch (error) {

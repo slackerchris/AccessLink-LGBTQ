@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
-import { businessService } from '../../services/mockBusinessService';
+import { businessService } from '../../services/firebase'; // Use actual Firebase service
+//import { businessService } from '../../services/mockBusinessService';
 
 interface BusinessEvent {
   id: string;

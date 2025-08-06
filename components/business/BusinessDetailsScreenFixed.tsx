@@ -78,12 +78,10 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
   const { } = useBusinessActions();  // Will fix these functions separately
   const { colors } = useTheme();
   const [isSaved, setIsSaved] = useState(false);  // Will implement saved businesses later
-  const [businessData, setBusinessData] = useState<BusinessListing & {
-    reviewCount: number;
-    photos: string[];
-    accessibilityFeatures: string[];
+  const [businessData, setBusinessData] = useState<(BusinessListing & {
+    accessibilityFeatures?: string[];
     reviews?: BusinessReview[];
-  } | null>(null);
+  }) | null>(null);
   
   // If a full business object was passed via navigation, parse Date objects
   useEffect(() => {
@@ -105,16 +103,13 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
   useEffect(() => {
     if (!businessData && fetchedBusiness) {
       // Convert the fetchedBusiness to the format expected by our adapter
-      // This handles the difference between businessService.BusinessListing and properBusinessService.BusinessListing
       const businessForAdapter: BusinessListing = {
         ...fetchedBusiness as any,
-        // Add any missing required fields with defaults
         hours: (fetchedBusiness as any).hours || {},
         images: (fetchedBusiness as any).images || [],
         tags: (fetchedBusiness as any).tags || [],
         createdAt: (fetchedBusiness as any).createdAt || new Date(),
       };
-      
       const adaptedBusiness = adaptBusinessForDisplay(businessForAdapter);
       setBusinessData(adaptedBusiness);
     }
@@ -272,7 +267,7 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={16} color="#fbbf24" />
               <Text style={styles.ratingText}>
-                {businessData.averageRating.toFixed(1)} ({businessData.reviewCount || 0} reviews)
+                {businessData.averageRating?.toFixed(1) ?? 'N/A'} ({businessData.totalReviews ?? 0} reviews)
               </Text>
             </View>
           </View>
@@ -290,9 +285,9 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
 
         {/* Business Image/Banner */}
         <View style={styles.bannerContainer}>
-          {businessData.photos && businessData.photos.length > 0 ? (
+          {businessData.images && businessData.images.length > 0 ? (
             <Image
-              source={{ uri: businessData.photos[0] }}
+              source={{ uri: businessData.images[0] }}
               style={styles.bannerImage}
               resizeMode="cover"
             />
