@@ -5,8 +5,13 @@ const { getFirestore } = require('firebase-admin/firestore');
 
 // Initialize Firebase Admin SDK
 if (!getApps().length) {
+  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    console.error('ERROR: GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.');
+    console.error('Please set it in your .env file to the path of your Firebase service account JSON.');
+    process.exit(1);
+  }
   initializeApp({
-    credential: cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
+    credential: cert(require(process.env.GOOGLE_APPLICATION_CREDENTIALS)),
   });
 }
 
