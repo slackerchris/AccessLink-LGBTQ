@@ -22,11 +22,10 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
 
   const [formData, setFormData] = useState({
     displayName: userProfile?.displayName || user?.displayName || '',
-    firstName: userProfile?.profile?.details?.firstName ?? userProfile?.profile?.firstName ?? '',
+    firstName: (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.firstName) ?? userProfile?.profile?.firstName ?? '',
     lastName: userProfile?.profile?.details?.lastName ?? userProfile?.profile?.lastName ?? '',
     phone: userProfile?.profile?.details?.phoneNumber ?? userProfile?.profile?.phoneNumber ?? '',
     bio: userProfile?.profile?.details?.bio ?? userProfile?.profile?.bio ?? '',
-    preferredPronouns: userProfile?.profile?.details?.preferredPronouns ?? userProfile?.profile?.preferredPronouns ?? '',
   });
 
   const [interests, setInterests] = useState<string[]>(
@@ -37,11 +36,23 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
   React.useEffect(() => {
     setFormData({
       displayName: userProfile?.displayName || user?.displayName || '',
-      firstName: userProfile?.profile?.details?.firstName ?? userProfile?.profile?.firstName ?? '',
-      lastName: userProfile?.profile?.details?.lastName ?? userProfile?.profile?.lastName ?? '',
-      phone: userProfile?.profile?.details?.phoneNumber ?? userProfile?.profile?.phoneNumber ?? '',
-      bio: userProfile?.profile?.details?.bio ?? userProfile?.profile?.bio ?? '',
-      preferredPronouns: userProfile?.profile?.details?.preferredPronouns ?? userProfile?.profile?.preferredPronouns ?? '',
+      firstName:
+      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.firstName) ??
+      userProfile?.profile?.firstName ??
+      '',
+      lastName:
+      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.lastName) ??
+      userProfile?.profile?.lastName ??
+      '',
+      phone:
+      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.phoneNumber) ??
+      userProfile?.profile?.phoneNumber ??
+      '',
+      bio:
+      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.bio) ??
+      userProfile?.profile?.bio ??
+      '',
+      // preferredPronouns removed
     });
     setInterests(userProfile?.profile?.details?.interests ?? userProfile?.profile?.interests ?? []);
   }, [userProfile]);
@@ -67,7 +78,6 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
           lastName: formData.lastName,
           phone: formData.phone, 
           bio: formData.bio,
-          preferredPronouns: formData.preferredPronouns,
           interests,
           // accessibilityNeeds moved to AccessibilityPreferencesScreen
         }
@@ -83,7 +93,6 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
             lastName: formData.lastName,
             phoneNumber: formData.phone, // Note: Changed from phone to phoneNumber to match UserProfile type
             bio: formData.bio,
-            preferredPronouns: formData.preferredPronouns,
             interests,
           }
         }
@@ -200,16 +209,7 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Preferred Pronouns</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-              value={formData.preferredPronouns}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, preferredPronouns: text }))}
-              placeholder="e.g., they/them, she/her, he/him"
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
+          {/* Preferred Pronouns field removed */}
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Phone Number</Text>

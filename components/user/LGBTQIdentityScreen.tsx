@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 const lgbtqIdentityOptions = [
@@ -46,30 +46,34 @@ const pronounOptions = [
 
 export default function LGBTQIdentityScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useAuth();
+  const { updateProfile } = useAuthActions();
   const { colors } = useTheme();
   const [saving, setSaving] = useState(false);
-  
-  // Simplified identity state - will be connected to Firebase later
-  const [identity, setIdentity] = useState({
-    visible: false,
-    pronouns: '',
-    identities: [],
-    preferredName: ''
-  });
-  const [customPronoun, setCustomPronoun] = useState('');
+
+  // Initialize from userProfile if available
+  const [identity, setIdentity] = useState(() => {
+        const [identity, setIdentity] = useState(() => {
+          const identityData = userProfile?.profile?.identity || {};
+          return {
+            visible: identityData.visible ?? false,
+            pronouns: identityData.pronouns ?? '',
+            identities: identityData.identities ?? [],
+            preferredName: identityData.preferredName ?? ''
+          };
+        });
   const [customIdentity, setCustomIdentity] = useState('');
 
   const handleToggleVisibility = useCallback(() => {
     setIdentity(prev => ({
       ...prev,
       visible: !prev.visible
-    }));
-  }, []);
-
-  const handlePronounSelect = useCallback((pronoun: string) => {
-    setIdentity(prev => ({
-      ...prev,
-      pronouns: prev.pronouns === pronoun ? '' : pronoun
+                        identity: {
+                            ...((userProfile?.profile?.identity && typeof userProfile.profile.identity === 'object') ? userProfile.profile.identity : {}),
+                            visible: identity.visible,
+                            pronouns: identity.pronouns,
+                            identities: identity.identities,
+                            preferredName: identity.preferredName
+                        }
     }));
   }, []);
 
@@ -112,14 +116,25 @@ export default function LGBTQIdentityScreen({ navigation }: { navigation: any })
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
-      // TODO: Implement profile update with Firebase
-      Alert.alert('Coming Soon', 'Identity settings will be saved in a future update!');
+      await updateProfile({
+        profile: {
+          details: {
+            ...((userProfile?.profile?.details && typeof userProfile.profile.details === 'object') ? userProfile.profile.details : {}),
+            identityVisible: identity.visible,
+            pronouns: identity.pronouns,
+            identities: identity.identities,
+            preferredName: identity.preferredName
+          }
+        }
+      });
+      Alert.alert('Success', 'Identity settings saved!');
+      navigation.goBack();
     } catch (error) {
       Alert.alert('Error', 'Failed to save identity settings. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [identity]);
+  }, [identity, updateProfile, userProfile, navigation]);
 
   const handleReset = useCallback(() => {
     Alert.alert(
