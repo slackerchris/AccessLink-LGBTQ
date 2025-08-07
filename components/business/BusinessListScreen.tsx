@@ -17,9 +17,10 @@ import {
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useBusinesses } from '../../hooks/useBusiness';
-import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
-//import { BusinessListing, BusinessCategory } from '../../services/mockBusinessService';
+import { BusinessListing, BusinessCategory } from '../../services/businessService';
+import { ListRenderItemInfo } from 'react-native';
 
 interface BusinessListScreenProps {
   initialCategory?: BusinessCategory;
@@ -94,7 +95,7 @@ const BusinessListItem = memo(({
         {item.averageRating > 0 && (
           <View style={styles.ratingContainer}>
             <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
-              {renderRating(item.averageRating)} ({item.reviewCount || 0})
+              {renderRating(item.averageRating)} ({item.totalReviews || 0})
             </Text>
           </View>
         )}
@@ -127,7 +128,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
   onNavigateToAddBusiness,
   onNavigateToBusinessDetails
 }) => {
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
   const { } = useBusinessActions();  // Will implement save functionality later
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
@@ -149,7 +150,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
     { key: 'all', label: 'All Categories', icon: '🏢' },
     { key: 'restaurant', label: 'Restaurants', icon: '🍽️' },
     { key: 'healthcare', label: 'Healthcare', icon: '🏥' },
-    { key: 'legal', label: 'Legal Services', icon: '⚖️' },
+    // { key: 'legal', label: 'Legal Services', icon: '⚖️' },
     { key: 'retail', label: 'Retail', icon: '🛍️' },
     { key: 'entertainment', label: 'Entertainment', icon: '🎭' },
     { key: 'fitness', label: 'Fitness', icon: '💪' },
@@ -212,7 +213,7 @@ export const BusinessListScreen: React.FC<BusinessListScreenProps> = ({
     }
   }, [hasMore, loading, loadMore]);
 
-  const renderBusinessItem = ({ item }: { item: BusinessListing }) => {
+  const renderBusinessItem = ({ item }: ListRenderItemInfo<BusinessListing>) => {
     return (
       <BusinessListItem
         item={item}

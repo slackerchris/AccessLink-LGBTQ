@@ -17,7 +17,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 // import { ServiceItem, businessService } from '../../services/mockBusinessService';
 import { getFirestore, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
@@ -39,7 +39,7 @@ interface ServicesManagementScreenProps {
 }
 
 export const ServicesManagementScreen: React.FC<ServicesManagementScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
+  const { userProfile } = useFirebaseAuth();
   const { businesses, refresh } = useBusinesses();
   
   // Find the current user's business

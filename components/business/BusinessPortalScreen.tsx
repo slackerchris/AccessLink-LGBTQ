@@ -9,14 +9,14 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 
 interface BusinessPortalScreenProps {
   navigation: any;
 }
 
 export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navigation }) => {
-  const { user, logout } = useAuth();
+  const { user, logout } = useFirebaseAuth();
 
   const handleSignOut = async () => {
     Alert.alert(

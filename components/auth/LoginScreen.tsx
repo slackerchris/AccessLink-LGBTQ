@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 
 // Using webAuth to connect to IndexedDB database
 
@@ -28,7 +28,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const { loading, login } = useAuth();
+  const { loading, login } = useFirebaseAuth();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {

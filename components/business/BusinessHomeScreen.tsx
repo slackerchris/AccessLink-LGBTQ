@@ -13,26 +13,28 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
+
+
+// Extend local type to add missing fields for business stats
+type BusinessListingWithStats = import('../../hooks/useBusiness').BusinessListing & { ownerId?: string; totalReviews?: number };
 
 interface BusinessHomeScreenProps {
   navigation: any;
 }
 
 export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
-  const { signOut } = useAuthActions();
+  const { user, userProfile } = useFirebaseAuth();
   const { businesses } = useBusinesses({}, 1); // Get just the business owner's business
   const { colors } = useTheme();
-  
   // Find the business owned by this user
-  const myBusiness = businesses.find(b => b.ownerId === user?.id);
+  const myBusiness = (businesses as BusinessListingWithStats[]).find(b => b.ownerId === userProfile?.uid);
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      // Sign out functionality removed
     } catch (error: any) {
       Alert.alert('Sign Out Error', error.message);
     }
@@ -56,7 +58,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     {
       icon: 'chatbubble-ellipses',
       title: 'Reviews',
-      value: myBusiness?.reviewCount?.toString() || '23',
+      value: (myBusiness?.totalReviews ?? 0).toString(),
       color: '#10b981',
       onPress: () => navigation.navigate('ReviewHistory')
     },
@@ -120,9 +122,8 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
             <Text style={[styles.businessName, { color: colors.headerText }]}>{firstName}! 🏢</Text>
             <Text style={[styles.subtitle, { color: colors.headerText }]}>Manage your business profile</Text>
           </View>
-          <TouchableOpacity onPress={handleSignOut} style={[styles.profileButton, { backgroundColor: colors.primary }]}>
-            <Ionicons name="business" size={40} color="#fff" />
-          </TouchableOpacity>
+          {/* Profile button, no sign out */}\n          <TouchableOpacity style={[styles.profileButton, { backgroundColor: colors.primary }]}>
+            <Ionicons name="business" size={40} color="#fff" />\n          </TouchableOpacity>
         </View>
       </View>
 
@@ -137,7 +138,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
               <Text style={[styles.businessTitle, { color: colors.text }]}>{myBusiness.name}</Text>
               <Text style={[styles.businessCategory, { color: colors.textSecondary }]}>{myBusiness.category}</Text>
               <Text style={[styles.businessStatus, { color: colors.textSecondary }]}>
-                ✅ {myBusiness.approved ? 'Approved & Live' : 'Pending Approval'}
+                  ✅ {myBusiness.status === 'approved' ? 'Approved & Live' : 'Pending Approval'}
               </Text>
             </View>
             <TouchableOpacity 

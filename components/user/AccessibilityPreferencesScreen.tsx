@@ -10,7 +10,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth, useAuthActions as useFirebaseAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface AccessibilityPreference {
@@ -228,14 +228,14 @@ const styles = StyleSheet.create({
 });
 
 export default function AccessibilityPreferencesScreen({ navigation }: { navigation: any }) {
-  const { userProfile } = useAuth();
-  const { updateProfile } = useAuthActions();
+  const { userProfile } = useFirebaseAuth();
+  const { updateProfile } = useFirebaseAuthActions();
   const { colors, highVisibility, toggleHighVisibility } = useTheme();
   const [saving, setSaving] = useState(false);
   
   // Initialize preferences from user profile if available
   // Adjusted: accessibilityPreferences now expected under userProfile?.profile?.details?.accessibilityPreferences
-  const accessPrefs = userProfile?.profile?.details?.accessibilityPreferences || {
+  const accessPrefs = userProfile?.profile?.accessibilityPreferences? || {
     wheelchairAccess: false,
     visualImpairment: false,
     hearingImpairment: false,
@@ -289,8 +289,8 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
         profile: {
           ...userProfile?.profile,
           accessibilityPreferences: {
-            ...userProfile?.profile?.details?.accessibilityPreferences,
-            ...accessibilityPreferences
+        ...userProfile?.profile?.accessibilityPreferences,
+        ...accessibilityPreferences
           }
         }
       });

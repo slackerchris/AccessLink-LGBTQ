@@ -17,7 +17,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useBusinessDetails } from '../../hooks/useProperBusiness';
 import { BusinessListing as BaseListing } from '../../services/properBusinessService';
@@ -124,7 +124,7 @@ const ReviewItem = memo(({ item, colors }: { item: any; colors: any }) => {
 export default function BusinessDetailsScreen({ navigation, route }: BusinessDetailsScreenProps) {
   // Get businessId from route params
   const { businessId } = route.params;
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
   const { colors } = useTheme();
   const [isSaved, setIsSaved] = useState(false);  // Will implement saved businesses later
   

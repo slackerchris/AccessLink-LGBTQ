@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 
 export default function MinimalAuthTestScreen() {
   let user;
   try {
-    user = useAuth().user;
+    user = useFirebaseAuth().user;
   } catch (e) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>

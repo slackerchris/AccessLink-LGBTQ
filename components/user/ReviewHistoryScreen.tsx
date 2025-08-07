@@ -11,7 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface Review {
@@ -33,7 +33,7 @@ interface Review {
 }
 
 export default function ReviewHistoryScreen({ navigation }: { navigation: any }) {
-  const { userProfile } = useAuth();
+  const { userProfile } = useFirebaseAuth();
   const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   

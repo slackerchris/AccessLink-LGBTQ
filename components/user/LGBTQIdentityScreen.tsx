@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth, useAuthActions as useFirebaseAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 const lgbtqIdentityOptions = [
@@ -45,8 +45,8 @@ const pronounOptions = [
 ];
 
 export default function LGBTQIdentityScreen({ navigation }: { navigation: any }) {
-  const { userProfile } = useAuth();
-  const { updateProfile } = useAuthActions();
+  const { userProfile } = useFirebaseAuth();
+  const { updateProfile } = useFirebaseAuthActions();
   const { colors } = useTheme();
   const [saving, setSaving] = useState(false);
 

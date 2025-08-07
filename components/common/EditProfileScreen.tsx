@@ -11,13 +11,13 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useAuthActions } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth, useAuthActions as useFirebaseAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 
 export function EditProfileScreen({ navigation }: { navigation: any }) {
-  const { user, userProfile } = useAuth();
-  const { updateProfile } = useAuthActions();
+  const { user, userProfile } = useFirebaseAuth();
+  const { updateProfile } = useFirebaseAuthActions();
   const { colors } = useTheme();
 
   const [formData, setFormData] = useState({

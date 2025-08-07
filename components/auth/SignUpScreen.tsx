@@ -17,7 +17,7 @@ import {
   Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 interface SignUpScreenProps {
@@ -43,7 +43,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     agreeToTerms: false
   });
 
-  const { loading, register, loginWithGoogle, error } = useAuth();
+  const { loading, register, loginWithGoogle, error } = useFirebaseAuth();
 
   const updateFormData = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));

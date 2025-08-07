@@ -9,14 +9,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 
 export function SavedPlacesScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userProfile } = useAuth();
+  const { userProfile } = useFirebaseAuth();
   // Removed: unsaveBusiness is not available. You may need to implement this in the future.
   const { businesses } = useBusinesses();
   const { colors } = useTheme();

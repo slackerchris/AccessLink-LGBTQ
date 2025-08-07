@@ -15,7 +15,7 @@ import {
   TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 // import { BusinessListing } from '../../services/mockBusinessService'; // Removed: file is empty and not needed
@@ -26,7 +26,7 @@ interface UserHomeScreenProps {
 }
 
 export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) => {
-  const { userProfile } = useAuth();
+  const { userProfile } = useFirebaseAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const { colors, shadows } = useTheme();
 

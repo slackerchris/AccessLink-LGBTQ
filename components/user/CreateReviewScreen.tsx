@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useReviewActions } from '../../hooks/useWebAuth';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -47,7 +47,7 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
   // Debug: check if inside React context
   let user, addReview, colors;
   try {
-    user = useAuth().user;
+    user = useFirebaseAuth().user;
     addReview = useReviewActions().addReview;
     colors = useTheme().colors;
     if (!colors) {
