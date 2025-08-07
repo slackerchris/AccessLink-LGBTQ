@@ -103,21 +103,6 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}> 
         <View style={styles.portalGrid}> 
-          {/* TEMP: Button to test AuthProvider context */}
-          <TouchableOpacity
-            style={[dynamicStyles.portalCard, { borderColor: '#10b981', borderWidth: 2 }]}
-            onPress={() => navigation.navigate('MinimalAuthTest')}
-            accessibilityRole="button"
-            accessibilityLabel="Test Auth Context"
-            accessibilityHint="Navigate to minimal auth context test screen"
-          >
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name="bug-outline" size={28} color="#10b981" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>Test Auth Context</Text>
-            <Text style={dynamicStyles.portalCardSubtitle}>Debug AuthProvider context</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={() => navigation.navigate('EditProfile')}
@@ -215,7 +200,7 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
             </View>
           </View>
 
-          <TouchableOpacity
+         {/* <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={handleSignOut}
             accessibilityRole="button"
@@ -227,7 +212,7 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
             </View>
             <Text style={dynamicStyles.portalCardTitle}>Sign Out</Text>
             <Text style={dynamicStyles.portalCardSubtitle}>Logout from app</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */} 
         </View>
 
         <View style={styles.accountInfo}>
@@ -242,13 +227,20 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
               <Text style={dynamicStyles.accountValue}>
                 {userProfile?.role === 'user' ? 'Community Member' : 
                  userProfile?.role === 'bizowner' ? 'Business Owner' : 
-                 'Administrator'}
-              </Text>
+                 userProfile?.role === 'bizmanager' ? 'Business Manager' : 
+             userProfile?.role === 'admin' ? 'Administrator' : 
+             userProfile?.role === 'moderator' ? 'Community Moderator' : 
+             '*Unknown*'}
+          </Text>
             </View>
             <View style={dynamicStyles.accountRow}>
               <Text style={dynamicStyles.accountLabel}>Member Since</Text>
               <Text style={dynamicStyles.accountValue}>
-                {userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : 'N/A'}
+                {userProfile?.createdAt
+                      ? (userProfile.createdAt.toDate
+                          ? userProfile.createdAt.toDate().toLocaleDateString()
+                              : new Date(userProfile.createdAt).toLocaleDateString())
+                                  : 'N/A'}
               </Text>
             </View>
           </View>
@@ -284,17 +276,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 16,
+    //gap: 16,
     marginBottom: 32,
   },
   portalCard: {
     borderRadius: 16,
     padding: 20,
-    width: '48%',
+    flexBasis: '48%',
     minHeight: 120, // Ensure adequate touch target height
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    marginBottom: 16,
   },
   portalIconContainer: {
     width: 64,
