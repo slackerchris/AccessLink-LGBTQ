@@ -13,12 +13,57 @@ import firebaseApp from '../services/firebase';
 export interface BusinessListing {
   id: string;
   name: string;
-  category: string;
   description: string;
+  category: string;
+  location: {
+    address: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  contact?: {
+    phone?: string;
+    email?: string;
+    website?: string;
+    socialMedia?: {
+      facebook?: string;
+      instagram?: string;
+      twitter?: string;
+      linkedin?: string;
+    };
+  };
+  hours?: {
+    [key: string]: {
+      open: string;
+      close: string;
+      closed: boolean;
+    };
+  };
+  lgbtqFriendly?: {
+    verified: boolean;
+    certifications: string[];
+    inclusivityFeatures: string[];
+  };
+  accessibility?: {
+    wheelchairAccessible: boolean;
+    brailleMenus: boolean;
+    signLanguageSupport: boolean;
+    quietSpaces: boolean;
+    accessibilityNotes: string;
+  };
+  ownerId?: string;
+  status?: 'pending' | 'approved' | 'rejected' | 'suspended';
+  featured?: boolean;
+  images?: string[];
+  tags?: string[];
   averageRating: number;
-  location: { address: string };
-  status?: string;
-  // Add other fields as needed
+  totalReviews?: number;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export type BusinessFilters = {
@@ -69,9 +114,9 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
     }
   }, [loading, hasMore, loadBusinesses]);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     setHasMore(true);
-    loadBusinesses(true);
+    await loadBusinesses(true);
   }, [loadBusinesses]);
 
   useEffect(() => {

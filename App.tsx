@@ -437,7 +437,7 @@ function ProfileScreen({ navigation }: { navigation: any }) {
         </Text>
         <Text style={styles.profileRole}>
           {userProfile?.role === 'admin' ? '👑 Admin' : 
-           userProfile?.role === 'business_owner' ? '🏢 Business Owner' : '👤 User'}
+           userProfile?.role === 'bizowner' ? '🏢 Business Owner' : '👤 User'}
         </Text>
       </View>
       
@@ -486,8 +486,15 @@ function AppNavigator({ userType }: { userType: 'user' | 'business_owner' | 'adm
 function AppContent() {
   const [dbInitialized, setDbInitialized] = useState(false);
   const { user, userProfile, loading } = useAuth();
-  // Map userProfile role to legacy format
-  const userType = userProfile?.role;
+  // Map userProfile role to AppNavigator expected format
+  const userType: 'user' | 'admin' | 'business_owner' | undefined =
+    userProfile?.role === 'bizowner' || userProfile?.role === 'bizmanager'
+      ? 'business_owner'
+      : userProfile?.role === 'admin'
+      ? 'admin'
+      : userProfile?.role === 'user'
+      ? 'user'
+      : undefined;
 
   // Suppress known warnings from third-party libraries
   useEffect(() => {
