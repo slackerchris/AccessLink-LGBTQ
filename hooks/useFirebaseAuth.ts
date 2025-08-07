@@ -39,7 +39,7 @@ interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
-  role: 'user' | 'admin' | 'business_owner';
+  role: 'user' | 'admin' | 'bizmanager' | 'bizowner';
   isEmailVerified: boolean;
   createdAt: any;
   updatedAt: any;
@@ -51,14 +51,18 @@ interface UserProfile {
       identities?: string[];
       preferredName?: string;
     };
-    firstName?: string;
-    lastName?: string;
-    phoneNumber?: string;
-    location?: string;
+    accessibilityPreferences?: {
+      wheelchairAccess?: boolean;
+      visualImpairment?: boolean;
+      hearingImpairment?: boolean;
+      cognitiveSupport?: boolean;
+      mobilitySupport?: boolean;
+      sensoryFriendly?: boolean;
+    };
     bio?: string;
-    preferredPronouns?: string;
+    //preferredPronouns?: string;
     interests?: string[];
-    accessibilityNeeds?: string[];
+  //  accessibilityNeeds?: string[];
   };
 }
 
@@ -66,15 +70,27 @@ interface Business {
   id: string;
   name: string;
   description: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  phone: string;
-  email: string;
-  website?: string;
+  contact: {
+    email: string;
+    phone: string;
+    website?: string;
+  };
+  location: {
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    coordinates
+?: {
+      latitude: number;
+      longitude: number;
+    };  
+  };
   ownerId: string;
-  categories: string[];
+  //address: string;
+  status?: string;
+  tags?: string[];
+  categories?: string[];
   accessibilityFeatures: string[];
   images: string[];
   rating: number;
@@ -191,7 +207,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         uid: firebaseUser.uid,
         email: email,
         displayName: displayName,
-        role: role,
+        role: role === 'business_owner' ? 'bizowner' : role,
         isEmailVerified: firebaseUser.emailVerified,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -258,7 +274,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
         displayName: firebaseUser.displayName || 'User',
-        role: defaultRole,
+        role: defaultRole === 'business_owner' ? 'bizowner' : defaultRole,
         isEmailVerified: firebaseUser.emailVerified,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

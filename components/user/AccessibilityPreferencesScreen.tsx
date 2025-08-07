@@ -234,8 +234,8 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
   const [saving, setSaving] = useState(false);
   
   // Initialize preferences from user profile if available
-  // Adjusted: accessibilityPreferences now expected under userProfile?.profile?.details?.accessibilityPreferences
-  const accessPrefs = userProfile?.profile?.accessibilityPreferences? || {
+  // Adjusted: accessibilityPreferences now expected under userProfile?.profile?.accessibilityPreferences
+  const accessPrefs = userProfile?.profile?.accessibilityPreferences || {
     wheelchairAccess: false,
     visualImpairment: false,
     hearingImpairment: false,
@@ -289,8 +289,8 @@ export default function AccessibilityPreferencesScreen({ navigation }: { navigat
         profile: {
           ...userProfile?.profile,
           accessibilityPreferences: {
-        ...userProfile?.profile?.accessibilityPreferences,
-        ...accessibilityPreferences
+            ...userProfile?.profile?.accessibilityPreferences,
+            ...accessibilityPreferences
           }
         }
       });

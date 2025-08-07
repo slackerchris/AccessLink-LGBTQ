@@ -42,7 +42,7 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
     );
   };
 
-  const firstName = userProfile?.profile?.firstName || userProfile?.displayName?.split(' ')[0] || 'Friend';
+  const firstName = userProfile?.profile?.details.firstName || userProfile?.displayName?.split(' ')[0] || 'Friend';
 
   const dynamicStyles = StyleSheet.create({
     portalCard: {
@@ -241,7 +241,7 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
               <Text style={dynamicStyles.accountLabel}>Account Type</Text>
               <Text style={dynamicStyles.accountValue}>
                 {userProfile?.role === 'user' ? 'Community Member' : 
-                 userProfile?.role === 'business_owner' ? 'Business Owner' : 
+                 userProfile?.role === 'bizowner' ? 'Business Owner' : 
                  'Administrator'}
               </Text>
             </View>
