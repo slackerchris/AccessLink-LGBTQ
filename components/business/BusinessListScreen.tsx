@@ -31,73 +31,73 @@ interface Category {
 }
 
 const categories: Category[] = [
-  { id: 'all', name: 'All', icon: 'grid-outline' },
-  { id: 'healthcare', name: 'Healthcare', icon: 'medical-outline' },
-  { id: 'dining', name: 'Dining', icon: 'restaurant-outline' },
-  { id: 'fitness', name: 'Fitness', icon: 'fitness-outline' },
-  { id: 'retail', name: 'Retail', icon: 'storefront-outline' },
-  { id: 'professional', name: 'Professional', icon: 'briefcase-outline' },
-  { id: 'entertainment', name: 'Entertainment', icon: 'film-outline' },
-];
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}> 
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
+        <View style={styles.headerTop}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>LGBTQ+ Directory</Text>
+          <TouchableOpacity
+            onPress={() => setShowSearch(!showSearch)}
+            style={styles.searchButton}
+          >
+            <Ionicons name="search" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
 
-interface BusinessListScreenProps {
-  navigation: any;
-}
+        {showSearch && (
+          <TextInput
+            style={[styles.searchInput, { backgroundColor: colors.surface, color: colors.text }]}
+            placeholder="Search businesses, services, locations..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={handleSearch}
+            autoFocus
+          />
+        )}
+      </View>
 
-export default function OptimizedBusinessListScreen({ navigation }: BusinessListScreenProps) {
-  const { colors } = useTheme();
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
+      {/* Category Filter */}
+      {!searchQuery && renderCategoryFilter()}
 
-  // Use optimized hooks
-  const { 
-    businesses: allBusinesses, 
-    loading: allLoading, 
-    error: allError,
-    refresh: refreshAll 
-  } = useBusinessDirectory();
+      {/* Performance Indicator */}
+      <View style={[styles.performanceIndicator, { backgroundColor: colors.successBackground || '#ECFDF5' }]}> 
+        <Ionicons name="flash" size={12} color={colors.success || '#10B981'} />
+        <Text style={[styles.performanceText, { color: colors.success || '#059669' }]}> 
+          ⚡ Optimized • {displayBusinesses.length} results • Sub-second loading
+        </Text>
+      </View>
 
-  const { 
-    businesses: categoryBusinesses, 
-    loading: categoryLoading, 
-    error: categoryError,
-    refresh: refreshCategory 
-  } = useBusinessesByCategory(selectedCategory !== 'all' ? selectedCategory as BusinessCategory : 'healthcare');
-
-  const { 
-    searchResults, 
-    searching: searchLoading, 
-    searchError,
-    search: searchBusinesses 
-  } = useBusinessSearch();
-
-  const {
-    businesses: featuredBusinesses,
-    loading: featuredLoading
-  } = useFeaturedBusinesses();
-
-  // Determine which data to show
-  const getCurrentBusinesses = () => {
-    if (searchQuery.trim()) {
-      return searchResults;
-    }
-    if (selectedCategory === 'all') {
-      return allBusinesses;
-    }
-    return categoryBusinesses;
-  };
-
-  const getCurrentLoading = () => {
-    if (searchQuery.trim()) {
-      return searchLoading;
-    }
-    if (selectedCategory === 'all') {
-      return allLoading;
-    }
-    return categoryLoading;
-  };
-
+      {/* Business List */}
+      {displayLoading ? (
+        <View style={styles.loadingContainer}>
+          <Ionicons name="business" size={48} color={colors.textSecondary || '#D1D5DB'} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading businesses...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={displayBusinesses}
+          renderItem={renderBusinessCard}
+          keyExtractor={(item) => item.businessId || item.id}
+          refreshing={displayLoading}
+          onRefresh={handleRefresh}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="business" size={64} color={colors.textSecondary || '#D1D5DB'} />
+              <Text style={[styles.emptyText, { color: colors.text }]}> 
+                {searchQuery ? 'No businesses found' : 'No businesses available'}
+              </Text>
+              <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}> 
+                {searchQuery ? 'Try a different search term' : 'Check back later for new listings'}
+              </Text>
+            </View>
+          }
+        />
+      )}
+    </View>
+  );
   const getCurrentError = () => {
     if (searchQuery.trim()) {
       return searchError;
@@ -151,7 +151,7 @@ export default function OptimizedBusinessListScreen({ navigation }: BusinessList
 
   const renderBusinessCard = ({ item }: { item: any }) => (
     <TouchableOpacity 
-      style={styles.businessCard}
+    style={[styles.businessCard, { backgroundColor: colors.card }]}
       onPress={() => handleNavigateToBusinessDetails(item)}
     >
       <View style={styles.businessHeader}>
