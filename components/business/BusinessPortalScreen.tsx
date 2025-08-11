@@ -150,7 +150,9 @@ export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navi
             </View>
             <View style={styles.accountRow}>
               <Text style={styles.accountLabel}>Business Name</Text>
-              <Text style={styles.accountValue}>{user?.displayName || 'Not Set'}</Text>
+              <Text style={styles.accountValue}>
+                {business?.name || 'Not Set'}
+              </Text>
             </View>
           </View>
         </View>

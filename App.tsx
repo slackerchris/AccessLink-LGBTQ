@@ -26,7 +26,7 @@ import MinimalAuthTestScreen from './components/user/MinimalAuthTestScreen';
 import LGBTQIdentityScreen from './components/user/LGBTQIdentityScreen';
 import ReviewHistoryScreen from './components/user/ReviewHistoryScreen';
 import CreateReviewScreen from './components/user/CreateReviewScreen';
-import { BusinessHomeScreen } from './components/business/BusinessHomeScreen';
+import BusinessHomeScreen from './components/business/BusinessHomeScreen';
 
 // Business Components  
 import OptimizedBusinessListScreen from './components/business/OptimizedBusinessListScreen';
@@ -37,6 +37,7 @@ import { EventsManagementScreen } from './components/business/EventsManagementSc
 import BusinessDetailsScreen from './components/business/BusinessDetailsScreen';
 import AddBusinessScreen from './components/business/AddBusinessScreen';
 import { BusinessPortalScreen } from './components/business/BusinessPortalScreen';
+import ManageBusinessListScreen from './components/business/ManageBusinessListScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
@@ -100,9 +101,7 @@ function BusinessListWrapper({ navigation, route }: { navigation: any; route: an
   const initialCategory = route.params?.initialCategory;
   
   return (
-    <OptimizedBusinessListScreen
-      navigation={navigation}
-    />
+    <OptimizedBusinessListScreen />
   );
 }
 
@@ -129,6 +128,7 @@ function BusinessPortalStackNavigator() {
   return (
     <BusinessPortalStack.Navigator screenOptions={{ headerShown: false }}>
       <BusinessPortalStack.Screen name="BusinessPortalMain" component={BusinessPortalScreen} />
+      <BusinessPortalStack.Screen name="ManageBusinessList" component={ManageBusinessListScreen} />
       <BusinessPortalStack.Screen name="BusinessProfileEdit" component={BusinessProfileEditScreen} />
       <BusinessPortalStack.Screen name="ServicesManagement" component={ServicesManagementScreen} />
       <BusinessPortalStack.Screen name="MediaGallery" component={MediaGalleryScreen} />
@@ -311,6 +311,11 @@ function BusinessDashboardStackNavigator() {
       <BusinessOwnerStack.Screen 
         name="BusinessHome" 
         component={BusinessHomeScreen} 
+        options={{ headerShown: false }}
+      />
+      <BusinessOwnerStack.Screen 
+        name="ManageBusinessList" 
+        component={ManageBusinessListScreen} 
         options={{ headerShown: false }}
       />
       <BusinessOwnerStack.Screen 

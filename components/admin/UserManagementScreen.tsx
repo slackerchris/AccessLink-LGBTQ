@@ -31,6 +31,7 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
 
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filters]);
 
   const loadUsers = async (reset: boolean = false) => {
@@ -39,20 +40,17 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
         setLoading(true);
         setCurrentPage(1);
       }
-
       const result = await adminService.getUsers(
         reset ? 1 : currentPage,
         50,
         searchQuery,
         filters
       );
-      
       if (reset) {
         setUsers(result.users);
       } else {
         setUsers(prev => [...prev, ...result.users]);
       }
-      
       setTotalCount(result.totalCount);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -102,6 +100,7 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
       async (note) => {
         if (note && note.trim()) {
           try {
+            // You may want to pass actual adminId/adminName from context
             await adminService.addUserNote(userId, note.trim());
             Alert.alert('Success', 'Note added successfully');
             // Reload user details

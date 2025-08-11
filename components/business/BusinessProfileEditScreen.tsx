@@ -23,7 +23,7 @@ interface BusinessProfileEditScreenProps {
 
 export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
-  const { getMyBusinesses } = useBusinessActions();
+  const { getMyBusinesses, updateBusiness } = useBusinessActions();
   
   const [userBusiness, setUserBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: '',
+    categories: [] as string[],
     phone: '',
     email: '',
     website: '',
@@ -89,7 +89,7 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
       setFormData({
         name: userBusiness.name || '',
         description: userBusiness.description || '',
-        category: userBusiness.category || '',
+        categories: userBusiness.categories || [],
         phone: userBusiness.contact?.phone || '',
         email: userBusiness.contact?.email || '',
         website: userBusiness.contact?.website || '',
@@ -146,7 +146,7 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
         ...userBusiness,
         name: formData.name,
         description: formData.description,
-        category: formData.category as any,
+        categories: formData.categories,
         contact: {
           phone: formData.phone,
           email: formData.email,
@@ -164,8 +164,8 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
         updatedAt: new Date()
       };
 
-      // In a real app, this would save to Firebase
-      console.log('Updated business profile:', updatedBusiness);
+      // Save to Firebase using the business actions
+      await updateBusiness(userBusiness.id, updatedBusiness);
       
       Alert.alert(
         'Success',
@@ -249,25 +249,43 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Category *</Text>
+            <Text style={styles.label}>Categories (Select all that apply)</Text>
+            <Text style={styles.categoryHelper}>Tap categories to select/deselect. You can choose multiple categories.</Text>
             <View style={styles.categoryContainer}>
-              {categories.map((category) => (
-                <TouchableOpacity
-                  key={category}
-                  style={[
-                    styles.categoryChip,
-                    formData.category === category && styles.selectedCategory
-                  ]}
-                  onPress={() => setFormData({...formData, category})}
-                >
-                  <Text style={[
-                    styles.categoryText,
-                    formData.category === category && styles.selectedCategoryText
-                  ]}>
-                    {category}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {categories.map((category) => {
+                const isSelected = formData.categories.includes(category);
+                return (
+                  <TouchableOpacity
+                    key={category}
+                    style={[
+                      styles.categoryChip,
+                      isSelected && styles.selectedCategory
+                    ]}
+                    onPress={() => {
+                      if (isSelected) {
+                        // Remove category if already selected
+                        setFormData({
+                          ...formData, 
+                          categories: formData.categories.filter(c => c !== category)
+                        });
+                      } else {
+                        // Add category if not selected
+                        setFormData({
+                          ...formData, 
+                          categories: [...formData.categories, category]
+                        });
+                      }
+                    }}
+                  >
+                    <Text style={[
+                      styles.categoryText,
+                      isSelected && styles.selectedCategoryText
+                    ]}>
+                      {isSelected && '✓ '}{category}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         </View>
@@ -513,6 +531,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  categoryHelper: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 12,
+    fontStyle: 'italic',
   },
   categoryChip: {
     paddingHorizontal: 12,

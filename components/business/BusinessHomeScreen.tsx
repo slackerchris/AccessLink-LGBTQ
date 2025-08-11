@@ -1,210 +1,198 @@
-/**
- * Business Home Screen
- * Dashboard for business owners to manage their business profile
- */
-
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
-import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
 
-
-// Extend local type to add missing fields for business stats
-type BusinessListingWithStats = import('../../hooks/useBusiness').BusinessListing & { ownerId?: string; totalReviews?: number };
-
-interface BusinessHomeScreenProps {
-  navigation: any;
+interface SimpleBusinessHomeScreenProps {
+  navigation?: any;
 }
 
-export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation }) => {
+export const SimpleBusinessHomeScreen: React.FC<SimpleBusinessHomeScreenProps> = ({ navigation }) => {
   const { user, userProfile } = useFirebaseAuth();
-  const { businesses } = useBusinesses({}, 1); // Get just the business owner's business
   const { colors } = useTheme();
-  // Find the business owned by this user
-  const myBusiness = (businesses as BusinessListingWithStats[]).find(b => b.ownerId === userProfile?.uid);
 
-  const handleSignOut = async () => {
-    try {
-      // Sign out functionality removed
-    } catch (error: any) {
-      Alert.alert('Sign Out Error', error.message);
-    }
-  };
+  const firstName = user?.displayName?.split(' ')[0] || 'Business Owner';
+  
+  // Check if user has business owner/manager role
+  const isBizUser = userProfile?.role === 'bizowner' || userProfile?.role === 'bizmanager';
 
+  // Simple loading state while auth is loading
+  if (!userProfile) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContent}>
+          <Ionicons name="business" size={48} color={colors.primary || '#6366f1'} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Show access denied for non-business users
+  if (!isBizUser) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.accessDeniedCard}>
+          <Ionicons name="business-outline" size={64} color="#ef4444" />
+          <Text style={styles.accessDeniedTitle}>Business Access Required</Text>
+          <Text style={styles.accessDeniedText}>
+            This section is only available to business owners and managers.
+          </Text>
+          <TouchableOpacity 
+            style={styles.contactButton} 
+            onPress={() => Alert.alert('Business Registration', 'Contact support to register your business:\n\nbusiness-support@accesslinklgbtq.app')}
+          >
+            <Text style={styles.contactButtonText}>Register Business</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // Business stats data - simplified without business data
   const businessStats = [
     {
       icon: 'eye',
-      title: 'Profile Views',
-      value: '347',
+      title: 'Views',
+      value: '124',
       color: '#3b82f6',
-      onPress: () => Alert.alert('Business Analytics', 'Your business is performing well! Full analytics dashboard coming in next update.')
     },
     {
       icon: 'star',
-      title: 'Average Rating',
-      value: myBusiness?.averageRating?.toFixed(1) || '4.5',
+      title: 'Rating',
+      value: '4.5',
       color: '#f59e0b',
-      onPress: () => navigation.navigate('ReviewHistory')
     },
     {
       icon: 'chatbubble-ellipses',
       title: 'Reviews',
-      value: (myBusiness?.totalReviews ?? 0).toString(),
+      value: '8',
       color: '#10b981',
-      onPress: () => navigation.navigate('ReviewHistory')
     },
     {
       icon: 'people',
       title: 'Followers',
-      value: '156',
+      value: '45',
       color: '#8b5cf6',
-      onPress: () => Alert.alert('Community Connection', 'Your business has built a strong following! Advanced follower features coming soon.')
     }
   ];
 
+  // Quick actions
   const quickActions = [
     {
-      icon: 'create',
-      title: 'Edit Business Profile',
-      subtitle: 'Update your business information',
-      onPress: () => navigation.navigate('BusinessProfileEdit')
+      icon: 'business',
+      title: 'My Businesses',
+      subtitle: 'View all your businesses',
+      onPress: () => {
+        if (navigation) {
+          navigation.navigate('ManageBusinessList');
+        } else {
+          console.warn('Navigation not available for My Businesses');
+        }
+      },
     },
     {
       icon: 'camera',
-      title: 'Media Gallery',
-      subtitle: 'Manage photos and videos',
-      onPress: () => navigation.navigate('MediaGallery')
+      title: 'Add Photos',
+      subtitle: 'Upload new images',
+      onPress: () => {
+        if (navigation) {
+          navigation.navigate('MediaGallery');
+        } else {
+          console.warn('Navigation not available for Media Gallery');
+        }
+      },
     },
     {
       icon: 'calendar',
-      title: 'Events Management',
-      subtitle: 'Create and manage events',
-      onPress: () => navigation.navigate('EventsManagement')
+      title: 'Create Event',
+      subtitle: 'Add new event',
+      onPress: () => {
+        if (navigation) {
+          navigation.navigate('EventsManagement');
+        } else {
+          console.warn('Navigation not available for Events Management');
+        }
+      },
     },
     {
       icon: 'pricetag',
       title: 'Manage Services',
-      subtitle: 'Update services and pricing',
-      onPress: () => navigation.navigate('ServicesManagement')
+      subtitle: 'Update offerings',
+      onPress: () => {
+        if (navigation) {
+          navigation.navigate('ServicesManagement');
+        } else {
+          console.warn('Navigation not available for Services Management');
+        }
+      },
     },
-    {
-      icon: 'megaphone',
-      title: 'Post Update',
-      subtitle: 'Share news with your community',
-      onPress: () => Alert.alert('Community Updates', 'Share updates through Events Management for now. Enhanced posting features coming soon!')
-    },
-    {
-      icon: 'analytics',
-      title: 'View Analytics',
-      subtitle: 'Track your business performance',
-      onPress: () => Alert.alert('Business Insights', 'Current stats available on this dashboard. Detailed analytics coming in next update!')
-    }
   ];
-
-  const firstName = user?.displayName?.split(' ')[0] || 'Business Owner';
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.header }]}>
+      {/* Header Section */}
+      <View style={[styles.header, { backgroundColor: colors.primary || '#6366f1' }]}>
         <View style={styles.headerContent}>
-          <View>
-            <Text style={[styles.greeting, { color: colors.headerText }]}>Welcome back,</Text>
-            <Text style={[styles.businessName, { color: colors.headerText }]}>{firstName}! 🏢</Text>
-            <Text style={[styles.subtitle, { color: colors.headerText }]}>Manage your business profile</Text>
-          </View>
-          {/* Profile button, no sign out */}\n          <TouchableOpacity style={[styles.profileButton, { backgroundColor: colors.primary }]}>
-            <Ionicons name="business" size={40} color="#fff" />\n          </TouchableOpacity>
+          <Text style={styles.greeting}>Welcome back, {firstName}!</Text>
+          <Text style={styles.subtitle}>Business Dashboard</Text>
         </View>
       </View>
 
-      {/* Business Summary Card */}
-      {myBusiness && (
-        <View style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.businessHeader}>
-            <View style={styles.businessIcon}>
-              <Ionicons name="storefront" size={24} color={colors.primary} />
-            </View>
-            <View style={styles.businessInfo}>
-              <Text style={[styles.businessTitle, { color: colors.text }]}>{myBusiness.name}</Text>
-              <Text style={[styles.businessCategory, { color: colors.textSecondary }]}>{myBusiness.category}</Text>
-              <Text style={[styles.businessStatus, { color: colors.textSecondary }]}>
-                  ✅ {myBusiness.status === 'approved' ? 'Approved & Live' : 'Pending Approval'}
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.editButton}
-              onPress={() => navigation.navigate('BusinessProfileEdit')}
-            >
-              <Ionicons name="create-outline" size={20} color="#6366f1" />
-            </TouchableOpacity>
+      {/* Business Welcome Card */}
+      <View style={[styles.businessCard, { backgroundColor: colors.card || '#fff' }]}>
+        <View style={styles.businessHeader}>
+          <View style={styles.businessIcon}>
+            <Ionicons name="storefront" size={24} color={colors.primary || '#6366f1'} />
+          </View>
+          <View style={styles.businessInfo}>
+            <Text style={[styles.businessTitle, { color: colors.text }]}>Business Portal</Text>
+            <Text style={[styles.businessCategory, { color: colors.textSecondary || '#6b7280' }]}>
+              Role: {userProfile?.role === 'bizowner' ? 'Business Owner' : 'Business Manager'}
+            </Text>
+            <Text style={styles.businessStatus}>
+              ✅ Access Granted
+            </Text>
           </View>
         </View>
-      )}
+      </View>
 
-      {/* Stats Grid */}
+      {/* Stats Section */}
       <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>Business Performance</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Business Performance</Text>
         <View style={styles.statsGrid}>
           {businessStats.map((stat, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.statCard}
-              onPress={stat.onPress}
-            >
+            <View key={index} style={[styles.statCard, { backgroundColor: colors.card || '#fff' }]}>
               <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
-                <Ionicons name={stat.icon as any} size={24} color={stat.color} />
+                <Ionicons name={stat.icon as any} size={20} color={stat.color} />
               </View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statTitle}>{stat.title}</Text>
-            </TouchableOpacity>
+              <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
+              <Text style={[styles.statTitle, { color: colors.textSecondary || '#6b7280' }]}>{stat.title}</Text>
+            </View>
           ))}
         </View>
       </View>
 
       {/* Quick Actions */}
       <View style={styles.actionsContainer}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
         {quickActions.map((action, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.actionCard}
+            style={[styles.actionCard, { backgroundColor: colors.card || '#fff' }]}
             onPress={action.onPress}
           >
             <View style={styles.actionIconContainer}>
               <Ionicons name={action.icon as any} size={20} color="#6366f1" />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>{action.title}</Text>
-              <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+              <Text style={[styles.actionTitle, { color: colors.text }]}>{action.title}</Text>
+              <Text style={[styles.actionSubtitle, { color: colors.textSecondary || '#6b7280' }]}>{action.subtitle}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
           </TouchableOpacity>
         ))}
-      </View>
-
-      {/* Support Section */}
-      <View style={styles.supportContainer}>
-        <Text style={styles.sectionTitle}>Need Help?</Text>
-        <TouchableOpacity 
-          style={styles.supportCard}
-          onPress={() => Alert.alert('Support', 'Contact: business-support@accesslinklgbtq.app')}
-        >
-          <Ionicons name="help-circle" size={24} color="#6366f1" />
-          <View style={styles.supportContent}>
-            <Text style={styles.supportTitle}>Business Support</Text>
-            <Text style={styles.supportSubtitle}>Get help managing your profile</Text>
-          </View>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -215,41 +203,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
   },
-  header: {
-    backgroundColor: '#6366f1',
-    paddingTop: 60, // Already good for safe area
-    paddingBottom: 30,
-    paddingHorizontal: 24, // Better mobile margins
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  greeting: {
-    fontSize: 18, // Larger for mobile
-    color: '#e0e7ff',
-  },
-  businessName: {
-    fontSize: 28, // Larger for mobile
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 8,
-    lineHeight: 34,
-  },
-  subtitle: {
-    fontSize: 16, // Larger for mobile
-    color: '#c7d2fe',
-    marginTop: 8,
-    lineHeight: 22,
-  },
-  profileButton: {
-    width: 56, // Larger touch target
-    height: 56,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 28,
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  loadingContent: {
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  header: {
+    backgroundColor: '#6366f1',
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 24,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  greeting: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#c7d2fe',
   },
   businessCard: {
     backgroundColor: '#fff',
@@ -282,21 +267,64 @@ const styles = StyleSheet.create({
   businessTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+    marginBottom: 4,
   },
   businessCategory: {
     fontSize: 14,
-    color: '#6b7280',
-    marginTop: 2,
+    marginBottom: 4,
   },
   businessStatus: {
     fontSize: 12,
     color: '#10b981',
-    marginTop: 5,
     fontWeight: '600',
   },
-  editButton: {
-    padding: 8,
+  noBusinessCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  noBusiness: {
+    fontSize: 16,
+    color: '#ef4444',
+    marginBottom: 8,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  noBusinessHelp: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  addBusinessButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  addBusinessText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  debugInfo: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#fef3c7',
+    borderRadius: 8,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#92400e',
+    textAlign: 'center',
   },
   statsContainer: {
     padding: 20,
@@ -304,7 +332,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 15,
   },
   statsGrid: {
@@ -315,7 +342,7 @@ const styles = StyleSheet.create({
   statCard: {
     backgroundColor: '#fff',
     width: '48%',
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 15,
@@ -326,23 +353,21 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   statIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
+    marginBottom: 4,
   },
   statTitle: {
     fontSize: 12,
-    color: '#6b7280',
     textAlign: 'center',
-    marginTop: 5,
   },
   actionsContainer: {
     padding: 20,
@@ -376,39 +401,50 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    marginBottom: 2,
   },
   actionSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
-    marginTop: 2,
   },
-  supportContainer: {
-    padding: 20,
-    paddingTop: 0,
-    paddingBottom: 40,
-  },
-  supportCard: {
+  accessDeniedCard: {
     backgroundColor: '#fff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
+    marginHorizontal: 20,
+    marginTop: 60,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  supportContent: {
-    marginLeft: 15,
-    flex: 1,
+  accessDeniedTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ef4444',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  supportTitle: {
+  accessDeniedText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  supportSubtitle: {
-    fontSize: 14,
     color: '#6b7280',
-    marginTop: 2,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  contactButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  contactButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
+
+export default SimpleBusinessHomeScreen;

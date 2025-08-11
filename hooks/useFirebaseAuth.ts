@@ -16,7 +16,7 @@ import {
 } from 'firebase/auth';
 import { 
   doc, 
-  getDoc, 
+  getDoc,
   setDoc, 
   collection, 
   query, 
@@ -112,10 +112,14 @@ interface AuthContextType {
 }
 
 interface BusinessContextType {
+  businesses: Business[];
+  loading: boolean;
+  error: string | null;
   getMyBusinesses: () => Promise<Business[]>;
   createBusiness: (businessData: Partial<Business>) => Promise<Business>;
   updateBusiness: (businessId: string, updates: Partial<Business>) => Promise<void>;
   deleteBusiness: (businessId: string) => Promise<void>;
+  refreshBusinesses: () => Promise<void>;
 }
 
 // Create contexts
@@ -128,6 +132,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Business state
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [businessLoading, setBusinessLoading] = useState(false);
+  const [businessError, setBusinessError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -140,7 +149,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
-            setUserProfile(userDoc.data() as UserProfile);
+            const profile = userDoc.data() as UserProfile;
+            setUserProfile(profile);
+            
+            // Auto-load businesses for business owners/managers
+            if (profile.role === 'bizowner' || profile.role === 'bizmanager') {
+              await loadUserBusinesses(firebaseUser.uid);
+            }
           } else {
             // Create a basic profile if none exists
             const basicProfile: UserProfile = {
@@ -160,6 +175,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else {
           setUser(null);
           setUserProfile(null);
+          setBusinesses([]); // Clear businesses when user logs out
         }
       } catch (err) {
         console.error('Error loading user profile:', err);
@@ -309,27 +325,68 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
   };
 
+  // Helper function to load user businesses
+  const loadUserBusinesses = async (userId: string) => {
+    try {
+      setBusinessLoading(true);
+      setBusinessError(null);
+      
+      const businessesQuery = query(
+        collection(db, 'businesses'),
+        where('ownerId', '==', userId)
+      );
+      
+      const querySnapshot = await getDocs(businessesQuery);
+      const userBusinesses: Business[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        userBusinesses.push({ id: doc.id, ...doc.data() } as Business);
+      });
+      
+      console.log('📊 Loaded businesses from database:', userBusinesses.length, 'businesses');
+      setBusinesses(userBusinesses);
+    } catch (err) {
+      console.error('Error fetching businesses:', err);
+      setBusinessError('Failed to load businesses');
+    } finally {
+      setBusinessLoading(false);
+    }
+  };
+
   // Business Actions
   const getMyBusinesses = async (): Promise<Business[]> => {
     if (!user) return [];
     
     try {
+      setBusinessLoading(true);
+      setBusinessError(null);
+      
       const businessesQuery = query(
         collection(db, 'businesses'),
         where('ownerId', '==', user.uid)
       );
       
       const querySnapshot = await getDocs(businessesQuery);
-      const businesses: Business[] = [];
+      const userBusinesses: Business[] = [];
       
       querySnapshot.forEach((doc) => {
-        businesses.push({ id: doc.id, ...doc.data() } as Business);
+        userBusinesses.push({ id: doc.id, ...doc.data() } as Business);
       });
       
-      return businesses;
+      setBusinesses(userBusinesses);
+      return userBusinesses;
     } catch (err) {
       console.error('Error fetching businesses:', err);
+      setBusinessError('Failed to load businesses');
       return [];
+    } finally {
+      setBusinessLoading(false);
+    }
+  };
+
+  const refreshBusinesses = async (): Promise<void> => {
+    if (user) {
+      await loadUserBusinesses(user.uid);
     }
   };
 
@@ -383,46 +440,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const businessValue: BusinessContextType = {
+    // Business data
+    businesses,
+    loading: businessLoading,
+    error: businessError,
+    
+    // Business actions
     getMyBusinesses,
     createBusiness,
     updateBusiness,
-    deleteBusiness
+    deleteBusiness,
+    refreshBusinesses,
   };
 
   // Implement update profile functionality
-  const handleUpdateProfile = async (profileUpdates: { displayName?: string; profile?: any }) => {
+  async function handleUpdateProfile(profileUpdates: { displayName?: string; profile?: any; }) {
     if (!user) throw new Error('User not authenticated');
-    
+
     try {
       setLoading(true);
-      
+
       // Update Firebase display name if provided
       if (profileUpdates.displayName) {
         await updateProfile(user, { displayName: profileUpdates.displayName });
       }
-      
+
       // Update Firestore user profile
       const userDocRef = doc(db, 'users', user.uid);
-      
+
       const updateData: any = {
         updatedAt: serverTimestamp()
       };
-      
+
       if (profileUpdates.displayName) {
         updateData.displayName = profileUpdates.displayName;
       }
-      
+
       if (profileUpdates.profile) {
         // Remove identity-related fields from details before merging
         const { details = {}, ...restProfile } = userProfile?.profile || {};
         // Remove unwanted keys from details
         const {
-          preferredName: _pn,
-          pronouns: _pr,
-          preferredPronouns: _pp,
-          identityVisible: _iv,
-          identities: _ids,
-          ...cleanDetails
+          preferredName: _pn, pronouns: _pr, preferredPronouns: _pp, identityVisible: _iv, identities: _ids, ...cleanDetails
         } = details;
         updateData.profile = {
           ...restProfile,
@@ -430,20 +489,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ...profileUpdates.profile
         };
       }
-      
+
       await updateDoc(userDocRef, updateData);
-      
+
       // Update local state
       if (userProfile) {
         // Remove identity-related fields from details before merging in local state
         const { details = {}, ...restProfile } = userProfile.profile || {};
         const {
-          preferredName: _pn,
-          pronouns: _pr,
-          preferredPronouns: _pp,
-          identityVisible: _iv,
-          identities: _ids,
-          ...cleanDetails
+          preferredName: _pn, pronouns: _pr, preferredPronouns: _pp, identityVisible: _iv, identities: _ids, ...cleanDetails
         } = details;
         setUserProfile({
           ...userProfile,
@@ -461,7 +515,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }
   
   const authActionsValue: AuthActionsType = {
     updateProfile: handleUpdateProfile

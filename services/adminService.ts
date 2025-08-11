@@ -1,5 +1,18 @@
 import { UserProfile } from './authService';
-import { databaseService } from './webDatabaseService';
+import { db } from './firebase';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  doc,
+  updateDoc,
+  orderBy,
+  limit,
+  startAfter,
+  Timestamp,
+} from 'firebase/firestore';
 
 // Admin-specific interfaces
 export interface AdminUser extends UserProfile {
@@ -159,41 +172,40 @@ class AdminService {
   // User Management
   async getUsers(page: number = 1, pageSize: number = 50, search?: string, filters?: UserFilters): Promise<{users: UserDetails[], totalCount: number}> {
     try {
-      // Get all users from database
-      const allUsers = await databaseService.getAllUsers();
-      
-      // Convert to UserDetails format and apply filters
-      let filteredUsers = allUsers.map(user => this.convertToUserDetails(user));
-      
-      // Apply search filter
+      const usersRef = collection(db, 'users');
+      let q = query(usersRef);
+
+      // Apply filters
+      if (filters?.status) {
+        q = query(q, where('accountStatus', '==', filters.status));
+      }
+      if (filters?.role) {
+        q = query(q, where('role', '==', filters.role));
+      }
+      if (filters?.verificationLevel) {
+        q = query(q, where('verificationLevel', '==', filters.verificationLevel));
+      }
+
+      // Apply search (Firestore doesn't support OR, so fetch and filter client-side)
+      const snapshot = await getDocs(q);
+      let users: UserDetails[] = [];
+      snapshot.forEach(docSnap => {
+        const user = this.convertToUserDetails({ ...docSnap.data(), id: docSnap.id });
+        users.push(user);
+      });
+
       if (search && search.trim()) {
         const searchLower = search.toLowerCase();
-        filteredUsers = filteredUsers.filter(user => 
+        users = users.filter(user =>
           user.email.toLowerCase().includes(searchLower) ||
           user.displayName.toLowerCase().includes(searchLower)
         );
       }
-      
-      // Apply status filter
-      if (filters?.status) {
-        filteredUsers = filteredUsers.filter(user => user.accountStatus === filters.status);
-      }
-      
-      // Apply user type filter
-      if (filters?.role) {
-        filteredUsers = filteredUsers.filter(user => user.role === filters.role);
-      }
-      
-      const totalCount = filteredUsers.length;
-      
-      // Apply pagination
-      const startIndex = (page - 1) * pageSize;
-      const paginatedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
-      
-      return {
-        users: paginatedUsers,
-        totalCount
-      };
+
+      const totalCount = users.length;
+      // Pagination (client-side for now)
+      const paginatedUsers = users.slice((page - 1) * pageSize, page * pageSize);
+      return { users: paginatedUsers, totalCount };
     } catch (error) {
       console.error('Error getting users:', error);
       throw error;
@@ -201,44 +213,48 @@ class AdminService {
   }
 
   private convertToUserDetails(user: any): UserDetails {
-    // Parse admin notes if they exist
     let adminNotes: AdminNote[] = [];
     if (user.adminNotes) {
-      try {
-        adminNotes = JSON.parse(user.adminNotes);
-      } catch (e) {
-        console.warn('Failed to parse admin notes for user', user.id);
-        adminNotes = [];
+      if (Array.isArray(user.adminNotes)) {
+        adminNotes = user.adminNotes.map((note: any) => ({
+          ...note,
+          timestamp: note.timestamp instanceof Timestamp ? note.timestamp.toDate() : new Date(note.timestamp)
+        }));
+      } else if (typeof user.adminNotes === 'string') {
+        try {
+          adminNotes = JSON.parse(user.adminNotes);
+        } catch {
+          adminNotes = [];
+        }
       }
     }
-
     return {
       uid: user.id,
       email: user.email,
       displayName: user.displayName,
-      role: user.userType as any,
-      isEmailVerified: true, // Assume verified for now
-      createdAt: new Date(user.createdAt),
-      updatedAt: new Date(user.lastModified || user.createdAt),
-      profile: {},
-      registrationDate: new Date(user.createdAt),
-      lastLoginDate: new Date(user.lastLoginAt),
+      role: user.role || user.userType || 'user',
+      isEmailVerified: user.isEmailVerified ?? true,
+      createdAt: user.createdAt instanceof Timestamp ? user.createdAt.toDate() : new Date(user.createdAt),
+      updatedAt: user.updatedAt instanceof Timestamp ? user.updatedAt.toDate() : new Date(user.updatedAt || user.createdAt),
+      profile: user.profile || {},
+      registrationDate: user.registrationDate instanceof Timestamp ? user.registrationDate.toDate() : new Date(user.registrationDate || user.createdAt),
+      lastLoginDate: user.lastLoginDate instanceof Timestamp ? user.lastLoginDate.toDate() : new Date(user.lastLoginDate || user.createdAt),
       accountStatus: user.accountStatus || 'active',
-      verificationLevel: 'email', // Default verification level
-      reviewCount: 0, // TODO: Calculate from reviews
-      businessCount: 0, // TODO: Calculate from businesses
+      verificationLevel: user.verificationLevel || 'email',
+      reviewCount: user.reviewCount || 0,
+      businessCount: user.businessCount || 0,
       adminNotes
     };
   }
 
   async getUserDetails(userId: string): Promise<UserDetails> {
     try {
-      // Get user from database
-      const user = await databaseService.getUserById(userId);
-      if (!user) {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
         throw new Error('User not found');
       }
-      return this.convertToUserDetails(user);
+      return this.convertToUserDetails({ ...userSnap.data(), id: userSnap.id });
     } catch (error) {
       console.error('Error fetching user details:', error);
       throw error;
@@ -247,24 +263,11 @@ class AdminService {
 
   async updateUserStatus(userId: string, status: 'active' | 'inactive' | 'suspended'): Promise<void> {
     try {
-      console.log(`Updating user ${userId} status to ${status}`);
-      
-      // Get the current user data
-      const user = await databaseService.getUserById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      // Update the user with new status
-      const updatedUser = {
-        ...user,
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
         accountStatus: status,
-        lastModified: new Date().toISOString()
-      };
-
-      // Save the updated user back to the database
-      await databaseService.updateUser(updatedUser);
-      
+        updatedAt: new Date()
+      });
       console.log(`✅ User ${userId} status updated to ${status}`);
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -272,55 +275,27 @@ class AdminService {
     }
   }
 
-  async addUserNote(userId: string, note: string, severity: 'info' | 'warning' | 'critical' = 'info'): Promise<void> {
+  async addUserNote(userId: string, note: string, severity: 'info' | 'warning' | 'critical' = 'info', adminId: string = 'admin', adminName: string = 'Administrator'): Promise<void> {
     try {
-      console.log(`Adding note to user ${userId}: ${note}`);
-      
-      // Get the current user data
-      const user = await databaseService.getUserById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      // Parse existing admin notes or create empty array
-      let adminNotes: AdminNote[] = [];
-      if (user.adminNotes) {
-        try {
-          adminNotes = JSON.parse(user.adminNotes);
-        } catch (e) {
-          console.warn('Failed to parse existing admin notes, starting fresh');
-          adminNotes = [];
-        }
-      }
-
-      // Create new admin note
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) throw new Error('User not found');
+      const userData = userSnap.data();
+      let adminNotes: AdminNote[] = Array.isArray(userData.adminNotes) ? userData.adminNotes : [];
       const newNote: AdminNote = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        adminId: 'admin', // TODO: Get actual admin ID from auth context
-        adminName: 'Administrator', // TODO: Get actual admin name from auth context
+        adminId,
+        adminName,
         note,
         timestamp: new Date(),
         severity
       };
-
-      // Add the new note
-      adminNotes.unshift(newNote); // Add to beginning
-
-      // Keep only the last 20 notes to prevent excessive storage
-      if (adminNotes.length > 20) {
-        adminNotes = adminNotes.slice(0, 20);
-      }
-
-      // Update the user with new notes
-      const updatedUser = {
-        ...user,
-        adminNotes: JSON.stringify(adminNotes),
-        lastModified: new Date().toISOString()
-      };
-
-      // Save the updated user back to the database
-      await databaseService.updateUser(updatedUser);
-      
+      adminNotes.unshift(newNote);
+      if (adminNotes.length > 20) adminNotes = adminNotes.slice(0, 20);
+      await updateDoc(userRef, {
+        adminNotes,
+        updatedAt: new Date()
+      });
       console.log(`✅ Note added to user ${userId}`);
     } catch (error) {
       console.error('Error adding user note:', error);
