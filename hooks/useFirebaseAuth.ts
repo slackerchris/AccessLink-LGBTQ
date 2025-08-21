@@ -246,12 +246,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       setError(null);
 
-      // React Native platform - use Expo AuthSession
+      // Use correct client ID for platform
+      const androidClientId = '595597079040-lmhfd1oik6mgvbone79a5mo95udum2po.apps.googleusercontent.com';
+      const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
+      const clientId = Platform.OS === 'android' ? androidClientId : iosClientId;
+
       const redirectUri = AuthSession.makeRedirectUri();
       console.log('🔗 Google OAuth redirect URI:', redirectUri);
-      
+
       const request = new AuthSession.AuthRequest({
-        clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
+        clientId,
         scopes: ['openid', 'profile', 'email'],
         redirectUri,
         responseType: AuthSession.ResponseType.IdToken,
