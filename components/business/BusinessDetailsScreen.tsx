@@ -25,6 +25,7 @@ import { BusinessListing } from '../../services/businessService';
 import { useBusinessDetails } from '../../hooks/useProperBusiness';
 import { parseFromNavigation } from '../../utils/navigationHelpers';
 import { adaptBusinessForDisplay, formatBusinessHours } from '../../utils/businessAdapters';
+import { savedPlacesService } from '../../services/savedPlacesService';
 
 // Define error color constant for use when colors.error is not available
 const ERROR_COLOR = '#ef4444';
@@ -84,10 +85,11 @@ const ReviewItem = memo(({ item, colors }: { item: BusinessReview; colors: any }
 
 export default function BusinessDetailsScreen({ navigation, route }: BusinessDetailsScreenProps) {
   const { businessId, business: navigationBusiness } = route.params;
-  const { userProfile } = useFirebaseAuth();
+  const { userProfile, user } = useFirebaseAuth();
   const { } = useBusinessActions();  // Will fix these functions separately
   const { colors } = useTheme();
-  const [isSaved, setIsSaved] = useState(false);  // Will implement saved businesses later
+  const [isSaved, setIsSaved] = useState(false);
+  const [loadingSaved, setLoadingSaved] = useState(false);
   const [businessData, setBusinessData] = useState<BusinessListing & {
     reviewCount: number;
     photos: string[];
@@ -139,6 +141,22 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
       }
     }, [idForFetch, refresh])
   );
+
+  // Check if business is saved when business data loads
+  useEffect(() => {
+    const checkSavedStatus = async () => {
+      if (businessData?.id && user?.uid) {
+        try {
+          const saved = await savedPlacesService.isBusinessSaved(user.uid, businessData.id);
+          setIsSaved(saved);
+        } catch (error) {
+          console.error('Error checking saved status:', error);
+        }
+      }
+    };
+    
+    checkSavedStatus();
+  }, [businessData?.id, user?.uid]);
   
   // Add console logs for debugging
   console.log('BusinessDetailsScreen - businessId:', businessId);
@@ -194,23 +212,32 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
   }
 
   const toggleSaved = async () => {
+    if (!user?.uid || !businessData?.id) {
+      Alert.alert('Login Required', 'Please login to save businesses');
+      return;
+    }
+
+    if (loadingSaved) return; // Prevent double-taps
+
+    setLoadingSaved(true);
+    
     try {
       if (isSaved) {
         // Unsave business
-        console.log('Unsaving business', businessData.id);
-        // await unsaveBusiness(business.id);
+        await savedPlacesService.unsaveBusiness(user.uid, businessData.id);
         setIsSaved(false);
         Alert.alert('Removed', `${businessData.name} has been removed from your saved places.`);
       } else {
         // Save business
-        console.log('Saving business', businessData.id);
-        // await saveBusiness(business.id);
+        await savedPlacesService.saveBusiness(user.uid, businessData.id);
         setIsSaved(true);
         Alert.alert('Saved', `${businessData.name} has been added to your saved places.`);
       }
     } catch (error) {
       console.error('Failed to toggle saved business:', error);
-      Alert.alert('Error', 'Failed to update saved businesses');
+      Alert.alert('Error', 'Failed to update saved businesses. Please try again.');
+    } finally {
+      setLoadingSaved(false);
     }
   };
 
@@ -299,11 +326,12 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
           <TouchableOpacity
             style={[styles.saveButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
             onPress={toggleSaved}
+            disabled={loadingSaved}
           >
             <Ionicons
               name={isSaved ? 'bookmark' : 'bookmark-outline'}
               size={24}
-              color="#fff"
+              color={loadingSaved ? '#ccc' : '#fff'}
             />
           </TouchableOpacity>
         </View>

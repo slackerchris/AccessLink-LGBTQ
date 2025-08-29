@@ -246,25 +246,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       setError(null);
 
-      // Use correct client ID for platform
-      const androidClientId = '595597079040-lmhfd1oik6mgvbone79a5mo95udum2po.apps.googleusercontent.com';
-      const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
-      const clientId = Platform.OS === 'android' ? androidClientId : iosClientId;
-
-      const redirectUri = AuthSession.makeRedirectUri();
+      // Use the latest Android client ID from the OAuth credentials
+      const androidClientId = '595597079040-0ktcl9hs1fm8iouuru2nt468p6us8g81.apps.googleusercontent.com';
+      
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: 'accesslink'
+      });
+      
       console.log('🔗 Google OAuth redirect URI:', redirectUri);
+      console.log('🔗 Platform:', Platform.OS);
+      console.log('🔗 Android Client ID:', androidClientId);
 
       const request = new AuthSession.AuthRequest({
-        clientId,
+        clientId: androidClientId,
         scopes: ['openid', 'profile', 'email'],
         redirectUri,
         responseType: AuthSession.ResponseType.IdToken,
-        extraParams: {},
+        extraParams: {
+          include_granted_scopes: 'true'
+        },
       });
 
       const result = await request.promptAsync({
         authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
       });
+
+      console.log('🔗 Google OAuth result:', result);
 
       if (result.type === 'success' && result.params.id_token) {
         const credential = GoogleAuthProvider.credential(result.params.id_token);
@@ -273,10 +280,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // Create or update user profile
         await createOrUpdateUserProfile(firebaseUser, 'user');
+      } else if (result.type === 'cancel') {
+        throw new Error('Google sign-in was cancelled');
       } else {
-        throw new Error('Google sign-in was cancelled or failed');
+        throw new Error('Google sign-in failed: ' + (result.type || 'Unknown error'));
       }
     } catch (err: any) {
+      console.error('🚨 Google OAuth Error:', err);
       setError(err.message || 'Google sign-in failed');
       throw err;
     } finally {

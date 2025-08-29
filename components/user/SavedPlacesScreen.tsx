@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -12,34 +12,68 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
+import { savedPlacesService } from '../../services/savedPlacesService';
 
 export function SavedPlacesScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userProfile } = useFirebaseAuth();
-  // Removed: unsaveBusiness is not available. You may need to implement this in the future.
+  const { userProfile, user } = useFirebaseAuth();
   const { businesses } = useBusinesses();
   const { colors } = useTheme();
+  const [removingBusinessId, setRemovingBusinessId] = useState<string | null>(null);
 
   // Check if we can go back (i.e., we're in a stack, not a tab)
   const canGoBack = navigation.canGoBack();
   const showBackButton = canGoBack && route.name === 'SavedPlaces';
 
   // Get saved businesses
-  // Adjusted: savedBusinesses now expected under userProfile?.profile?.details?.savedBusinesses
   const savedBusinesses = useMemo(() => {
-    const savedIds = userProfile?.profile?.details?.savedBusinesses || [];
+    // Try different possible paths for savedBusinesses
+    const savedIds = 
+      userProfile?.profile?.details?.savedBusinesses || 
+      (userProfile?.profile?.details as any)?.savedBusinesses ||
+      [];
+    
     if (!businesses || !Array.isArray(businesses)) {
       return [];
     }
     return businesses.filter(business => savedIds.includes(business.id));
-  }, [businesses, userProfile?.profile?.details?.savedBusinesses]);
+  }, [businesses, userProfile?.profile]);
 
   const handleGoToDirectory = () => {
     navigation.navigate('Directory' as never);
   };
 
-  // Removed: handleUnsaveBusiness and unsaveBusiness functionality is not implemented.
+  const handleUnsaveBusiness = async (businessId: string, businessName: string) => {
+    if (!user?.uid) {
+      Alert.alert('Error', 'Please login to manage saved places');
+      return;
+    }
+
+    Alert.alert(
+      'Remove from Saved Places',
+      `Remove ${businessName} from your saved places?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            setRemovingBusinessId(businessId);
+            try {
+              await savedPlacesService.unsaveBusiness(user.uid, businessId);
+              // The UI will update automatically via the useMemo dependency on userProfile
+            } catch (error) {
+              console.error('Error removing saved business:', error);
+              Alert.alert('Error', 'Failed to remove business from saved places');
+            } finally {
+              setRemovingBusinessId(null);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const renderSavedBusiness = ({ item }: { item: any }) => (
     <TouchableOpacity 
@@ -67,11 +101,14 @@ export function SavedPlacesScreen() {
           </View>
         </View>
         <TouchableOpacity
-          style={styles.unsaveButton}
+          style={[styles.unsaveButton, { opacity: removingBusinessId === item.id ? 0.5 : 1 }]}
           onPress={(e) => {
             e.stopPropagation();
-            // handleUnsaveBusiness(item.id); // Removed: unsaveBusiness not implemented
+            if (removingBusinessId !== item.id) {
+              handleUnsaveBusiness(item.id, item.name);
+            }
           }}
+          disabled={removingBusinessId === item.id}
         >
           <Ionicons name="bookmark" size={24} color="#ef4444" />
         </TouchableOpacity>

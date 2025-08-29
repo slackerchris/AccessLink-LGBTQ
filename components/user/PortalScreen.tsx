@@ -200,7 +200,7 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
             </View>
           </View>
 
-         {/* <TouchableOpacity
+          <TouchableOpacity
             style={dynamicStyles.portalCard}
             onPress={handleSignOut}
             accessibilityRole="button"
@@ -212,7 +212,7 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
             </View>
             <Text style={dynamicStyles.portalCardTitle}>Sign Out</Text>
             <Text style={dynamicStyles.portalCardSubtitle}>Logout from app</Text>
-          </TouchableOpacity> */} 
+          </TouchableOpacity>
         </View>
 
         <View style={styles.accountInfo}>
