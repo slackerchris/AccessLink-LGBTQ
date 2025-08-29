@@ -3,7 +3,7 @@
  * Minimal Firestore-backed review creation used by CreateReviewScreen
  */
 
-import { addDoc, collection, serverTimestamp, query, where, orderBy, getDocs, Timestamp, runTransaction, doc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, orderBy, getDocs, Timestamp, runTransaction, doc, limit } from 'firebase/firestore';
 import { db } from './firebase';
 
 export interface CreateReviewInput {
@@ -74,32 +74,115 @@ export interface UserReview {
 }
 
 export async function getUserReviews(userId: string): Promise<UserReview[]> {
-  const q = query(
-    collection(db, 'reviews'),
-    where('userId', '==', userId),
-    orderBy('createdAt', 'desc')
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data() as any;
-    const toIso = (t: any) => {
-      if (!t) return new Date(0).toISOString();
-      if (t instanceof Timestamp) return t.toDate().toISOString();
-      if (typeof t?.toDate === 'function') return t.toDate().toISOString();
-      // already ISO string or millis
-      if (typeof t === 'string') return t;
-      if (typeof t === 'number') return new Date(t).toISOString();
-      return new Date().toISOString();
-    };
-    return {
-      id: d.id,
-      businessId: data.businessId,
-      businessName: data.businessName ?? null,
-      rating: data.rating,
-      comment: data.comment,
-      photos: Array.isArray(data.photos) ? data.photos : [],
-      createdAt: toIso(data.createdAt),
-      updatedAt: toIso(data.updatedAt),
-    } as UserReview;
-  });
+  console.log('🔍 getUserReviews: Called with userId:', userId);
+  
+  try {
+    const q = query(
+      collection(db, 'reviews'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    console.log('🔍 getUserReviews: Query created, executing...');
+    const snap = await getDocs(q);
+    console.log('🔍 getUserReviews: Query executed, found', snap.size, 'documents');
+    
+    const results = snap.docs.map((d) => {
+      const data = d.data() as any;
+      console.log('🔍 getUserReviews: Processing document:', d.id, 'with data:', {
+        userId: data.userId,
+        businessId: data.businessId,
+        rating: data.rating,
+        comment: data.comment?.substring(0, 50),
+        createdAt: data.createdAt
+      });
+      
+      const toIso = (t: any) => {
+        if (!t) return new Date(0).toISOString();
+        if (t instanceof Timestamp) return t.toDate().toISOString();
+        if (typeof t?.toDate === 'function') return t.toDate().toISOString();
+        // already ISO string or millis
+        if (typeof t === 'string') return t;
+        if (typeof t === 'number') return new Date(t).toISOString();
+        return new Date().toISOString();
+      };
+      return {
+        id: d.id,
+        businessId: data.businessId,
+        businessName: data.businessName ?? null,
+        rating: data.rating,
+        comment: data.comment,
+        photos: Array.isArray(data.photos) ? data.photos : [],
+        createdAt: toIso(data.createdAt),
+        updatedAt: toIso(data.updatedAt),
+      } as UserReview;
+    });
+    
+    console.log('✅ getUserReviews: Returning', results.length, 'processed reviews');
+    return results;
+  } catch (error) {
+    console.error('❌ getUserReviews: Error occurred:', error);
+    throw error;
+  }
+}
+
+// Get recent reviews for a business (for BusinessDetailsScreen)
+export async function getBusinessReviews(businessId: string, limitCount: number = 3): Promise<UserReview[]> {
+  console.log('🔍 getBusinessReviews: Called with businessId:', businessId, 'limit:', limitCount);
+  
+  try {
+    // Use a simpler query to avoid index requirements
+    const q = query(
+      collection(db, 'reviews'),
+      where('businessId', '==', businessId),
+      limit(limitCount * 2) // Get more to sort client-side
+    );
+    
+    console.log('🔍 getBusinessReviews: Query created, executing...');
+    const snap = await getDocs(q);
+    console.log('🔍 getBusinessReviews: Query executed, found', snap.size, 'documents');
+    
+    const results = snap.docs.map((d) => {
+      const data = d.data() as any;
+      console.log('🔍 getBusinessReviews: Processing document:', d.id, 'with data:', {
+        userId: data.userId,
+        businessId: data.businessId,
+        rating: data.rating,
+        comment: data.comment?.substring(0, 50),
+        createdAt: data.createdAt
+      });
+      
+      const toIso = (t: any) => {
+        if (!t) return new Date(0).toISOString();
+        if (t instanceof Timestamp) return t.toDate().toISOString();
+        if (typeof t?.toDate === 'function') return t.toDate().toISOString();
+        // already ISO string or millis
+        if (typeof t === 'string') return t;
+        if (typeof t === 'number') return new Date(t).toISOString();
+        return new Date().toISOString();
+      };
+      return {
+        id: d.id,
+        businessId: data.businessId,
+        businessName: data.businessName ?? null,
+        rating: data.rating,
+        comment: data.comment,
+        photos: Array.isArray(data.photos) ? data.photos : [],
+        createdAt: toIso(data.createdAt),
+        updatedAt: toIso(data.updatedAt),
+        userId: data.userId, // Include userId for display
+      } as UserReview;
+    });
+    
+    // Sort by createdAt client-side and limit results
+    const sortedResults = results
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limitCount);
+    
+    console.log('✅ getBusinessReviews: Returning', sortedResults.length, 'processed reviews');
+    return sortedResults;
+  } catch (error) {
+    console.error('❌ getBusinessReviews: Error occurred:', error);
+    throw error;
+  }
 }

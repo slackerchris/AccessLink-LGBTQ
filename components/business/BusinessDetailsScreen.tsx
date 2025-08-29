@@ -26,6 +26,8 @@ import { useBusinessDetails } from '../../hooks/useProperBusiness';
 import { parseFromNavigation } from '../../utils/navigationHelpers';
 import { adaptBusinessForDisplay, formatBusinessHours } from '../../utils/businessAdapters';
 import { savedPlacesService } from '../../services/savedPlacesService';
+import { getBusinessReviews, UserReview } from '../../services/reviewService';
+import { trackBusinessView } from '../../services/viewTrackingService';
 
 // Define error color constant for use when colors.error is not available
 const ERROR_COLOR = '#ef4444';
@@ -39,6 +41,56 @@ interface BusinessDetailsScreenProps {
     };
   };
 }
+
+// Recent Review Item Component
+const RecentReviewItem = memo(({ item, colors }: { item: UserReview; colors: any }) => {
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Ionicons
+          key={i}
+          name={i <= rating ? 'star' : 'star-outline'}
+          size={14}
+          color={i <= rating ? '#fbbf24' : colors.border}
+        />
+      );
+    }
+    return stars;
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Recently';
+    }
+  };
+
+  return (
+    <View style={[styles.recentReviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={styles.recentReviewHeader}>
+        <View style={styles.recentReviewRating}>
+          {renderStars(item.rating)}
+        </View>
+        <Text style={[styles.recentReviewDate, { color: colors.textSecondary }]}>
+          {formatDate(item.createdAt)}
+        </Text>
+      </View>
+      <Text 
+        style={[styles.recentReviewComment, { color: colors.text }]} 
+        numberOfLines={3}
+      >
+        {item.comment}
+      </Text>
+    </View>
+  );
+});
 
 // Minimal review type for display in this screen
 type BusinessReview = {
@@ -90,6 +142,8 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
   const { colors } = useTheme();
   const [isSaved, setIsSaved] = useState(false);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [recentReviews, setRecentReviews] = useState<UserReview[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   const [businessData, setBusinessData] = useState<BusinessListing & {
     reviewCount: number;
     photos: string[];
@@ -157,6 +211,45 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
     
     checkSavedStatus();
   }, [businessData?.id, user?.uid]);
+
+  // Load recent reviews for this business
+  useEffect(() => {
+    const loadRecentReviews = async () => {
+      if (businessData?.id) {
+        try {
+          setLoadingReviews(true);
+          console.log('🔍 BusinessDetailsScreen: Loading reviews for business:', businessData.id);
+          const reviews = await getBusinessReviews(businessData.id, 3); // Get last 3 reviews
+          console.log('✅ BusinessDetailsScreen: Loaded', reviews.length, 'reviews');
+          setRecentReviews(reviews);
+        } catch (error) {
+          console.error('❌ BusinessDetailsScreen: Error loading reviews:', error);
+          setRecentReviews([]); // Set empty array on error
+        } finally {
+          setLoadingReviews(false);
+        }
+      }
+    };
+    
+    loadRecentReviews();
+  }, [businessData?.id]);
+
+  // Track business view when business data is available
+  useEffect(() => {
+    const trackView = async () => {
+      if (businessData?.id) {
+        try {
+          console.log('📊 BusinessDetailsScreen: Tracking view for business:', businessData.id);
+          await trackBusinessView(businessData.id);
+        } catch (error) {
+          console.log('⚠️ BusinessDetailsScreen: View tracking failed (non-critical):', error);
+          // Don't show this error to users as it's not critical for the user experience
+        }
+      }
+    };
+
+    trackView();
+  }, [businessData?.id]);
   
   // Add console logs for debugging
   console.log('BusinessDetailsScreen - businessId:', businessId);
@@ -458,19 +551,49 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
         {/* Reviews Section */}
         <View style={styles.reviewsContainer}>
           <View style={styles.reviewsHeader}>
-            <Text style={[styles.reviewsTitle, { color: colors.text }]}>Reviews</Text>
+            <View>
+              <Text style={[styles.reviewsTitle, { color: colors.text }]}>Recent Reviews</Text>
+              {recentReviews.length > 0 && (
+                <Text style={[styles.reviewsSubtitle, { color: colors.textSecondary }]}>
+                  Latest {recentReviews.length} review{recentReviews.length !== 1 ? 's' : ''}
+                </Text>
+              )}
+            </View>
             <TouchableOpacity
               style={[styles.writeReviewButton, { backgroundColor: colors.primary }]}
               onPress={handleWriteReview}
             >
-              <Text style={styles.writeReviewText}>Write a Review</Text>
+              <Ionicons name="add" size={16} color="white" style={{ marginRight: 4 }} />
+              <Text style={styles.writeReviewText}>Write Review</Text>
             </TouchableOpacity>
           </View>
           
-          {businessData.reviews && businessData.reviews.length > 0 ? (
-            businessData.reviews.map((review, index) => (
-              <ReviewItem key={review.id || index} item={review} colors={colors} />
-            ))
+          {loadingReviews ? (
+            <View style={[styles.loadingReviewsContainer, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.loadingReviewsText, { color: colors.textSecondary }]}>
+                Loading reviews...
+              </Text>
+            </View>
+          ) : recentReviews.length > 0 ? (
+            <View style={styles.reviewsList}>
+              {recentReviews.map((review, index) => (
+                <RecentReviewItem key={review.id || index} item={review} colors={colors} />
+              ))}
+              
+              {/* View All Reviews Button */}
+              <TouchableOpacity
+                style={[styles.viewAllReviewsButton, { borderColor: colors.border }]}
+                onPress={() => {
+                  // TODO: Navigate to all reviews screen
+                  Alert.alert('Coming Soon', 'View all reviews feature will be available soon!');
+                }}
+              >
+                <Text style={[styles.viewAllReviewsText, { color: colors.primary }]}>
+                  View All Reviews
+                </Text>
+                <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
           ) : (
             <View style={[styles.noReviewsContainer, { backgroundColor: colors.surface }]}>
               <Ionicons name="chatbubble-ellipses-outline" size={32} color={colors.textSecondary} />
@@ -663,6 +786,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   writeReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -750,5 +875,60 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     fontSize: 16,
+  },
+  // Recent review styles
+  recentReviewCard: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  recentReviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  recentReviewRating: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  recentReviewDate: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  recentReviewComment: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  // Additional review styles
+  reviewsSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  loadingReviewsContainer: {
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  loadingReviewsText: {
+    fontSize: 14,
+  },
+  reviewsList: {
+    marginTop: 16,
+  },
+  viewAllReviewsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    gap: 6,
+  },
+  viewAllReviewsText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

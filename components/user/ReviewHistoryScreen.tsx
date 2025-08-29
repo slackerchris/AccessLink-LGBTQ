@@ -27,13 +27,26 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
   const [reviews, setReviews] = useState<Review[]>([]);
 
   const load = useCallback(async () => {
-    if (!userProfile?.uid) return;
+    console.log('🔍 ReviewHistoryScreen: load() called');
+    console.log('🔍 ReviewHistoryScreen: userProfile =', userProfile);
+    console.log('🔍 ReviewHistoryScreen: userProfile.uid =', userProfile?.uid);
+    
+    if (!userProfile?.uid) {
+      console.log('⚠️ ReviewHistoryScreen: No user UID available, skipping load');
+      return;
+    }
+    
     try {
+      console.log('🔍 ReviewHistoryScreen: Calling getUserReviews with userId:', userProfile.uid);
       const items = await getUserReviews(userProfile.uid);
+      console.log('✅ ReviewHistoryScreen: getUserReviews returned:', items);
+      console.log('🔍 ReviewHistoryScreen: Number of reviews:', items.length);
       setReviews(items);
     } catch (e) {
+      console.error('❌ ReviewHistoryScreen: Error loading reviews:', e);
       // Fallback to any locally-stored profile reviews
       const local = (userProfile?.profile as any)?.details?.reviews || [];
+      console.log('🔍 ReviewHistoryScreen: Using fallback local reviews:', local);
       setReviews(local);
     }
   }, [userProfile?.uid]);

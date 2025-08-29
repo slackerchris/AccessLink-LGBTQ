@@ -149,7 +149,13 @@ export const ManageBusinessListScreen: React.FC<ManageBusinessListScreenProps> =
                       {business.category || 'Category not set'}
                     </Text>
                     <Text style={[styles.businessAddress, { color: colors.textSecondary }]}>
-                      {business.location?.address || 'Address not set'}
+                      {business.location ? (
+                        [
+                          business.location.address,
+                          business.location.city,
+                          business.location.state
+                        ].filter(Boolean).join(', ') || 'Address not set'
+                      ) : 'Address not set'}
                     </Text>
                   </View>
                   <View style={styles.businessStatus}>

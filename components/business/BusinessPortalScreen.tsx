@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
+import { useAuth as useFirebaseAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
 
 interface BusinessPortalScreenProps {
   navigation: any;
@@ -17,6 +17,23 @@ interface BusinessPortalScreenProps {
 
 export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navigation }) => {
   const { user, logout } = useFirebaseAuth();
+  const { getMyBusinesses } = useBusinessActions();
+  const [business, setBusiness] = useState<any>(null);
+
+  useEffect(() => {
+    loadBusiness();
+  }, []);
+
+  const loadBusiness = async () => {
+    try {
+      const businesses = await getMyBusinesses();
+      if (businesses.length > 0) {
+        setBusiness(businesses[0]);
+      }
+    } catch (error) {
+      console.error('Error loading business:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -54,16 +71,16 @@ export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navi
         <View style={styles.portalGrid}>
           <TouchableOpacity
             style={styles.portalCard}
-            onPress={() => navigation.navigate('BusinessProfileEdit')}
+            onPress={() => navigation.navigate('BusinessProfilesList')}
             accessibilityRole="button"
-            accessibilityLabel="Edit Business Profile"
-            accessibilityHint="Opens screen to edit your business information"
+            accessibilityLabel="Manage Business Profiles"
+            accessibilityHint="View and edit your business profiles"
           >
             <View style={[styles.portalIconContainer, { backgroundColor: '#ede9fe' }]}>
               <Ionicons name="business" size={28} color="#8b5cf6" />
             </View>
-            <Text style={styles.portalCardTitle}>Business Profile</Text>
-            <Text style={styles.portalCardSubtitle}>Edit business details</Text>
+            <Text style={styles.portalCardTitle}>Business Profiles</Text>
+            <Text style={styles.portalCardSubtitle}>Manage your businesses</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -82,6 +99,20 @@ export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navi
 
           <TouchableOpacity
             style={styles.portalCard}
+            onPress={() => navigation.navigate('Reviews')}
+            accessibilityRole="button"
+            accessibilityLabel="Manage Reviews"
+            accessibilityHint="View and manage customer reviews"
+          >
+            <View style={[styles.portalIconContainer, { backgroundColor: '#fef2e5' }]}>
+              <Ionicons name="star" size={28} color="#f59e0b" />
+            </View>
+            <Text style={styles.portalCardTitle}>Reviews</Text>
+            <Text style={styles.portalCardSubtitle}>Customer feedback</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.portalCard}
             onPress={() => navigation.navigate('MediaGallery')}
             accessibilityRole="button"
             accessibilityLabel="Media Gallery"
@@ -92,6 +123,20 @@ export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navi
             </View>
             <Text style={styles.portalCardTitle}>Media Gallery</Text>
             <Text style={styles.portalCardSubtitle}>Photos & videos</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.portalCard}
+            onPress={() => navigation.navigate('AddBusiness')}
+            accessibilityRole="button"
+            accessibilityLabel="Add New Business"
+            accessibilityHint="Register another business to your account"
+          >
+            <View style={[styles.portalIconContainer, { backgroundColor: '#e0f2fe' }]}>
+              <Ionicons name="add-circle" size={28} color="#0284c7" />
+            </View>
+            <Text style={styles.portalCardTitle}>Add Business</Text>
+            <Text style={styles.portalCardSubtitle}>Register new location</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -122,6 +167,10 @@ export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navi
             <Text style={styles.portalCardSubtitle}>Get help</Text>
           </TouchableOpacity>
 
+        </View>
+
+        {/* Sign Out Button - Separate from main grid */}
+        <View style={styles.signOutSection}>
           <TouchableOpacity
             style={styles.portalCard}
             onPress={handleSignOut}
@@ -191,14 +240,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 16,
     marginBottom: 32,
+  },
+  signOutSection: {
+    marginBottom: 16,
+    alignItems: 'center',
   },
   portalCard: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
-    width: '48%',
+    flexBasis: '31%',
     minHeight: 120,
     alignItems: 'center',
     justifyContent: 'center',
@@ -209,6 +261,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    marginBottom: 16,
   },
   portalIconContainer: {
     width: 64,

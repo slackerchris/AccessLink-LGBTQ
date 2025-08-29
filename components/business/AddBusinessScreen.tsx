@@ -17,7 +17,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useFirebaseAuth';
-//import { BusinessCategory, businessService } from '../../services/mockBusinessService';
+import { BusinessCategory } from '../../services/businessService';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { validators } from '../../utils/validators';
 
 interface AddBusinessScreenProps {
@@ -25,7 +27,7 @@ interface AddBusinessScreenProps {
 }
 
 export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   
   // Business basic info
@@ -60,7 +62,7 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
     { value: 'beauty', label: 'Beauty & Wellness' },
     { value: 'fitness', label: 'Fitness' },
     { value: 'retail', label: 'Retail' },
-    { value: 'legal', label: 'Legal Services' },
+    { value: 'professional_services', label: 'Professional Services' },
     { value: 'entertainment', label: 'Entertainment' },
     { value: 'education', label: 'Education' },
     { value: 'nonprofit', label: 'Non-Profit' },
@@ -95,6 +97,12 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
 
     setLoading(true);
     try {
+      // Build contact object without undefined values
+      const contactData: any = {};
+      if (phone.trim()) contactData.phone = phone.trim();
+      if (email.trim()) contactData.email = email.trim();
+      if (website.trim()) contactData.website = website.trim();
+
       const businessData = {
         name: name.trim(),
         description: description.trim(),
@@ -105,41 +113,44 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
           state: state.trim(),
           zipCode: zipCode.trim(),
         },
-        contact: {
-          phone: phone.trim() || undefined,
-          email: email.trim() || undefined,
-          website: website.trim() || undefined,
-        },
+        contact: contactData,
         accessibility: {
           wheelchairAccessible,
-          visuallyImpairedFriendly: brailleMenus,
-          hearingImpairedFriendly: signLanguageSupport,
-          notes: accessibilityNotes.trim() || undefined,
+          brailleMenus,
+          signLanguageSupport,
+          quietSpaces,
+          accessibilityNotes: accessibilityNotes.trim(),
         },
-        lgbtqInfo: {
-          safeSpaceCertified: lgbtqVerified,
-          lgbtqOwned: false,
-          supportsPrideEvents: false,
-          lgbtqStaffTraining: false,
-          genderNeutralBathrooms: false,
+        lgbtqFriendly: {
+          verified: lgbtqVerified,
+          certifications: [],
+          inclusivityFeatures: [],
         },
         hours: {},
         tags: [],
         images: [],
-        services: [],
-        mediaGallery: [],
-        events: [],
-        ownerId: user?.id || 'anonymous',
-        approved: true, // Auto-approve for demo
         featured: false,
-        reviews: [],
+        ownerId: userProfile?.uid || '',
+        status: 'pending' as const,
       };
 
-      const businessId = await businessService.createBusiness(businessData);
+      if (!userProfile) {
+        Alert.alert('Error', 'User profile not found');
+        return;
+      }
+
+      // Create business document directly in Firestore
+      const docRef = await addDoc(collection(db, 'businesses'), {
+        ...businessData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        averageRating: 0,
+        totalReviews: 0,
+      });
       
       Alert.alert(
         'Success',
-        'Business has been created successfully and added to the directory!',
+        'Business has been created successfully and is pending approval!',
         [
           {
             text: 'OK',

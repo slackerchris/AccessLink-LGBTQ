@@ -39,7 +39,9 @@ import { EventsManagementScreen } from './components/business/EventsManagementSc
 import BusinessDetailsScreen from './components/business/BusinessDetailsScreen';
 import AddBusinessScreen from './components/business/AddBusinessScreen';
 import { BusinessPortalScreen } from './components/business/BusinessPortalScreen';
+import BusinessReviewsManagementScreen from './components/business/BusinessReviewsManagementScreen';
 import ManageBusinessListScreen from './components/business/ManageBusinessListScreen';
+import BusinessProfilesListScreen from './components/business/BusinessProfilesListScreen';
 
 // Common Components
 import { EditProfileScreen } from './components/common/EditProfileScreen';
@@ -131,11 +133,14 @@ function BusinessPortalStackNavigator() {
   return (
     <BusinessPortalStack.Navigator screenOptions={{ headerShown: false }}>
       <BusinessPortalStack.Screen name="BusinessPortalMain" component={BusinessPortalScreen} />
+      <BusinessPortalStack.Screen name="BusinessProfilesList" component={BusinessProfilesListScreen} />
       <BusinessPortalStack.Screen name="ManageBusinessList" component={ManageBusinessListScreen} />
       <BusinessPortalStack.Screen name="BusinessProfileEdit" component={BusinessProfileEditScreen} />
       <BusinessPortalStack.Screen name="ServicesManagement" component={ServicesManagementScreen} />
       <BusinessPortalStack.Screen name="MediaGallery" component={MediaGalleryScreen} />
       <BusinessPortalStack.Screen name="EventsManagement" component={EventsManagementScreen} />
+      <BusinessPortalStack.Screen name="Reviews" component={BusinessReviewsManagementScreen} />
+      <BusinessPortalStack.Screen name="AddBusiness" component={AddBusinessScreen} />
     </BusinessPortalStack.Navigator>
   );
 }
@@ -406,7 +411,7 @@ function BusinessTabNavigator() {
       
       <BusinessTab.Screen 
         name="Reviews" 
-        component={BusinessHomeScreen}
+        component={BusinessReviewsManagementScreen}
         options={{ title: 'Reviews' }}
       />
       

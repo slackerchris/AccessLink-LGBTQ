@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 
 interface SimpleBusinessHomeScreenProps {
   navigation?: any;
@@ -11,11 +13,76 @@ interface SimpleBusinessHomeScreenProps {
 export const SimpleBusinessHomeScreen: React.FC<SimpleBusinessHomeScreenProps> = ({ navigation }) => {
   const { user, userProfile } = useFirebaseAuth();
   const { colors } = useTheme();
+  
+  // State for business data
+  const [realBusinessStats, setRealBusinessStats] = useState({
+    totalBusinesses: 0,
+    totalViews: 0,
+    averageRating: 0,
+    totalReviews: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   const firstName = user?.displayName?.split(' ')[0] || 'Business Owner';
   
   // Check if user has business owner/manager role
   const isBizUser = userProfile?.role === 'bizowner' || userProfile?.role === 'bizmanager';
+
+  // Fetch real business data
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      if (!userProfile?.uid) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Query businesses owned by current user
+        const businessesQuery = query(
+          collection(db, 'businesses'),
+          where('ownerId', '==', userProfile.uid)
+        );
+        
+        const querySnapshot = await getDocs(businessesQuery);
+        let totalViews = 0;
+        let totalRating = 0;
+        let totalReviews = 0;
+        let businessCount = 0;
+
+        querySnapshot.forEach((doc) => {
+          const business = doc.data();
+          businessCount++;
+          
+          // Sum up stats from all businesses
+          totalViews += business.views || 0;
+          totalReviews += business.totalReviews || 0;
+          if (business.averageRating && business.totalReviews > 0) {
+            totalRating += business.averageRating * business.totalReviews;
+          }
+        });
+
+        // Calculate overall average rating
+        const overallRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+
+        setRealBusinessStats({
+          totalBusinesses: businessCount,
+          totalViews,
+          averageRating: overallRating,
+          totalReviews,
+        });
+      } catch (error) {
+        console.error('Error fetching business data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isBizUser) {
+      fetchBusinessData();
+    } else {
+      setLoading(false);
+    }
+  }, [userProfile?.uid, isBizUser]);
 
   // Simple loading state while auth is loading
   if (!userProfile) {
@@ -50,30 +117,30 @@ export const SimpleBusinessHomeScreen: React.FC<SimpleBusinessHomeScreenProps> =
     );
   }
 
-  // Business stats data - simplified without business data
+  // Business stats data - using real data
   const businessStats = [
     {
-      icon: 'eye',
-      title: 'Views',
-      value: '124',
+      icon: 'business',
+      title: 'Businesses',
+      value: realBusinessStats.totalBusinesses.toString(),
       color: '#3b82f6',
     },
     {
       icon: 'star',
       title: 'Rating',
-      value: '4.5',
+      value: realBusinessStats.averageRating > 0 ? realBusinessStats.averageRating.toFixed(1) : '0.0',
       color: '#f59e0b',
     },
     {
       icon: 'chatbubble-ellipses',
       title: 'Reviews',
-      value: '8',
+      value: realBusinessStats.totalReviews.toString(),
       color: '#10b981',
     },
     {
-      icon: 'people',
-      title: 'Followers',
-      value: '45',
+      icon: 'eye',
+      title: 'Views',
+      value: realBusinessStats.totalViews.toString(),
       color: '#8b5cf6',
     }
   ];
@@ -86,7 +153,7 @@ export const SimpleBusinessHomeScreen: React.FC<SimpleBusinessHomeScreenProps> =
       subtitle: 'View all your businesses',
       onPress: () => {
         if (navigation) {
-          navigation.navigate('ManageBusinessList');
+          navigation.navigate('BusinessProfilesList');
         } else {
           console.warn('Navigation not available for My Businesses');
         }
@@ -162,15 +229,29 @@ export const SimpleBusinessHomeScreen: React.FC<SimpleBusinessHomeScreenProps> =
       <View style={styles.statsContainer}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Business Performance</Text>
         <View style={styles.statsGrid}>
-          {businessStats.map((stat, index) => (
-            <View key={index} style={[styles.statCard, { backgroundColor: colors.card || '#fff' }]}>
-              <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
-                <Ionicons name={stat.icon as any} size={20} color={stat.color} />
+          {loading ? (
+            // Loading placeholders
+            Array.from({ length: 4 }).map((_, index) => (
+              <View key={index} style={[styles.statCard, { backgroundColor: colors.card || '#fff' }]}>
+                <View style={[styles.statIcon, { backgroundColor: '#f3f4f6' }]}>
+                  <Ionicons name="ellipsis-horizontal" size={20} color="#9ca3af" />
+                </View>
+                <Text style={[styles.statValue, { color: '#9ca3af' }]}>--</Text>
+                <Text style={[styles.statTitle, { color: colors.textSecondary || '#6b7280' }]}>Loading...</Text>
               </View>
-              <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
-              <Text style={[styles.statTitle, { color: colors.textSecondary || '#6b7280' }]}>{stat.title}</Text>
-            </View>
-          ))}
+            ))
+          ) : (
+            // Real data
+            businessStats.map((stat, index) => (
+              <View key={index} style={[styles.statCard, { backgroundColor: colors.card || '#fff' }]}>
+                <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
+                  <Ionicons name={stat.icon as any} size={20} color={stat.color} />
+                </View>
+                <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
+                <Text style={[styles.statTitle, { color: colors.textSecondary || '#6b7280' }]}>{stat.title}</Text>
+              </View>
+            ))
+          )}
         </View>
       </View>
 
