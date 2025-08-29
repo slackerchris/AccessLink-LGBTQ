@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccessLink LGBTQ+ - Authentication</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6c5ce7;
+            margin-bottom: 20px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6c5ce7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success {
+            color: #00b894;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .error {
+            color: #e17055;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🏳️‍🌈 AccessLink LGBTQ+</div>
+        <div class="spinner"></div>
+        <p id="status">Completing authentication...</p>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        // Extract OAuth parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        
+        const statusEl = document.getElementById('status');
+        const resultEl = document.getElementById('result');
+        
+        function updateStatus(message, type = 'info') {
+            statusEl.textContent = message;
+            if (type === 'success') {
+                resultEl.className = 'success';
+                resultEl.textContent = '✅ Authentication successful! You can close this window.';
+            } else if (type === 'error') {
+                resultEl.className = 'error';
+                resultEl.textContent = '❌ Authentication failed. Please try again.';
+            }
+        }
+        
+        // Handle OAuth callback
+        if (error) {
+            updateStatus('Authentication failed', 'error');
+            console.error('OAuth Error:', error);
+        } else if (code) {
+            updateStatus('Authentication successful!', 'success');
+            console.log('OAuth Code:', code);
+            
+            // For mobile app: try to redirect back to app
+            setTimeout(() => {
+                // Try to open the mobile app
+                const mobileUrl = `accesslink://oauth?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state || '')}`;
+                window.location.href = mobileUrl;
+                
+                // Fallback: show success message
+                setTimeout(() => {
+                    updateStatus('Please return to the AccessLink app', 'success');
+                }, 1000);
+            }, 2000);
+        } else {
+            updateStatus('Invalid authentication response', 'error');
+        }
+        
+        // Auto-close after successful auth (for popup scenarios)
+        if (code && window.opener) {
+            setTimeout(() => {
+                window.close();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

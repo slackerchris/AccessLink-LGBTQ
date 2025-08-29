@@ -14,8 +14,12 @@
       },
       "oauth_client": [
         {
-          "client_id": "595597079040-lmhfd1oik6mgvbone79a5mo95udum2po.apps.googleusercontent.com",
-          "client_type": 3
+          "client_id": "595597079040-0ktcl9hs1fm8iouuru2nt468p6us8g81.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.accesslinklgbtq.lgbtq",
+            "certificate_hash": "e40c177a294a97d04028736e69f0347e51bffd46"
+          }
         }
       ],
       "api_key": [
@@ -25,12 +29,7 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "595597079040-lmhfd1oik6mgvbone79a5mo95udum2po.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

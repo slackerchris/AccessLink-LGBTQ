@@ -1,0 +1,33 @@
+runtime: python39
+
+handlers:
+# OAuth callback handler
+- url: /auth/callback
+  static_files: auth-callback.html
+  upload: auth-callback.html
+  secure: always
+
+# Privacy policy
+- url: /privacy
+  static_files: privacy.html
+  upload: privacy.html
+  secure: always
+
+# Terms of service  
+- url: /terms
+  static_files: terms.html
+  upload: terms.html
+  secure: always
+
+# Main website - catch all
+- url: /.*
+  static_files: index.html
+  upload: index.html
+  secure: always
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10
+
+env_variables:
+  GOOGLE_CLOUD_PROJECT: "acceslink-lgbtq"

@@ -246,25 +246,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       setError(null);
 
-      // Use the latest Android client ID from the OAuth credentials
-      const androidClientId = '595597079040-0ktcl9hs1fm8iouuru2nt468p6us8g81.apps.googleusercontent.com';
+      // Use the web client ID for OAuth flow (required for expo-auth-session)
+      const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+      if (!webClientId) {
+        throw new Error('Google Web Client ID not configured');
+      }
       
       const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'accesslink'
+        scheme: 'accesslink',
+        path: 'oauth'
       });
       
       console.log('🔗 Google OAuth redirect URI:', redirectUri);
       console.log('🔗 Platform:', Platform.OS);
-      console.log('🔗 Android Client ID:', androidClientId);
+      console.log('🔗 Web Client ID:', webClientId);
 
       const request = new AuthSession.AuthRequest({
-        clientId: androidClientId,
+        clientId: webClientId,
         scopes: ['openid', 'profile', 'email'],
         redirectUri,
         responseType: AuthSession.ResponseType.IdToken,
-        extraParams: {
-          include_granted_scopes: 'true'
-        },
+        extraParams: {},
       });
 
       const result = await request.promptAsync({

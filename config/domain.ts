@@ -14,6 +14,14 @@ export const DOMAIN_CONFIG = {
   DEEP_LINK_SCHEME: 'accesslink',
   UNIVERSAL_LINK_DOMAIN: 'accesslinklgbtq.app',
   
+  // OAuth Configuration
+  OAUTH_REDIRECT_URIS: {
+    PRODUCTION: 'https://accesslinklgbtq.app/auth/callback',
+    WWW_PRODUCTION: 'https://www.accesslinklgbtq.app/auth/callback',
+    STAGING: 'https://accesslink-website-595597079040.us-east4.run.app/auth/callback', // Current deployed URL
+    DEVELOPMENT: 'https://auth.expo.io/@chriseckman/accesslink-lgbtq', // For development only
+  },
+  
   // Social/sharing
   SOCIAL_TITLE: 'AccessLink LGBTQ+',
   SOCIAL_DESCRIPTION: 'Discover LGBTQ+ friendly businesses and build inclusive communities',
