@@ -4,14 +4,7 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -29,7 +22,10 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
       time: '6:00 PM',
       location: 'Rainbow Park',
       category: 'Community',
-      color: '#ec4899'
+      color: '#ec4899',
+      ownerId: 'business-owner-123',
+  description: 'Celebrate Pride Month with live music, speakers, and community booths.',
+  contact: { phone: '(555) 111-2222', website: 'pride.example.org' }
     },
     {
       id: 2,
@@ -38,7 +34,10 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
       time: '7:00 PM',
       location: 'Downtown Convention Center',
       category: 'Networking',
-      color: colors.primary
+      color: colors.primary,
+      ownerId: 'business-owner-123',
+  description: 'Meet local LGBTQ+ entrepreneurs and allies. Snacks and refreshments provided.',
+  contact: { phone: '(555) 222-3333', website: 'mixers.example.com' }
     },
     {
       id: 3,
@@ -47,7 +46,10 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
       time: '2:00 PM',
       location: 'Pride Health Center',
       category: 'Health',
-      color: '#10b981'
+      color: '#10b981',
+      ownerId: 'org-abc',
+  description: 'Mindfulness and self-care techniques to support mental wellness.',
+  contact: { phone: '(555) 333-4444', website: 'wellness.example.net' }
     }
   ];
 
@@ -65,7 +67,7 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
           <TouchableOpacity
             key={event.id}
             style={[styles.eventCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => Alert.alert(event.title, `${event.date} at ${event.time}\n${event.location}`)}
+            onPress={() => navigation.navigate('EventDetails', { event })}
           >
             <View style={[styles.eventCategory, { backgroundColor: event.color }]}>
               <Text style={styles.eventCategoryText}>{event.category}</Text>

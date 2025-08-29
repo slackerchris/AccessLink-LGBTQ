@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, StatusBar } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -20,6 +21,7 @@ import { AdminHomeScreen } from './components/admin/AdminHomeScreen';
 import { UserHomeScreen } from './components/user/UserHomeScreen';
 import { SavedPlacesScreen } from './components/user/SavedPlacesScreen';
 import { EventsScreen } from './components/user/EventsScreen';
+import EventDetailsScreen from './components/user/EventDetailsScreen';
 import PortalScreen from './components/user/PortalScreen';
 import AccessibilityPreferencesScreen from './components/user/AccessibilityPreferencesScreen';
 import MinimalAuthTestScreen from './components/user/MinimalAuthTestScreen';
@@ -43,6 +45,7 @@ import ManageBusinessListScreen from './components/business/ManageBusinessListSc
 import { EditProfileScreen } from './components/common/EditProfileScreen';
 import { FeedbackScreen } from './components/common/FeedbackScreen';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import PermissionsScreen from './components/common/PermissionsScreen';
 
 // Admin Components
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -287,8 +290,8 @@ function UserTabNavigator() {
       
       <UserTab.Screen 
         name="Events" 
-        component={EventsScreen}
-        options={{ title: 'Events' }}
+        component={EventsStackNavigator}
+        options={{ title: 'Events', headerShown: false }}
       />
       
       <UserTab.Screen 
@@ -300,6 +303,17 @@ function UserTabNavigator() {
         }}
       />
     </UserTab.Navigator>
+  );
+}
+
+// Events stack to support Event Details
+const EventsStack = createStackNavigator();
+function EventsStackNavigator() {
+  return (
+    <EventsStack.Navigator>
+      <EventsStack.Screen name="EventsHome" component={EventsScreen} options={{ headerShown: false }} />
+      <EventsStack.Screen name="EventDetails" component={EventDetailsScreen} options={{ title: 'Event Details' }} />
+    </EventsStack.Navigator>
   );
 }
 
@@ -490,6 +504,7 @@ function AppNavigator({ userType }: { userType: 'user' | 'business_owner' | 'adm
 // AppContent component to manage auth state and navigation
 function AppContent() {
   const [dbInitialized, setDbInitialized] = useState(false);
+  const [showPermGate, setShowPermGate] = useState<boolean | null>(null);
   const { user, userProfile, loading } = useAuth();
   // Map userProfile role to AppNavigator expected format
   const userType: 'user' | 'admin' | 'business_owner' | undefined =
@@ -512,6 +527,25 @@ function AppContent() {
     setDbInitialized(true);
   }, []);
 
+  // One-time permission gate (first launch)
+  useEffect(() => {
+    (async () => {
+      try {
+        const seen = await AsyncStorage.getItem('onboard.permissions.v1');
+        setShowPermGate(seen ? false : true);
+      } catch {
+        setShowPermGate(false);
+      }
+    })();
+  }, []);
+
+  const handlePermsDone = async () => {
+    try {
+      await AsyncStorage.setItem('onboard.permissions.v1', '1');
+    } catch {}
+    setShowPermGate(false);
+  };
+
   // Show loading screen while database initializes
   if (!dbInitialized) {
     return (
@@ -528,6 +562,19 @@ function AppContent() {
         <Text>Loading...</Text>
       </View>
     );
+  }
+
+  // Show permissions screen once, before main app
+  if (showPermGate === null) {
+    return (
+      <View style={[styles.centered, { flex: 1 }]}> 
+        <Text>Loading…</Text>
+      </View>
+    );
+  }
+
+  if (showPermGate) {
+    return <PermissionsScreen onDone={handlePermsDone} />;
   }
 
   return (

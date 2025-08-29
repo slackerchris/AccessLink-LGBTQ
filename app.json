@@ -14,7 +14,11 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.accesslinklgbtq.lgbtq"
+      "bundleIdentifier": "com.accesslinklgbtq.lgbtq",
+      "infoPlist": {
+        "NSCalendarsUsageDescription": "AccessLink adds events you choose to your calendar so you never miss community happenings.",
+        "NSRemindersUsageDescription": "AccessLink can optionally add reminders for events you save."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +28,10 @@
       "versionCode": 1,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+  "android.permission.CALL_PHONE",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
       ],
       "compileSdkVersion": 34,
       "targetSdkVersion": 34,

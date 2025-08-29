@@ -3,7 +3,7 @@
  * Shows detailed information about a specific business
  */
 
-import React, { useState, memo, useEffect } from 'react';
+import React, { useState, memo, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -17,10 +17,11 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinessActions } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
-import { BusinessListing, BusinessReview } from '../../services/businessService';
+import { BusinessListing } from '../../services/businessService';
 import { useBusinessDetails } from '../../hooks/useProperBusiness';
 import { parseFromNavigation } from '../../utils/navigationHelpers';
 import { adaptBusinessForDisplay, formatBusinessHours } from '../../utils/businessAdapters';
@@ -37,6 +38,15 @@ interface BusinessDetailsScreenProps {
     };
   };
 }
+
+// Minimal review type for display in this screen
+type BusinessReview = {
+  id?: string;
+  userName?: string;
+  rating: number;
+  content: string;
+  createdAt: any;
+};
 
 const ReviewItem = memo(({ item, colors }: { item: BusinessReview; colors: any }) => {
   const renderStars = (rating: number) => {
@@ -96,14 +106,15 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
     }
   }, [navigationBusiness]);
   
-  // Fetch business details using the businessId if no direct business object was provided
-  const { business: fetchedBusiness, loading, error } = useBusinessDetails(
-    businessId && !navigationBusiness ? businessId : ''
-  );
+  // Determine an ID to fetch details for (supports both navigation object and explicit id)
+  const idForFetch = navigationBusiness?.id || businessId || null;
+
+  // Fetch business details using the resolved ID
+  const { business: fetchedBusiness, loading, error, refresh } = useBusinessDetails(idForFetch);
   
   // Use either the navigation-provided business or the fetched one
   useEffect(() => {
-    if (!businessData && fetchedBusiness) {
+    if (fetchedBusiness) {
       // Convert the fetchedBusiness to the format expected by our adapter
       // This handles the difference between businessService.BusinessListing and properBusinessService.BusinessListing
       const businessForAdapter: BusinessListing = {
@@ -114,11 +125,20 @@ export default function BusinessDetailsScreen({ navigation, route }: BusinessDet
         tags: (fetchedBusiness as any).tags || [],
         createdAt: (fetchedBusiness as any).createdAt || new Date(),
       };
-      
+
       const adaptedBusiness = adaptBusinessForDisplay(businessForAdapter);
       setBusinessData(adaptedBusiness);
     }
-  }, [fetchedBusiness, businessData]);
+  }, [fetchedBusiness]);
+
+  // Refresh details whenever this screen comes into focus (e.g., after submitting a review)
+  useFocusEffect(
+    useCallback(() => {
+      if (idForFetch) {
+        refresh();
+      }
+    }, [idForFetch, refresh])
+  );
   
   // Add console logs for debugging
   console.log('BusinessDetailsScreen - businessId:', businessId);

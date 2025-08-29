@@ -20,7 +20,7 @@ import {
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
-import { useReviewActions } from '../../hooks/useWebAuth';
+import { addReview as addReviewToDb } from '../../services/reviewService';
 import { useTheme } from '../../hooks/useTheme';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -45,10 +45,9 @@ interface CreateReviewScreenProps {
 export default function CreateReviewScreen({ navigation, route }: CreateReviewScreenProps) {
   const { businessId, businessName } = route.params;
   // Debug: check if inside React context
-  let user, addReview, colors;
+  let user, colors;
   try {
     user = useFirebaseAuth().user;
-    addReview = useReviewActions().addReview;
     colors = useTheme().colors;
     if (!colors) {
       throw new Error('colors is undefined from useTheme()');
@@ -226,7 +225,17 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
         photosCount: reviewPhotos.length
       });
 
-      await addReview(businessId, rating, comment.trim(), reviewPhotos);
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
+      await addReviewToDb({
+        businessId,
+        userId: user.uid,
+        rating,
+        comment: comment.trim(),
+        photos: reviewPhotos,
+        businessName,
+      });
       
       console.log('✅ DEBUG: addReview completed successfully');
       console.log('🔍 DEBUG: About to show success alert');

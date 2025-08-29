@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,40 +13,43 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { getUserReviews, UserReview } from '../../services/reviewService';
 
-interface Review {
-  id: string;
-  businessId: string;
-  rating: number;
-  comment: string;
-  photos?: {
-    id: string;
-    uri: string;
-    caption?: string;
-    category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
-    uploadedAt: string;
-  }[];
+type Review = UserReview & {
   accessibilityTags?: string[];
   helpfulCount?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+};
 
 export default function ReviewHistoryScreen({ navigation }: { navigation: any }) {
   const { userProfile } = useFirebaseAuth();
   const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
-  
-  // Adjusted: reviews now expected under userProfile?.profile?.details?.reviews
-  const reviews = userProfile?.profile?.details?.reviews || [];
-  const sortedReviews = reviews.sort((a, b) => 
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  const load = useCallback(async () => {
+    if (!userProfile?.uid) return;
+    try {
+      const items = await getUserReviews(userProfile.uid);
+      setReviews(items);
+    } catch (e) {
+      // Fallback to any locally-stored profile reviews
+      const local = (userProfile?.profile as any)?.details?.reviews || [];
+      setReviews(local);
+    }
+  }, [userProfile?.uid]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const sortedReviews = [...reviews].sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    // In a real app, this would refresh the data from the server
-    setTimeout(() => setRefreshing(false), 1000);
+  setRefreshing(true);
+  await load();
+  setRefreshing(false);
   }, []);
 
   const renderStars = (rating: number) => {
@@ -73,15 +76,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
     });
   };
 
-  const getBusinessName = (businessId: string) => {
-    // In a real app, this would fetch business data
-    const businessNames: { [key: string]: string } = {
-      'rainbow-cafe-001': 'Rainbow Cafe',
-      'pride-health-center-002': 'Pride Health Center',
-      'inclusive-bookstore-003': 'Inclusive Books',
-    };
-    return businessNames[businessId] || 'Unknown Business';
-  };
+  const getBusinessName = (businessId: string, fallback?: string | null) => fallback || businessId;
 
   const handleEditReview = (review: Review) => {
     Alert.alert(
@@ -113,7 +108,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
     <View key={review.id} style={[styles.reviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.reviewHeader}>
         <View style={styles.businessInfo}>
-          <Text style={[styles.businessName, { color: colors.text }]}>{getBusinessName(review.businessId)}</Text>
+          <Text style={[styles.businessName, { color: colors.text }]}>{getBusinessName(review.businessId, (review as any).businessName)}</Text>
           <View style={styles.ratingContainer}>
             {renderStars(review.rating)}
             <Text style={[styles.ratingText, { color: colors.textSecondary }]}>({review.rating}/5)</Text>
@@ -140,15 +135,15 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
       <Text style={[styles.reviewComment, { color: colors.text }]}>{review.comment}</Text>
 
       {/* Photos Section */}
-      {review.photos && review.photos.length > 0 && (
+    {Array.isArray(review.photos) && review.photos.length > 0 && (
         <View style={styles.photosSection}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {review.photos.map(photo => (
-              <View key={photo.id} style={styles.reviewPhoto}>
-                <Image source={{ uri: photo.uri }} style={styles.reviewPhotoImage} />
-                {photo.caption && (
+            {review.photos.map((photo, i) => (
+              <View key={(photo as any)?.id || (photo as any)?.uri || `${i}`} style={styles.reviewPhoto}>
+        <Image source={{ uri: (photo as any).uri || photo }} style={styles.reviewPhotoImage} />
+        {(photo as any).caption && (
                   <Text style={[styles.reviewPhotoCaption, { color: colors.textSecondary, backgroundColor: colors.surface }]} numberOfLines={2}>
-                    {photo.caption}
+          {(photo as any).caption}
                   </Text>
                 )}
               </View>
@@ -244,7 +239,7 @@ export default function ReviewHistoryScreen({ navigation }: { navigation: any })
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {stats && (
+  {stats && (
           <View style={[styles.statsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.statsHeader}>
               <Text style={[styles.statsTitle, { color: colors.text }]}>Your Impact</Text>
