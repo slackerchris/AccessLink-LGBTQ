@@ -22,6 +22,8 @@ import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useBusinessActions } from '../../hooks/useFirebaseAuth';
 import { getBusinessReviews, UserReview } from '../../services/reviewService';
+import { getBusinessResponseByReviewId, BusinessResponse } from '../../services/businessResponseService';
+import { ReviewResponseModal } from './ReviewResponseModal';
 
 interface Review {
   id: string;
@@ -32,6 +34,7 @@ interface Review {
   comment: string; // Changed from 'content' to match UserReview
   createdAt: any;
   updatedAt: any;
+  businessResponse?: BusinessResponse; // Add business response
 }
 
 interface Business {
@@ -58,6 +61,8 @@ export const BusinessReviewsManagementScreen: React.FC<BusinessReviewsManagement
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [responseModalVisible, setResponseModalVisible] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [reviewStats, setReviewStats] = useState({
     totalReviews: 0,
     averageRating: 0,
@@ -125,11 +130,31 @@ export const BusinessReviewsManagementScreen: React.FC<BusinessReviewsManagement
       
       // Get all reviews (not just the last 3)
       const allReviews = await getBusinessReviews(businessId, 100); // Get up to 100 reviews
-      setReviews(allReviews);
-      console.log('✅ Loaded', allReviews.length, 'reviews');
+      
+      // Load business responses for each review
+      const reviewsWithResponses = await Promise.all(
+        allReviews.map(async (review) => {
+          try {
+            const businessResponse = await getBusinessResponseByReviewId(review.id);
+            return {
+              ...review,
+              businessResponse: businessResponse || undefined,
+            };
+          } catch (error) {
+            console.warn('Error loading response for review:', review.id, error);
+            return {
+              ...review,
+              businessResponse: undefined,
+            };
+          }
+        })
+      );
+      
+      setReviews(reviewsWithResponses);
+      console.log('✅ Loaded', reviewsWithResponses.length, 'reviews with responses');
       
       // Calculate review statistics
-      calculateReviewStats(allReviews);
+      calculateReviewStats(reviewsWithResponses);
       
     } catch (error) {
       console.error('❌ Error loading reviews:', error);
@@ -172,6 +197,18 @@ export const BusinessReviewsManagementScreen: React.FC<BusinessReviewsManagement
       await loadReviews(selectedBusiness.id);
     }
     setRefreshing(false);
+  };
+
+  const handleRespondToReview = (review: Review) => {
+    setSelectedReview(review);
+    setResponseModalVisible(true);
+  };
+
+  const handleResponseSubmitted = async () => {
+    // Reload reviews to show the new/updated response
+    if (selectedBusiness) {
+      await loadReviews(selectedBusiness.id);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -358,11 +395,13 @@ export const BusinessReviewsManagementScreen: React.FC<BusinessReviewsManagement
             
             <View style={styles.ratingsBreakdown}>
               {[5, 4, 3, 2, 1].map(rating => 
-                renderRatingBar(
-                  rating, 
-                  reviewStats.ratingsBreakdown[rating as keyof typeof reviewStats.ratingsBreakdown], 
-                  reviewStats.totalReviews
-                )
+                <View key={`rating-${rating}`}>
+                  {renderRatingBar(
+                    rating, 
+                    reviewStats.ratingsBreakdown[rating as keyof typeof reviewStats.ratingsBreakdown], 
+                    reviewStats.totalReviews
+                  )}
+                </View>
               )}
             </View>
           </View>
@@ -383,6 +422,7 @@ export const BusinessReviewsManagementScreen: React.FC<BusinessReviewsManagement
           ) : (
             reviews.map((review, index) => (
               <View key={review.id || index} style={[styles.reviewCard, { borderColor: colors.border }]}>
+                {/* Original Review */}
                 <View style={styles.reviewHeader}>
                   <View style={styles.reviewAuthor}>
                     <Text style={[styles.reviewerName, { color: colors.text }]}>
@@ -401,14 +441,50 @@ export const BusinessReviewsManagementScreen: React.FC<BusinessReviewsManagement
                   {review.comment}
                 </Text>
                 
+                {/* Business Response Section */}
+                {review.businessResponse && (
+                  <View style={[styles.businessResponseContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <View style={styles.responseHeader}>
+                      <View style={styles.responseAuthor}>
+                        <Ionicons name="storefront" size={16} color={colors.primary} />
+                        <Text style={[styles.responseAuthorName, { color: colors.text }]}>
+                          {review.businessResponse.businessOwnerName}
+                        </Text>
+                        <Text style={[styles.responseLabel, { color: colors.textSecondary }]}>
+                          • Business Owner
+                        </Text>
+                      </View>
+                      <Text style={[styles.responseDate, { color: colors.textSecondary }]}>
+                        {formatDate(review.businessResponse.createdAt)}
+                      </Text>
+                    </View>
+                    
+                    <Text style={[styles.responseContent, { color: colors.text }]}>
+                      {review.businessResponse.message}
+                    </Text>
+                    
+                    {review.businessResponse.updatedAt !== review.businessResponse.createdAt && (
+                      <Text style={[styles.editedIndicator, { color: colors.textSecondary }]}>
+                        (edited)
+                      </Text>
+                    )}
+                  </View>
+                )}
+                
                 {/* Business Owner Actions */}
                 <View style={styles.reviewActions}>
                   <TouchableOpacity 
                     style={[styles.actionButton, { borderColor: colors.border }]}
-                    onPress={() => Alert.alert('Coming Soon', 'Response to reviews feature coming soon!')}
+                    onPress={() => handleRespondToReview(review)}
                   >
-                    <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
-                    <Text style={[styles.actionButtonText, { color: colors.primary }]}>Respond</Text>
+                    <Ionicons 
+                      name={review.businessResponse ? "chatbubble" : "chatbubble-outline"} 
+                      size={16} 
+                      color={colors.primary} 
+                    />
+                    <Text style={[styles.actionButtonText, { color: colors.primary }]}>
+                      {review.businessResponse ? 'Edit Response' : 'Respond'}
+                    </Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity 
@@ -459,6 +535,21 @@ export const BusinessReviewsManagementScreen: React.FC<BusinessReviewsManagement
           </View>
         </View>
       </ScrollView>
+
+      {/* Review Response Modal */}
+      {selectedReview && (
+        <ReviewResponseModal
+          visible={responseModalVisible}
+          onClose={() => {
+            setResponseModalVisible(false);
+            setSelectedReview(null);
+          }}
+          review={selectedReview}
+          businessOwnerId={user?.uid || ''}
+          businessOwnerName={user?.displayName || 'Business Owner'}
+          onResponseSubmitted={handleResponseSubmitted}
+        />
+      )}
 
       {/* Business Selector Modal */}
       <Modal
@@ -869,6 +960,46 @@ const styles = StyleSheet.create({
   },
   addBusinessSubtitle: {
     fontSize: 14,
+  },
+  // Business Response Styles
+  businessResponseContainer: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10b981', // Green accent for business responses
+  },
+  responseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  responseAuthor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  responseAuthorName: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  responseLabel: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  responseDate: {
+    fontSize: 12,
+  },
+  responseContent: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  editedIndicator: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
 });
 

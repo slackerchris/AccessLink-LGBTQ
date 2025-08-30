@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth as useFirebaseAuth, useAuthActions as useFirebaseAuthActions } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
+import PhotoUploadComponent from './PhotoUploadComponent';
 
 
 export function EditProfileScreen({ navigation }: { navigation: any }) {
@@ -158,14 +159,22 @@ export function EditProfileScreen({ navigation }: { navigation: any }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.profileIcon}>
-          <Ionicons name="person-circle" size={100} color={colors.primary} />
-          <TouchableOpacity 
-            style={[styles.editIconButton, { backgroundColor: colors.primary }]}
-            onPress={() => Alert.alert('Profile Photo', 'Photo upload will be available in the next app update. For now, your profile uses a default icon.')}
-          >
-            <Ionicons name="camera" size={20} color="#fff" />
-          </TouchableOpacity>
+        <View style={styles.profilePhotoSection}>
+          <PhotoUploadComponent
+            uploadType="user-profile"
+            userId={user?.uid}
+            currentPhotoURL={(userProfile as any)?.profilePhoto}
+            onPhotoUploaded={(downloadURL) => {
+              console.log('✅ Profile photo uploaded:', downloadURL);
+              // The photoUploadService already updates the user document
+              // We could trigger a profile refresh here if needed
+            }}
+            onPhotoRemoved={() => {
+              console.log('🗑️ Profile photo removed');
+              // Handle profile photo removal if needed
+            }}
+            disabled={loading}
+          />
         </View>
 
         <View style={styles.section}>
@@ -335,23 +344,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16, // Added explicit font size
   },
-  profileIcon: {
+  profilePhotoSection: {
     alignItems: 'center',
     marginVertical: 20,
-    position: 'relative',
-  },
-  editIconButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: '35%',
-    backgroundColor: '#6366f1',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#fff',
   },
   section: {
     paddingHorizontal: 20,

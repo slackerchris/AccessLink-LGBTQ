@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
+import PhotoUploadComponent from '../common/PhotoUploadComponent';
 
 interface BusinessProfileEditScreenProps {
   navigation: any;
@@ -222,6 +223,28 @@ export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps>
       </View>
 
       <View style={styles.content}>
+        {/* Business Profile Photo */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Business Photo</Text>
+          <PhotoUploadComponent
+            uploadType="business-profile"
+            businessId={userBusiness?.id}
+            currentPhotoURL={(userBusiness as any)?.profilePhoto}
+            onPhotoUploaded={(downloadURL) => {
+              console.log('✅ Business profile photo uploaded:', downloadURL);
+              // Update the local business data
+              setUserBusiness(prev => ({ ...prev, profilePhoto: downloadURL }));
+            }}
+            onPhotoRemoved={() => {
+              console.log('🗑️ Business profile photo removed');
+              // Handle profile photo removal if needed
+              setUserBusiness(prev => ({ ...prev, profilePhoto: null }));
+            }}
+            disabled={isLoading}
+            style={{ marginVertical: 16 }}
+          />
+        </View>
+
         {/* Basic Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Basic Information</Text>

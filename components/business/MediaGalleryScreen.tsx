@@ -1,6 +1,6 @@
 /**
- * Media Gallery Management Screen for Business Owners
- * Allows businesses to upload and manage photos/videos showcasing their facilities
+ * Modern Media Gallery Management Screen for Business Owners
+ * Clean, Instagram-inspired interface for photo management
  */
 
 import React, { useState, useEffect } from 'react';
@@ -14,14 +14,20 @@ import {
   Image,
   SafeAreaView,
   Modal,
+  StatusBar,
+  Platform,
   TextInput,
   Dimensions,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
+import { photoUploadService } from '../../services/photoUploadService';
+import { useTheme } from '../../hooks/useTheme';
 
 const { width: screenWidth } = Dimensions.get('window');
+const photoSize = (screenWidth - 48) / 3; // 3 photos per row with padding
 
 interface MediaItem {
   id: string;
@@ -48,17 +54,18 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
   useEffect(() => {
     const loadBusiness = async () => {
       try {
-        console.log('Loading business for user:', user); // Debug log
+        console.log('📸 MediaGallery: Loading business for user ID:', user?.uid);
         const businesses = await getMyBusinesses();
-        console.log('Found businesses:', businesses); // Debug log
+        console.log('📸 MediaGallery: Found', businesses.length, 'businesses');
         if (businesses.length > 0) {
           setUserBusiness(businesses[0]); // Get the first business
-          console.log('Set userBusiness to:', businesses[0]); // Debug log
+          console.log('📸 MediaGallery: Set business:', businesses[0].name, 'ID:', businesses[0].id);
+          console.log('📸 MediaGallery: Current photos in business:', (businesses[0] as any).photos?.length || 0);
         } else {
-          console.log('No businesses found for user'); // Debug log
+          console.log('📸 MediaGallery: No businesses found for user');
         }
       } catch (error) {
-        console.error('Error loading business:', error);
+        console.error('📸 MediaGallery: Error loading business:', error);
       } finally {
         setLoading(false);
       }
@@ -67,9 +74,9 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
     if (user) {
       loadBusiness();
     } else {
-      console.log('No user found, cannot load business'); // Debug log
+      console.log('📸 MediaGallery: No user found, cannot load business');
     }
-  }, [user, getMyBusinesses]);
+  }, [user?.uid]); // Only depend on user ID, not the full user object
   
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -103,13 +110,32 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
   const loadMediaItems = async () => {
     if (userBusiness?.id) {
       try {
-        // For now, use placeholder media items
-        // In the future, this would fetch from the real database
-        const businessMedia: MediaItem[] = [];
+        console.log('📸 MediaGallery: Loading media items for business:', userBusiness.name);
+        
+        // Load photos from the business's photos array
+        const businessPhotos = (userBusiness as any).photos || [];
+        console.log('📸 MediaGallery: Found', businessPhotos.length, 'photos in business');
+        
+        // Convert business photos to MediaItem format
+        const businessMedia: MediaItem[] = businessPhotos.map((photoUrl: string, index: number) => ({
+          id: `existing-${Date.now()}-${index}`,
+          uri: photoUrl,
+          title: `Business Photo ${index + 1}`,
+          description: 'Uploaded business photo',
+          category: 'other' as const,
+          uploadedAt: new Date().toISOString(),
+          featured: false
+        }));
+        
+        console.log('📸 MediaGallery: Converted to', businessMedia.length, 'media items');
         setMediaItems(businessMedia);
       } catch (error) {
-        console.error('Error loading media:', error);
+        console.error('📸 MediaGallery: Error loading media:', error);
+        setMediaItems([]); // Set empty array on error
       }
+    } else {
+      console.log('📸 MediaGallery: No business ID, setting empty media items');
+      setMediaItems([]);
     }
   };
 
@@ -118,141 +144,110 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
     : mediaItems.filter(item => item.category === selectedCategory);
 
   const handleAddMedia = () => {
-    console.log('Add Media button clicked!'); // Debug log
-    
-    // For web compatibility, let's implement proper file selection
-    if (typeof window !== 'undefined') {
-      // We're on web - create a file input element
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*,video/*'; // Accept both images and videos
-      input.multiple = false; // Single file selection for now
-      
-      input.onchange = (event: any) => {
-        const file = event.target.files[0];
-        if (file) {
-          console.log('File selected:', file.name, file.type, file.size);
-          handleFileUpload(file);
-        }
-      };
-      
-      input.click(); // Trigger file selection dialog
-    } else {
-      // Native - use Alert
-      Alert.alert(
-        'Add Media',
-        'Choose media type to upload',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Take Photo', onPress: () => handleMediaSelection('camera-photo') },
-          { text: 'Choose Photo', onPress: () => handleMediaSelection('photo') },
-          { text: 'Choose Video', onPress: () => handleMediaSelection('video') }
-        ]
-      );
-    }
-  };
-
-  const handleFileUpload = async (file: File) => {
-    console.log('Processing file upload:', file.name, file.type);
+    console.log('📸 MediaGallery: Add Media button clicked');
+    console.log('📸 MediaGallery: Current userBusiness:', userBusiness);
+    console.log('📸 MediaGallery: Business ID:', userBusiness?.id);
     
     if (!userBusiness?.id) {
-      console.log('No userBusiness found:', userBusiness);
+      console.log('❌ MediaGallery: No business ID found');
       Alert.alert('Error', 'No business account found. Please ensure you are logged in as a business owner.');
       return;
     }
 
-    // Validate file type
-    const isImage = file.type.startsWith('image/');
-    const isVideo = file.type.startsWith('video/');
-    
-    if (!isImage && !isVideo) {
-      Alert.alert('Error', 'Please select an image or video file.');
-      return;
-    }
-
-    // Validate file size (limit to 10MB for demo)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      Alert.alert('Error', 'File size must be less than 10MB.');
-      return;
-    }
-
-    try {
-      // Create a preview URL for the file
-      const previewUrl = URL.createObjectURL(file);
-      
-      console.log('Creating new media item with preview URL:', previewUrl);
-      
-      // Create new media item
-      const newMediaItem: MediaItem = {
-        id: `media-${Date.now()}`,
-        uri: previewUrl,
-        title: file.name.split('.')[0] || 'New Media', // Use filename without extension as title
-        description: `Uploaded ${isImage ? 'image' : 'video'}: ${file.name}`,
-        category: 'other',
-        uploadedAt: new Date().toISOString(),
-        featured: false
-      };
-
-      // Add to local state (in a real app, this would upload to server/cloud storage)
-      setMediaItems(prev => [newMediaItem, ...prev]);
-      
-      // Open edit modal for the new item
-      setEditingItem(newMediaItem);
-      setFormData({
-        title: newMediaItem.title,
-        description: newMediaItem.description || '',
-        category: newMediaItem.category,
-        featured: newMediaItem.featured
-      });
-      setIsModalVisible(true);
-      
-      Alert.alert('Success', `${isImage ? 'Image' : 'Video'} uploaded successfully! You can now edit the details.`);
-      
-    } catch (error) {
-      console.error('Error processing file:', error);
-      Alert.alert('Error', 'Failed to process the selected file. Please try again.');
-    }
+    // Use React Native Alert for photo selection
+    Alert.alert(
+      'Add Media',
+      'Choose how you want to add a photo',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Take Photo', onPress: () => handleMediaSelection('camera-photo') },
+        { text: 'Choose Photo', onPress: () => handleMediaSelection('photo') }
+      ]
+    );
   };
 
   const handleMediaSelection = async (type: string) => {
-    console.log('Media selection called with type:', type); // Debug log
+    console.log('📸 MediaGallery: Starting photo upload for business:', userBusiness?.id);
+    console.log('📸 MediaGallery: Selection type:', type);
+    
     if (!userBusiness?.id) {
-      console.log('No userBusiness found:', userBusiness); // Debug log
+      console.log('❌ MediaGallery: No business ID in handleMediaSelection');
+      Alert.alert('Error', 'No business account found. Please ensure you are logged in as a business owner.');
       return;
     }
 
-    console.log('Creating new media item...'); // Debug log
-    // Simulate media selection and upload
-    const newMediaItem: MediaItem = {
-      id: `media-${Date.now()}`,
-      uri: type.includes('video') 
-        ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-        : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
-      title: 'New Media',
-      description: 'Recently uploaded',
-      category: 'other',
-      uploadedAt: new Date().toISOString(),
-      featured: false
-    };
-
     try {
-      // For now, just add to local state
-      // In the future, this would save to the real database
-      setMediaItems(prev => [newMediaItem, ...prev]);
+      setIsLoading(true);
+      console.log('📸 MediaGallery: About to call selectPhotoSource');
+
+      // Use our photo upload service to select and upload photo
+      const imageResult = await photoUploadService.selectPhotoSource();
+      console.log('📸 MediaGallery: Image selection result:', imageResult);
       
-      // Open edit modal for the new item
-      setEditingItem(newMediaItem);
-      setFormData({
-        title: newMediaItem.title,
-        description: newMediaItem.description || '',
-        category: newMediaItem.category,
-        featured: newMediaItem.featured
-      });
-      setIsModalVisible(true);
+      if (!imageResult || imageResult.canceled || !imageResult.assets?.[0]) {
+        console.log('📸 MediaGallery: Image selection was canceled or failed');
+        setIsLoading(false);
+        return;
+      }
+
+      const selectedImage = imageResult.assets[0];
+      console.log('📸 MediaGallery: Selected image:', selectedImage.uri);
+      
+      // Upload to Firebase Storage
+      console.log('📸 MediaGallery: Starting Firebase upload...');
+      const uploadResult = await photoUploadService.uploadBusinessPhoto(
+        userBusiness.id,
+        selectedImage.uri,
+        'gallery'
+      );
+      console.log('📸 MediaGallery: Upload result:', uploadResult);
+
+      if (uploadResult.success && uploadResult.downloadURL) {
+        console.log('📸 MediaGallery: Upload successful, creating media item');
+        // Create new media item with real Firebase URL
+        const newMediaItem: MediaItem = {
+          id: `media-${Date.now()}`,
+          uri: uploadResult.downloadURL,
+          title: 'New Photo',
+          description: 'Recently uploaded business photo',
+          category: 'other',
+          uploadedAt: new Date().toISOString(),
+          featured: false
+        };
+
+        console.log('📸 MediaGallery: Adding media item to state:', newMediaItem);
+        // Add to local state
+        setMediaItems(prev => {
+          console.log('📸 MediaGallery: Previous media items:', prev.length);
+          const updated = [newMediaItem, ...prev];
+          console.log('📸 MediaGallery: Updated media items:', updated.length);
+          return updated;
+        });
+        
+        // Open edit modal for the new item
+        setEditingItem(newMediaItem);
+        setFormData({
+          title: newMediaItem.title,
+          description: newMediaItem.description || '',
+          category: newMediaItem.category,
+          featured: newMediaItem.featured
+        });
+        setIsModalVisible(true);
+        
+        Alert.alert('Success', 'Photo uploaded successfully! You can now edit the details.');
+      } else {
+        console.log('❌ MediaGallery: Upload failed:', uploadResult.error);
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+
     } catch (error) {
-      console.error('Error uploading media:', error);
-      Alert.alert('Error', 'Failed to upload media. Please try again.');
+      console.error('❌ MediaGallery: Upload error:', error);
+      Alert.alert(
+        'Upload Failed',
+        error instanceof Error ? error.message : 'Failed to upload photo. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -349,72 +344,6 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
     }
   };
 
-  const renderMediaItem = ({ item }: { item: MediaItem }) => {
-    const isVideo = item.uri.includes('.mp4') || item.uri.includes('video');
-    
-    if (viewMode === 'grid') {
-      return (
-        <TouchableOpacity 
-          style={styles.gridItem}
-          onPress={() => handleEditMedia(item)}
-        >
-          <Image source={{ uri: item.uri }} style={styles.gridImage} />
-          {isVideo && (
-            <View style={styles.videoOverlay}>
-              <Ionicons name="play-circle" size={32} color="rgba(255,255,255,0.9)" />
-            </View>
-          )}
-          {item.featured && (
-            <View style={styles.featuredBadge}>
-              <Ionicons name="star" size={16} color="#fff" />
-            </View>
-          )}
-          <View style={styles.gridInfo}>
-            <Text style={styles.gridTitle} numberOfLines={2}>{item.title}</Text>
-            <Text style={styles.gridCategory}>{categories.find(c => c.key === item.category)?.label}</Text>
-          </View>
-        </TouchableOpacity>
-      );
-    }
-
-    return (
-      <TouchableOpacity 
-        style={styles.listItem}
-        onPress={() => handleEditMedia(item)}
-      >
-        <Image source={{ uri: item.uri }} style={styles.listImage} />
-        {isVideo && (
-          <View style={styles.listVideoOverlay}>
-            <Ionicons name="play-circle" size={24} color="rgba(255,255,255,0.9)" />
-          </View>
-        )}
-        <View style={styles.listInfo}>
-          <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>{item.title}</Text>
-            {item.featured && <Ionicons name="star" size={16} color="#fbbf24" />}
-          </View>
-          <Text style={styles.listDescription} numberOfLines={2}>
-            {item.description || 'No description'}
-          </Text>
-          <View style={styles.listMeta}>
-            <Text style={styles.listCategory}>
-              {categories.find(c => c.key === item.category)?.label}
-            </Text>
-            <Text style={styles.listDate}>
-              {new Date(item.uploadedAt).toLocaleDateString()}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={styles.listActions}
-          onPress={() => handleDeleteMedia(item.id)}
-        >
-          <Ionicons name="trash-outline" size={20} color="#ef4444" />
-        </TouchableOpacity>
-      </TouchableOpacity>
-    );
-  };
-
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -457,103 +386,99 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
     );
   }
 
+  const { colors } = useTheme();
+
+  if (loading) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading gallery...</Text>
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
+      {/* Modern Header */}
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Media Gallery</Text>
-        <View style={styles.headerActions}>
+        
+        <View style={styles.headerCenter}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Gallery</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+            {mediaItems.length} {mediaItems.length === 1 ? 'photo' : 'photos'}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
+          onPress={handleAddMedia}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Ionicons name="add" size={24} color="white" />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Photo Grid */}
+      {mediaItems.length > 0 ? (
+        <FlatList
+          data={filteredMedia}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              style={styles.photoItem}
+              onPress={() => {
+                setEditingItem(item);
+                setFormData({
+                  title: item.title,
+                  description: item.description || '',
+                  category: item.category,
+                  featured: item.featured
+                });
+                setIsModalVisible(true);
+              }}
+            >
+              <Image source={{ uri: item.uri }} style={styles.photo} />
+              {item.featured && (
+                <View style={styles.featuredBadge}>
+                  <Ionicons name="star" size={12} color="#FFD700" />
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item) => item.id}
+          numColumns={3}
+          style={styles.photoGrid}
+          contentContainerStyle={styles.photoGridContent}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.emptyState}>
+          <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface }]}>
+            <Ionicons name="camera-outline" size={48} color={colors.textSecondary} />
+          </View>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Photos Yet</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+            Start building your gallery by adding photos that showcase your business
+          </Text>
           <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          >
-            <Ionicons 
-              name={viewMode === 'grid' ? 'list' : 'grid'} 
-              size={20} 
-              color="#fff" 
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerButton}
+            style={[styles.emptyButton, { backgroundColor: colors.primary }]}
             onPress={handleAddMedia}
           >
-            <Ionicons name="add" size={24} color="#fff" />
+            <Ionicons name="camera" size={20} color="white" style={{ marginRight: 8 }} />
+            <Text style={styles.emptyButtonText}>Add Your First Photo</Text>
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Category Filter */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryFilter}
-        contentContainerStyle={styles.categoryFilterContent}
-      >
-        {categories.map((category) => (
-          <TouchableOpacity
-            key={category.key}
-            style={[
-              styles.categoryChip,
-              selectedCategory === category.key && styles.categoryChipActive
-            ]}
-            onPress={() => setSelectedCategory(category.key)}
-          >
-            <Ionicons 
-              name={category.icon as any} 
-              size={16} 
-              color={selectedCategory === category.key ? '#fff' : '#6366f1'} 
-            />
-            <Text style={[
-              styles.categoryChipText,
-              selectedCategory === category.key && styles.categoryChipTextActive
-            ]}>
-              {category.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Media Stats */}
-      <View style={styles.statsBar}>
-        <Text style={styles.statsText}>
-          {filteredMedia.length} {filteredMedia.length === 1 ? 'item' : 'items'}
-          {selectedCategory !== 'all' && ` in ${categories.find(c => c.key === selectedCategory)?.label}`}
-        </Text>
-        <Text style={styles.statsText}>
-          {mediaItems.filter(item => item.featured).length} featured
-        </Text>
-      </View>
-
-      {/* Media Grid/List */}
-      <FlatList
-        data={filteredMedia}
-        renderItem={renderMediaItem}
-        keyExtractor={(item) => item.id}
-        numColumns={viewMode === 'grid' ? 2 : 1}
-        key={viewMode} // Force re-render when view mode changes
-        style={styles.mediaList}
-        contentContainerStyle={styles.mediaListContent}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="images-outline" size={64} color="#9ca3af" />
-            <Text style={styles.emptyTitle}>No media yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Start building your gallery by adding photos and videos that showcase your business
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyButton}
-              onPress={handleAddMedia}
-            >
-              <Text style={styles.emptyButtonText}>Add Media</Text>
-            </TouchableOpacity>
-          </View>
-        }
-      />
+      )}
 
       {/* Edit Media Modal */}
       <Modal
@@ -673,243 +598,157 @@ export const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ navigati
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   header: {
-    backgroundColor: '#6366f1',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    minHeight: 64,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
+    fontWeight: '600',
   },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
+  headerSubtitle: {
+    fontSize: 14,
+    marginTop: 2,
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
-  },
-  categoryFilter: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  categoryFilterContent: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  categoryChip: {
-    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    gap: 6,
-  },
-  categoryChipActive: {
-    backgroundColor: '#6366f1',
-    borderColor: '#6366f1',
-  },
-  categoryChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6366f1',
-  },
-  categoryChipTextActive: {
-    color: '#fff',
-  },
-  statsBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  statsText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  mediaList: {
-    flex: 1,
-  },
-  mediaListContent: {
-    padding: 20,
-  },
-  gridItem: {
-    flex: 0.5,
-    margin: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden',
+    marginLeft: 8,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
   },
-  gridImage: {
+  photoGrid: {
+    flex: 1,
+  },
+  photoGridContent: {
+    padding: 16,
+  },
+  photoItem: {
+    width: photoSize,
+    height: photoSize,
+    marginRight: 8,
+    marginBottom: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  photo: {
     width: '100%',
-    height: 120,
-  },
-  videoOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    height: '100%',
+    backgroundColor: '#f3f4f6',
   },
   featuredBadge: {
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: '#fbbf24',
+    width: 24,
+    height: 24,
     borderRadius: 12,
-    padding: 4,
-  },
-  gridInfo: {
-    padding: 12,
-  },
-  gridTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  gridCategory: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  listItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  listImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  listVideoOverlay: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    width: 80,
-    height: 80,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 8,
-  },
-  listInfo: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
-  },
-  listHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  listTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    flex: 1,
-  },
-  listDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  listMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  listCategory: {
-    fontSize: 12,
-    color: '#6366f1',
-    fontWeight: '500',
-  },
-  listDate: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  listActions: {
-    justifyContent: 'center',
-    paddingLeft: 12,
   },
   emptyState: {
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    paddingVertical: 60,
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 64,
+  },
+  emptyIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Error state styles
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#1f2937',
     marginTop: 16,
     marginBottom: 8,
   },
-  emptySubtitle: {
-    fontSize: 14,
+  errorText: {
+    fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 32,
-    lineHeight: 20,
+    lineHeight: 22,
   },
-  emptyButton: {
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+  // Modal styles for edit photo modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
-  emptyButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    maxHeight: '80%',
   },
   modalContainer: {
     flex: 1,
@@ -919,14 +758,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    marginBottom: 20,
   },
-  modalButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalButtonText: {
     fontSize: 16,
@@ -938,15 +783,51 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.5,
   },
-  modalTitle: {
-    fontSize: 18,
+  modalSection: {
+    marginBottom: 24,
+  },
+  modalLabel: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#1f2937',
+    marginBottom: 8,
   },
-  modalContent: {
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  modalTextArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
     flex: 1,
-    padding: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
   },
+  modalButtonPrimary: {
+    backgroundColor: '#6366f1',
+  },
+  modalButtonSecondary: {
+    backgroundColor: '#f3f4f6',
+  },
+  modalButtonTextPrimary: {
+    color: 'white',
+  },
+  modalButtonTextSecondary: {
+    color: '#6b7280',
+  },
+  // Form styles
   formGroup: {
     marginBottom: 20,
   },
@@ -972,6 +853,7 @@ const styles = StyleSheet.create({
   },
   categorySelector: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   categorySelectorItem: {
@@ -1048,28 +930,5 @@ const styles = StyleSheet.create({
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-    lineHeight: 22,
   },
 });
