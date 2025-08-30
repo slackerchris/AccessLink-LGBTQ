@@ -1,7 +1,71 @@
 /**
  * Navigation Helper Utilities
- * Functions for safely passing data in navigation parameters
+ * Functions for safely passing data in navigation parameters and preventing crashes
  */
+
+/**
+ * Safe navigation goBack that prevents crashes from double navigation
+ */
+export const safeGoBack = (navigation: any, fallbackRoute?: string) => {
+  try {
+    if (navigation && typeof navigation.goBack === 'function') {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else if (fallbackRoute) {
+        navigation.navigate(fallbackRoute);
+      }
+    }
+  } catch (error) {
+    console.error('Navigation goBack error:', error);
+    // If goBack fails and we have a fallback, try that
+    if (fallbackRoute && navigation?.navigate) {
+      try {
+        navigation.navigate(fallbackRoute);
+      } catch (fallbackError) {
+        console.error('Fallback navigation error:', fallbackError);
+      }
+    }
+  }
+};
+
+/**
+ * Safe navigation with error handling
+ */
+export const safeNavigate = (navigation: any, routeName: string, params?: any) => {
+  try {
+    if (navigation && typeof navigation.navigate === 'function') {
+      navigation.navigate(routeName, params);
+    }
+  } catch (error) {
+    console.error('Navigation error:', error);
+  }
+};
+
+/**
+ * Debounced navigation to prevent rapid-fire navigation calls
+ */
+let lastNavigationTime = 0;
+const NAVIGATION_DEBOUNCE_MS = 500;
+
+export const debouncedNavigate = (navigation: any, routeName: string, params?: any) => {
+  const now = Date.now();
+  if (now - lastNavigationTime > NAVIGATION_DEBOUNCE_MS) {
+    lastNavigationTime = now;
+    safeNavigate(navigation, routeName, params);
+  } else {
+    console.log('Navigation debounced - too soon since last navigation');
+  }
+};
+
+export const debouncedGoBack = (navigation: any, fallbackRoute?: string) => {
+  const now = Date.now();
+  if (now - lastNavigationTime > NAVIGATION_DEBOUNCE_MS) {
+    lastNavigationTime = now;
+    safeGoBack(navigation, fallbackRoute);
+  } else {
+    console.log('GoBack debounced - too soon since last navigation');
+  }
+};
 
 /**
  * Prepares an object for navigation by making it serializable

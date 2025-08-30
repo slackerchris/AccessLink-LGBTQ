@@ -3,10 +3,11 @@
  * Shows community events for users
  */
 
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
+import { debouncedNavigate } from '../../utils/navigationHelpers';
 
 interface EventsScreenProps {
   navigation: any;
@@ -14,7 +15,9 @@ interface EventsScreenProps {
 
 export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
   const { colors } = useTheme();
-  const events = [
+  
+  // Memoized events data for better performance
+  const events = useMemo(() => [
     {
       id: 1,
       title: 'Pride Month Celebration',
@@ -24,8 +27,8 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
       category: 'Community',
       color: '#ec4899',
       ownerId: 'business-owner-123',
-  description: 'Celebrate Pride Month with live music, speakers, and community booths.',
-  contact: { phone: '(555) 111-2222', website: 'pride.example.org' }
+      description: 'Celebrate Pride Month with live music, speakers, and community booths.',
+      contact: { phone: '(555) 111-2222', website: 'pride.example.org' }
     },
     {
       id: 2,
@@ -36,8 +39,8 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
       category: 'Networking',
       color: colors.primary,
       ownerId: 'business-owner-123',
-  description: 'Meet local LGBTQ+ entrepreneurs and allies. Snacks and refreshments provided.',
-  contact: { phone: '(555) 222-3333', website: 'mixers.example.com' }
+      description: 'Meet local LGBTQ+ entrepreneurs and allies. Snacks and refreshments provided.',
+      contact: { phone: '(555) 222-3333', website: 'mixers.example.com' }
     },
     {
       id: 3,
@@ -48,13 +51,55 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
       category: 'Health',
       color: '#10b981',
       ownerId: 'org-abc',
-  description: 'Mindfulness and self-care techniques to support mental wellness.',
-  contact: { phone: '(555) 333-4444', website: 'wellness.example.net' }
+      description: 'Mindfulness and self-care techniques to support mental wellness.',
+      contact: { phone: '(555) 333-4444', website: 'wellness.example.net' }
     }
-  ];
+  ], [colors.primary]);
+
+  // Memoized event card handler
+  const handleEventPress = useCallback((event: any) => {
+    console.log('📅 EventsScreen: Event pressed:', event.title);
+    debouncedNavigate(navigation, 'EventDetails', { event });
+  }, [navigation]);
+
+  // Memoized event card component
+  const EventCard = React.memo(({ event }: { event: any }) => (
+    <TouchableOpacity
+      key={event.id}
+      style={[styles.eventCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+      onPress={() => handleEventPress(event)}
+    >
+      <View style={[styles.eventCategory, { backgroundColor: event.color }]}>
+        <Text style={styles.eventCategoryText}>{event.category}</Text>
+      </View>
+      
+      <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
+      
+      <View style={styles.eventDetails}>
+        <View style={styles.eventDetail}>
+          <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.date}</Text>
+        </View>
+        
+        <View style={styles.eventDetail}>
+          <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.time}</Text>
+        </View>
+        
+        <View style={styles.eventDetail}>
+          <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.location}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  ));
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      showsVerticalScrollIndicator={false}
+      removeClippedSubviews={true}
+    >
       <View style={[styles.header, { backgroundColor: colors.header }]}>
         <Text style={[styles.headerTitle, { color: colors.headerText }]}>Community Events</Text>
         <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}>
@@ -64,34 +109,7 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
 
       <View style={styles.content}>
         {events.map((event) => (
-          <TouchableOpacity
-            key={event.id}
-            style={[styles.eventCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('EventDetails', { event })}
-          >
-            <View style={[styles.eventCategory, { backgroundColor: event.color }]}>
-              <Text style={styles.eventCategoryText}>{event.category}</Text>
-            </View>
-            
-            <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
-            
-            <View style={styles.eventDetails}>
-              <View style={styles.eventDetail}>
-                <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
-                <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.date}</Text>
-              </View>
-              
-              <View style={styles.eventDetail}>
-                <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-                <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.time}</Text>
-              </View>
-              
-              <View style={styles.eventDetail}>
-                <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
-                <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.location}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
+          <EventCard key={event.id} event={event} />
         ))}
 
         <View style={styles.comingSoon}>

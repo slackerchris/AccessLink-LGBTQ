@@ -106,7 +106,7 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
     } finally {
       setLoading(false);
     }
-  }, [filters, pageLimit, db]);
+  }, [filters.category, pageLimit, db]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -121,7 +121,7 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
 
   useEffect(() => {
     refresh();
-  }, [filters, pageLimit]);
+  }, [filters.category, pageLimit]);
 
   return {
     businesses,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { debouncedNavigate } from '../../utils/navigationHelpers';
 
 interface PortalScreenProps {
   navigation: any;
@@ -21,7 +22,7 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
   const { user, userProfile, logout } = useFirebaseAuth();
   const { theme, toggleTheme, colors, shadows } = useTheme();
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     Alert.alert(
       'Sign Out',
       'Are you sure you want to sign out?',
@@ -40,11 +41,39 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
         }
       ]
     );
-  };
+  }, [logout]);
 
-  const firstName = userProfile?.profile?.details.firstName || userProfile?.displayName?.split(' ')[0] || 'Friend';
+  const firstName = useMemo(() => 
+    userProfile?.profile?.details.firstName || 
+    userProfile?.displayName?.split(' ')[0] || 
+    'Friend'
+  , [userProfile]);
 
-  const dynamicStyles = StyleSheet.create({
+  // Memoized navigation handlers for better performance
+  const navigationHandlers = useMemo(() => ({
+    editProfile: () => {
+      console.log('🚀 PortalScreen: Navigating to EditProfile');
+      debouncedNavigate(navigation, 'EditProfile');
+    },
+    savedPlaces: () => {
+      console.log('🚀 PortalScreen: Navigating to SavedPlaces');
+      debouncedNavigate(navigation, 'SavedPlaces');
+    },
+    reviewHistory: () => {
+      console.log('🚀 PortalScreen: Navigating to ReviewHistory');
+      debouncedNavigate(navigation, 'ReviewHistory');
+    },
+    accessibility: () => {
+      console.log('🚀 PortalScreen: Navigating to AccessibilityPreferences');
+      debouncedNavigate(navigation, 'AccessibilityPreferences');
+    },
+    identity: () => {
+      console.log('🚀 PortalScreen: Navigating to LGBTQIdentity');
+      debouncedNavigate(navigation, 'LGBTQIdentity');
+    }
+  }), [navigation]);
+
+  const dynamicStyles = useMemo(() => StyleSheet.create({
     portalCard: {
       ...styles.portalCard,
       ...shadows.button, // Use optimized shadows
@@ -90,7 +119,40 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
       ...styles.accountValue,
       color: colors.text,
     },
-  });
+  }), [colors, shadows]);
+
+  // Memoized portal card component
+  const PortalCard = React.memo(({ 
+    onPress, 
+    iconName, 
+    iconColor, 
+    title, 
+    subtitle, 
+    accessibilityLabel,
+    accessibilityHint 
+  }: {
+    onPress: () => void;
+    iconName: string;
+    iconColor: string;
+    title: string;
+    subtitle: string;
+    accessibilityLabel: string;
+    accessibilityHint: string;
+  }) => (
+    <TouchableOpacity
+      style={dynamicStyles.portalCard}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+    >
+      <View style={dynamicStyles.portalIconContainer}>
+        <Ionicons name={iconName as any} size={28} color={iconColor} />
+      </View>
+      <Text style={dynamicStyles.portalCardTitle}>{title}</Text>
+      <Text style={dynamicStyles.portalCardSubtitle}>{subtitle}</Text>
+    </TouchableOpacity>
+  ));
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
@@ -101,83 +163,61 @@ export default function PortalScreen({ navigation }: { navigation: any }) {
         </Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}> 
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+      > 
         <View style={styles.portalGrid}> 
-          <TouchableOpacity
-            style={dynamicStyles.portalCard}
-            onPress={() => navigation.navigate('EditProfile')}
-            accessibilityRole="button"
+          <PortalCard
+            onPress={navigationHandlers.editProfile}
+            iconName="person"
+            iconColor="#8b5cf6"
+            title="My Profile"
+            subtitle="Edit personal details"
             accessibilityLabel="Edit Profile"
             accessibilityHint="Opens screen to edit your personal profile information"
-          >
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name="person" size={28} color="#8b5cf6" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>My Profile</Text>
-            <Text style={dynamicStyles.portalCardSubtitle}>Edit personal details</Text>
-          </TouchableOpacity>
+          />
 
-          <TouchableOpacity
-            style={dynamicStyles.portalCard}
-            onPress={() => navigation.navigate('SavedPlaces')}
-            accessibilityRole="button"
+          <PortalCard
+            onPress={navigationHandlers.savedPlaces}
+            iconName="bookmark"
+            iconColor="#6366f1"
+            title="Saved Places"
+            subtitle="Your saved businesses"
             accessibilityLabel="Saved Places"
             accessibilityHint="View and manage your saved businesses"
-          >
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name="bookmark" size={28} color="#6366f1" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>Saved Places</Text>
-            <Text style={dynamicStyles.portalCardSubtitle}>
-              Your saved businesses
-            </Text>
-          </TouchableOpacity>
+          />
 
-          <TouchableOpacity
-            style={dynamicStyles.portalCard}
-            onPress={() => navigation.navigate('ReviewHistory')}
-            accessibilityRole="button"
+          <PortalCard
+            onPress={navigationHandlers.reviewHistory}
+            iconName="star"
+            iconColor="#f59e0b"
+            title="My Reviews"
+            subtitle="View your reviews"
             accessibilityLabel="My Reviews"
             accessibilityHint="View and manage your business reviews"
-          >
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name="star" size={28} color="#f59e0b" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>My Reviews</Text>
-            <Text style={dynamicStyles.portalCardSubtitle}>
-              View your reviews
-            </Text>
-          </TouchableOpacity>
+          />
 
-          <TouchableOpacity
-            style={dynamicStyles.portalCard}
-            onPress={() => navigation.navigate('AccessibilityPreferences')}
-            accessibilityRole="button"
+          <PortalCard
+            onPress={navigationHandlers.accessibility}
+            iconName="accessibility"
+            iconColor="#10b981"
+            title="Accessibility"
+            subtitle="Customize preferences"
             accessibilityLabel="Accessibility Settings"
             accessibilityHint="Configure your accessibility preferences and needs"
-          >
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name="accessibility" size={28} color="#10b981" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>Accessibility</Text>
-            <Text style={dynamicStyles.portalCardSubtitle}>Customize preferences</Text>
-          </TouchableOpacity>
+          />
 
-          <TouchableOpacity
-            style={dynamicStyles.portalCard}
-            onPress={() => navigation.navigate('LGBTQIdentity')}
-            accessibilityRole="button"
+          <PortalCard
+            onPress={navigationHandlers.identity}
+            iconName="heart"
+            iconColor="#ec4899"
+            title="Identity Settings"
+            subtitle="LGBTQ+ identity preferences"
             accessibilityLabel="Identity Settings"
             accessibilityHint="Manage your LGBTQ+ identity and visibility preferences"
-          >
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name="heart" size={28} color="#ec4899" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>Identity Settings</Text>
-            <Text style={dynamicStyles.portalCardSubtitle}>
-              LGBTQ+ identity preferences
-            </Text>
-          </TouchableOpacity>
+          />
 
           <View style={dynamicStyles.portalCard}>
             <View style={dynamicStyles.portalIconContainer}>

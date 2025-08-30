@@ -3,7 +3,7 @@
  * Main dashboard for regular users
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,12 +18,51 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
 import { useBusinesses } from '../../hooks/useBusiness';
 import { useTheme } from '../../hooks/useTheme';
-// import { BusinessListing } from '../../services/mockBusinessService'; // Removed: file is empty and not needed
-import { prepareForNavigation } from '../../utils/navigationHelpers';
+import { prepareForNavigation, debouncedNavigate } from '../../utils/navigationHelpers';
+import { debounce } from '../../utils/performanceUtils';
 
 interface UserHomeScreenProps {
   navigation: any;
 }
+
+// Memoized Business Card Component for better performance
+const BusinessCard = React.memo(({ business, index, onPress, colors }: any) => (
+  <TouchableOpacity
+    key={`business-${business.id || index}`}
+    style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+    activeOpacity={0.7}
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={`${business.name} business`}
+    accessibilityHint={`View details for ${business.name}, a ${business.category} business with ${business.averageRating.toFixed(1)} star rating`}
+  >
+    <View style={styles.businessInfo}>
+      <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
+        {business.name}
+      </Text>
+      <Text style={[styles.businessCategory, { color: colors.primary }]} numberOfLines={1}>
+        {business.category}
+      </Text>
+      <Text style={[styles.businessDescription, { color: colors.textSecondary }]} numberOfLines={2}>
+        {business.description}
+      </Text>
+      <View style={styles.businessMeta}>
+        <View style={styles.ratingContainer}>
+          <Ionicons name="star" size={16} color="#fbbf24" />
+          <Text style={[styles.ratingText, { color: colors.text }]}>
+            {business.averageRating.toFixed(1)}
+          </Text>
+        </View>
+        <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>
+          {business.totalReviews || 0} reviews
+        </Text>
+      </View>
+    </View>
+    <View style={styles.businessIcon}>
+      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+    </View>
+  </TouchableOpacity>
+));
 
 export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) => {
   const { userProfile } = useFirebaseAuth();
@@ -34,6 +73,9 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
   const businessFilters = useMemo(() => ({}), []);
   const { businesses } = useBusinesses(businessFilters, 6); // Get first 6 businesses
 
+  // Memoize featured businesses to prevent re-calculations
+  const featuredBusinesses = useMemo(() => businesses.slice(0, 3), [businesses]);
+
   // Debug business data - only log when businesses actually change
   useEffect(() => {
     if (businesses.length > 0) {
@@ -41,13 +83,41 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
     }
   }, [businesses.length]); // Only log when count changes
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigation.navigate('Directory', { searchQuery: searchQuery.trim() });
-    } else {
-      navigation.navigate('Directory');
+  // Optimized navigation handler with debouncing
+  const handleBusinessPress = useCallback((business: any, index: number) => {
+    console.log('🔥 BUSINESS CLICKED:', business.name, 'Index:', index, 'ID:', business.id);
+    try {
+      const serializedBusiness = prepareForNavigation(business);
+      console.log('🔥 Navigating to Directory -> BusinessDetails with business:', serializedBusiness.name);
+      debouncedNavigate(navigation, 'Directory', { 
+        screen: 'BusinessDetails', 
+        params: { business: serializedBusiness } 
+      });
+    } catch (error) {
+      console.error('🔥 Navigation error:', error);
+      // Fallback - try just businessId
+      debouncedNavigate(navigation, 'Directory', { 
+        screen: 'BusinessDetails', 
+        params: { businessId: business.id } 
+      });
     }
-  };
+  }, [navigation]);
+
+  // Optimized search handler with debouncing
+  const debouncedSearch = useMemo(
+    () => debounce(() => {
+      if (searchQuery.trim()) {
+        navigation.navigate('Directory', { searchQuery: searchQuery.trim() });
+      } else {
+        navigation.navigate('Directory');
+      }
+    }, 300),
+    [searchQuery, navigation]
+  );
+
+  const handleSearch = useCallback(() => {
+    debouncedSearch();
+  }, [debouncedSearch]);
 
   const firstName = userProfile?.displayName?.split(' ')[0] || 'Friend';
 
@@ -85,10 +155,7 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
           <TouchableOpacity 
             style={[styles.searchButton, { backgroundColor: colors.primary }]}
             activeOpacity={0.7}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleSearch();
-            }}
+            onPress={handleSearch}
           >
             <Text style={styles.searchButtonText}>Search</Text>
           </TouchableOpacity>
@@ -110,41 +177,14 @@ export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) =>
           </TouchableOpacity>
         </View>
         
-        {businesses.slice(0, 3).map((business, index) => (
-          <TouchableOpacity
+        {featuredBusinesses.map((business, index) => (
+          <BusinessCard
             key={`business-${business.id || index}`}
-            style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            activeOpacity={0.7}
-            onPress={(e) => {
-              e.stopPropagation();
-              console.log('Business clicked:', business.name, 'Index:', index);
-              // Use prepareForNavigation to serialize Date objects to strings
-              const serializedBusiness = prepareForNavigation(business);
-              navigation.navigate('Directory', { 
-                screen: 'BusinessDetails', 
-                params: { business: serializedBusiness } 
-              });
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`${business.name} business`}
-            accessibilityHint={`View details for ${business.name}, a ${business.category} business with ${business.averageRating.toFixed(1)} star rating`}
-          >
-            <View style={styles.businessInfo}>
-              <Text style={[styles.businessName, { color: colors.text }]}>{business.name}</Text>
-              <Text style={[styles.businessCategory, { color: colors.primary }]}>{business.category}</Text>
-              <Text style={[styles.businessDescription, { color: colors.textSecondary }]} numberOfLines={2}>
-                {business.description}
-              </Text>
-              <View style={styles.businessMeta}>
-                <View style={styles.rating}>
-                  <Ionicons name="star" size={16} color="#fbbf24" />
-                  <Text style={[styles.ratingText, { color: colors.textSecondary }]}>{business.averageRating.toFixed(1)}</Text>
-                </View>
-                <Text style={[styles.location, { color: colors.textSecondary }]}>{business.location.address}</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
+            business={business}
+            index={index}
+            onPress={() => handleBusinessPress(business, index)}
+            colors={colors}
+          />
         ))}
       </View>
     </ScrollView>
@@ -282,6 +322,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   rating: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -289,6 +333,15 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 14,
     marginLeft: 4,
+  },
+  reviewCount: {
+    fontSize: 12,
+    marginLeft: 8,
+  },
+  businessIcon: {
+    marginLeft: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   location: {
     fontSize: 12,

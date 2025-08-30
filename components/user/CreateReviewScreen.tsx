@@ -255,7 +255,10 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
             onPress: () => {
               console.log('🔍 DEBUG: Success alert button pressed - navigating back');
               setShowSuccessMessage(false);
-              navigation.goBack();
+              // Use setTimeout to prevent double navigation
+              setTimeout(() => {
+                navigation.goBack();
+              }, 100);
             }
           }
         ],
@@ -265,13 +268,6 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
       );
       
       console.log('🔍 DEBUG: Alert.alert called - should be showing now');
-      
-      // Fallback: Auto-navigate after 3 seconds if alert doesn't work
-      setTimeout(() => {
-        console.log('🔍 DEBUG: Fallback timeout - auto-navigating back');
-        setShowSuccessMessage(false);
-        navigation.goBack();
-      }, 3000);
     } catch (error) {
       console.error('❌ DEBUG: addReview failed:', error);
       Alert.alert(
