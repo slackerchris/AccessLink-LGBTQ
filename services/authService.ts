@@ -14,8 +14,10 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp, FieldValue } from 'firebase/firestore';
 import { auth, db } from './firebase';
+
+export type TimestampField = Date | FieldValue;
 
 export interface UserProfile {
   uid: string;
@@ -23,8 +25,8 @@ export interface UserProfile {
   displayName: string;
   role: 'user' | 'admin' | 'business_owner';
   isEmailVerified: boolean;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: TimestampField;
+  updatedAt: TimestampField;
   profile: {
     firstName?: string;
     lastName?: string;
@@ -37,8 +39,8 @@ export interface UserProfile {
       businessId: string;
       rating: number;
       comment: string;
-      createdAt: string;
-      updatedAt: string;
+      createdAt: TimestampField;
+      updatedAt: TimestampField;
     }[];
     accessibilityPreferences?: {
       wheelchairAccess: boolean;
@@ -187,9 +189,12 @@ class AuthService {
       await setDoc(doc(db, 'users', user.uid), userProfile);
 
       return userCredential;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Registration error:', error);
-      throw new Error(this.getAuthErrorMessage(error.code));
+      if (error instanceof Error && 'code' in error) {
+        throw new Error(this.getAuthErrorMessage((error as {code: string}).code));
+      }
+      throw new Error('An unknown registration error occurred');
     }
   }
 
@@ -197,9 +202,12 @@ class AuthService {
   public async signIn(email: string, password: string): Promise<UserCredential> {
     try {
       return await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Sign in error:', error);
-      throw new Error(this.getAuthErrorMessage(error.code));
+      if (error instanceof Error && 'code' in error) {
+        throw new Error(this.getAuthErrorMessage((error as {code: string}).code));
+      }
+      throw new Error('An unknown sign-in error occurred');
     }
   }
 
@@ -207,7 +215,7 @@ class AuthService {
   public async signOut(): Promise<void> {
     try {
       await signOut(auth);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Sign out error:', error);
       throw new Error('Failed to sign out');
     }
@@ -217,9 +225,12 @@ class AuthService {
   public async resetPassword(email: string): Promise<void> {
     try {
       await sendPasswordResetEmail(auth, email);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Password reset error:', error);
-      throw new Error(this.getAuthErrorMessage(error.code));
+      if (error instanceof Error && 'code' in error) {
+        throw new Error(this.getAuthErrorMessage((error as {code: string}).code));
+      }
+      throw new Error('An unknown password reset error occurred');
     }
   }
 

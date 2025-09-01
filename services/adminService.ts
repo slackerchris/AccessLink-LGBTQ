@@ -99,6 +99,37 @@ export interface UserFilters {
   hasBusinessAccount?: boolean;
 }
 
+// Raw data structure for a note from Firestore
+export interface FirestoreAdminNote {
+  id: string;
+  adminId: string;
+  adminName: string;
+  note: string;
+  timestamp: Timestamp | string; // Can be a Firestore Timestamp or an ISO string
+  severity: 'info' | 'warning' | 'critical';
+}
+
+// Raw data structure for a user from Firestore
+export interface FirestoreUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role?: 'user' | 'business_owner' | 'admin';
+  userType?: 'user' | 'business_owner' | 'admin'; // Legacy field
+  isEmailVerified?: boolean;
+  createdAt: Timestamp | string;
+  updatedAt?: Timestamp | string;
+  // TODO: Define a proper type for the user profile
+  profile?: any; 
+  registrationDate?: Timestamp | string;
+  lastLoginDate?: Timestamp | string;
+  accountStatus?: 'active' | 'inactive' | 'suspended';
+  verificationLevel?: 'unverified' | 'email' | 'phone' | 'full';
+  reviewCount?: number;
+  businessCount?: number;
+  adminNotes?: FirestoreAdminNote[] | string; // Can be an array or a JSON string
+}
+
 class AdminService {
   private baseUrl = 'https://api.accesslink-lgbtq.com/admin';
 
@@ -106,7 +137,7 @@ class AdminService {
   async adminLogin(email: string, password: string): Promise<AdminUser> {
     try {
       // Mock implementation - replace with actual API call
-      if (email === 'admin@accesslink.com' && password === 'AdminPass123!') {
+      if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
         return {
           uid: 'admin-1',
           email: 'admin@accesslink.com',
@@ -190,7 +221,7 @@ class AdminService {
       const snapshot = await getDocs(q);
       let users: UserDetails[] = [];
       snapshot.forEach(docSnap => {
-        const user = this.convertToUserDetails({ ...docSnap.data(), id: docSnap.id });
+        const user = this.convertToUserDetails({ ...docSnap.data(), id: docSnap.id } as FirestoreUser);
         users.push(user);
       });
 
@@ -212,33 +243,45 @@ class AdminService {
     }
   }
 
-  private convertToUserDetails(user: any): UserDetails {
+  private convertToUserDetails(user: FirestoreUser): UserDetails {
     let adminNotes: AdminNote[] = [];
     if (user.adminNotes) {
       if (Array.isArray(user.adminNotes)) {
-        adminNotes = user.adminNotes.map((note: any) => ({
+        adminNotes = user.adminNotes.map((note: FirestoreAdminNote) => ({
           ...note,
           timestamp: note.timestamp instanceof Timestamp ? note.timestamp.toDate() : new Date(note.timestamp)
         }));
       } else if (typeof user.adminNotes === 'string') {
         try {
-          adminNotes = JSON.parse(user.adminNotes);
-        } catch {
+          // Attempt to parse the string, assuming it's a JSON array of notes
+          const parsedNotes: FirestoreAdminNote[] = JSON.parse(user.adminNotes);
+          adminNotes = parsedNotes.map(note => ({
+            ...note,
+            timestamp: typeof note.timestamp === 'string' ? new Date(note.timestamp) : (note.timestamp as Timestamp).toDate(),
+          }));
+        } catch (e) {
+          // If parsing fails, treat it as an empty array
+          console.warn(`Could not parse adminNotes for user ${user.id}`, e);
           adminNotes = [];
         }
       }
     }
+    const createdAtDate = user.createdAt instanceof Timestamp ? user.createdAt.toDate() : new Date(user.createdAt);
+    const updatedAtDate = user.updatedAt ? (user.updatedAt instanceof Timestamp ? user.updatedAt.toDate() : new Date(user.updatedAt)) : createdAtDate;
+    const registrationDate = user.registrationDate ? (user.registrationDate instanceof Timestamp ? user.registrationDate.toDate() : new Date(user.registrationDate)) : createdAtDate;
+    const lastLoginDate = user.lastLoginDate ? (user.lastLoginDate instanceof Timestamp ? user.lastLoginDate.toDate() : new Date(user.lastLoginDate)) : createdAtDate;
+
     return {
       uid: user.id,
       email: user.email,
       displayName: user.displayName,
       role: user.role || user.userType || 'user',
       isEmailVerified: user.isEmailVerified ?? true,
-      createdAt: user.createdAt instanceof Timestamp ? user.createdAt.toDate() : new Date(user.createdAt),
-      updatedAt: user.updatedAt instanceof Timestamp ? user.updatedAt.toDate() : new Date(user.updatedAt || user.createdAt),
+      createdAt: createdAtDate,
+      updatedAt: updatedAtDate,
       profile: user.profile || {},
-      registrationDate: user.registrationDate instanceof Timestamp ? user.registrationDate.toDate() : new Date(user.registrationDate || user.createdAt),
-      lastLoginDate: user.lastLoginDate instanceof Timestamp ? user.lastLoginDate.toDate() : new Date(user.lastLoginDate || user.createdAt),
+      registrationDate: registrationDate,
+      lastLoginDate: lastLoginDate,
       accountStatus: user.accountStatus || 'active',
       verificationLevel: user.verificationLevel || 'email',
       reviewCount: user.reviewCount || 0,
@@ -254,7 +297,7 @@ class AdminService {
       if (!userSnap.exists()) {
         throw new Error('User not found');
       }
-      return this.convertToUserDetails({ ...userSnap.data(), id: userSnap.id });
+      return this.convertToUserDetails({ ...userSnap.data(), id: userSnap.id } as FirestoreUser);
     } catch (error) {
       console.error('Error fetching user details:', error);
       throw error;

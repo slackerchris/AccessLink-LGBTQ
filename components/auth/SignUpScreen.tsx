@@ -3,21 +3,21 @@
  * User registration form with role selection
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Switch
+  Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
+import { useSignUp } from '../../hooks/useSignUp';
 import { useTheme } from '../../hooks/useTheme';
 
 interface SignUpScreenProps {
@@ -25,286 +25,163 @@ interface SignUpScreenProps {
   onSignUpSuccess: () => void;
 }
 
-export const SignUpScreen: React.FC<SignUpScreenProps> = ({
-  onNavigateToLogin,
-  onSignUpSuccess
-}) => {
-  const { colors } = useTheme();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    displayName: '',
-    firstName: '',
-    lastName: '',
-    phoneNumber: '',
-    location: '',
-    isBusinessOwner: false,
-    agreeToTerms: false
-  });
+// Memoized Sub-components
+const Header: React.FC = React.memo(() => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <Text style={styles.title}>🏳️‍🌈 Join AccessLink!</Text>
+      <Text style={styles.subtitle}>Create your account to get started</Text>
+    </View>
+  );
+});
 
-  const { loading, register, loginWithGoogle, error } = useFirebaseAuth();
+const SignUpForm: React.FC<{
+  formData: any;
+  loading: boolean;
+  authError: string | null;
+  updateFormData: (field: string, value: any) => void;
+  handleSignUp: () => void;
+  handleGoogleSignUp: () => void;
+}> = React.memo(({ formData, loading, authError, updateFormData, handleSignUp, handleGoogleSignUp }) => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
 
-  const updateFormData = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const renderInput = (field: string, placeholder: string, options: any = {}) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{placeholder} *</Text>
+      <TextInput
+        style={styles.input}
+        value={formData[field]}
+        onChangeText={(value) => updateFormData(field, value)}
+        placeholder={placeholder}
+        editable={!loading}
+        placeholderTextColor={colors.textSecondary}
+        {...options}
+      />
+    </View>
+  );
 
-  const validateForm = (): string | null => {
-    if (!formData.email.trim()) return 'Email is required';
-    if (!formData.password) return 'Password is required';
-    if (formData.password.length < 6) return 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
-    if (!formData.displayName.trim()) return 'Display name is required';
-    if (!formData.firstName.trim()) return 'First name is required';
-    if (!formData.agreeToTerms) return 'You must agree to the terms of service';
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) return 'Please enter a valid email address';
-    
-    return null;
-  };
+  return (
+    <View style={styles.form}>
+      {renderInput('email', 'Email Address', { keyboardType: 'email-address', autoCapitalize: 'none' })}
+      {renderInput('displayName', 'Display Name', { autoCapitalize: 'words' })}
+      <View style={styles.row}>
+        <View style={[styles.inputGroup, styles.halfWidth]}>
+          {renderInput('firstName', 'First Name', { autoCapitalize: 'words' })}
+        </View>
+        <View style={[styles.inputGroup, styles.halfWidth, styles.marginLeft]}>
+          {renderInput('lastName', 'Last Name', { autoCapitalize: 'words' })}
+        </View>
+      </View>
+      {renderInput('phoneNumber', 'Phone Number', { keyboardType: 'phone-pad' })}
+      {renderInput('location', 'Location', { autoCapitalize: 'words' })}
+      {renderInput('password', 'Password', { secureTextEntry: true, autoCapitalize: 'none' })}
+      {renderInput('confirmPassword', 'Confirm Password', { secureTextEntry: true, autoCapitalize: 'none' })}
 
-  const handleSignUp = async () => {
-    const validationError = validateForm();
-    if (validationError) {
-      Alert.alert('Validation Error', validationError);
-      return;
-    }
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>I'm a business owner</Text>
+        <Switch
+          value={formData.isBusinessOwner}
+          onValueChange={(value) => updateFormData('isBusinessOwner', value)}
+          disabled={loading}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={colors.card}
+        />
+      </View>
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>I agree to the Terms of Service *</Text>
+        <Switch
+          value={formData.agreeToTerms}
+          onValueChange={(value) => updateFormData('agreeToTerms', value)}
+          disabled={loading}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={colors.card}
+        />
+      </View>
 
-    try {
-      const role = formData.isBusinessOwner ? 'business_owner' : 'user';
+      {authError && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{authError}</Text>
+        </View>
+      )}
 
-      await register(
-        formData.email.trim(),
-        formData.password,
-        formData.displayName.trim(),
-        role
-      );
+      <TouchableOpacity
+        style={[styles.signUpButton, loading && styles.disabledButton]}
+        onPress={handleSignUp}
+        disabled={loading}
+      >
+        {loading ? <ActivityIndicator color={colors.headerText} /> : <Text style={styles.signUpButtonText}>Create Account</Text>}
+      </TouchableOpacity>
 
-      Alert.alert(
-        'Registration Successful!',
-        'Please check your email to verify your account. You can start using the app right away.',
-        [{ text: 'OK', onPress: onSignUpSuccess }]
-      );
-    } catch (err: any) {
-      Alert.alert('Registration Failed', err.message || 'An error occurred during registration');
-    }
-  };
+      <View style={styles.divider}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>or</Text>
+        <View style={styles.dividerLine} />
+      </View>
 
-  const handleGoogleSignUp = async () => {
-    try {
-      await loginWithGoogle();
-      // User will be redirected based on their account type
-      Alert.alert(
-        'Welcome!',
-        'Your account has been set up successfully with Google. You can complete your profile anytime.',
-        [{ text: 'OK', onPress: onSignUpSuccess }]
-      );
-    } catch (error: any) {
-      console.error('Google sign-up error:', error);
-      Alert.alert('Google Sign-Up Failed', error.message || 'Failed to sign up with Google');
-    }
-  };
+      <TouchableOpacity
+        style={[styles.googleButton, loading && styles.disabledButton]}
+        onPress={handleGoogleSignUp}
+        disabled={loading}
+      >
+        <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.googleIcon} />
+        <Text style={styles.googleButtonText}>Continue with Google</Text>
+      </TouchableOpacity>
+    </View>
+  );
+});
 
-  const clearForm = () => {
-    setFormData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      displayName: '',
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
-      location: '',
-      isBusinessOwner: false,
-      agreeToTerms: false
-    });
+const Footer: React.FC<{ onSignIn: () => void; loading: boolean }> = React.memo(({ onSignIn, loading }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.footer}>
+      <Text style={styles.footerText}>Already have an account?</Text>
+      <TouchableOpacity onPress={onSignIn} disabled={loading}>
+        <Text style={styles.loginText}>Sign In</Text>
+      </TouchableOpacity>
+    </View>
+  );
+});
+
+// Main Component
+export const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNavigateToLogin, onSignUpSuccess }) => {
+  const { formData, loading, authError, updateFormData, handleSignUp, handleGoogleSignUp, clearForm } = useSignUp(onSignUpSuccess);
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+
+  const handleNavigateLogin = () => {
+    clearForm();
+    onNavigateToLogin();
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Text style={styles.title}>🏳️‍🌈 Join AccessLink!</Text>
-          <Text style={styles.subtitle}>Create your account to get started</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.email}
-              onChangeText={(value) => updateFormData('email', value)}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Display Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.displayName}
-              onChangeText={(value) => updateFormData('displayName', value)}
-              placeholder="How you'd like to be known"
-              autoCapitalize="words"
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.label}>First Name *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.firstName}
-                onChangeText={(value) => updateFormData('firstName', value)}
-                placeholder="First name"
-                autoCapitalize="words"
-                editable={!loading}
-              />
-            </View>
-            <View style={[styles.inputGroup, styles.halfWidth, styles.marginLeft]}>
-              <Text style={styles.label}>Last Name</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.lastName}
-                onChangeText={(value) => updateFormData('lastName', value)}
-                placeholder="Last name"
-                autoCapitalize="words"
-                editable={!loading}
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.phoneNumber}
-              onChangeText={(value) => updateFormData('phoneNumber', value)}
-              placeholder="Your phone number"
-              keyboardType="phone-pad"
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Location</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.location}
-              onChangeText={(value) => updateFormData('location', value)}
-              placeholder="City, State"
-              autoCapitalize="words"
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.password}
-              onChangeText={(value) => updateFormData('password', value)}
-              placeholder="Create a password (min 6 characters)"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm Password *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.confirmPassword}
-              onChangeText={(value) => updateFormData('confirmPassword', value)}
-              placeholder="Confirm your password"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>I'm a business owner</Text>
-            <Switch
-              value={formData.isBusinessOwner}
-              onValueChange={(value) => updateFormData('isBusinessOwner', value)}
-              disabled={loading}
-            />
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>I agree to the Terms of Service *</Text>
-            <Switch
-              value={formData.agreeToTerms}
-              onValueChange={(value) => updateFormData('agreeToTerms', value)}
-              disabled={loading}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.signUpButton, loading && styles.disabledButton]}
-            onPress={handleSignUp}
-            disabled={loading}
-          >
-            <Text style={styles.signUpButtonText}>
-              {loading ? 'Creating Account...' : 'Create Account'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Google Sign-Up Button */}
-          <TouchableOpacity
-            style={[styles.googleButton, loading && styles.disabledButton]}
-            onPress={handleGoogleSignUp}
-            disabled={loading}
-          >
-            <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.googleIcon} />
-            <Text style={styles.googleButtonText}>
-              {loading ? 'Signing Up...' : 'Continue with Google'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account?</Text>
-          <TouchableOpacity
-            onPress={() => {
-              clearForm();
-              onNavigateToLogin();
-            }}
-            disabled={loading}
-          >
-            <Text style={styles.loginText}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
+        <Header />
+        <SignUpForm
+          formData={formData}
+          loading={loading}
+          authError={authError}
+          updateFormData={updateFormData}
+          handleSignUp={handleSignUp}
+          handleGoogleSignUp={handleGoogleSignUp}
+        />
+        <Footer onSignIn={handleNavigateLogin} loading={loading} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -312,34 +189,31 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40, // Increased for mobile
-    marginTop: 30, // Increased for safe area
+    marginBottom: 40,
+    marginTop: 30,
   },
   title: {
-    fontSize: 32, // Larger for mobile impact
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12, // Increased spacing
+    color: colors.text,
+    marginBottom: 12,
     textAlign: 'center',
     lineHeight: 40,
   },
   subtitle: {
-    fontSize: 18, // Larger for mobile readability
-    color: '#666',
+    fontSize: 18,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 10,
   },
   form: {
-    backgroundColor: 'white',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
@@ -359,16 +233,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
+    color: colors.text,
   },
   switchRow: {
     flexDirection: 'row',
@@ -379,33 +254,35 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     flex: 1,
     marginRight: 12,
   },
   errorContainer: {
-    backgroundColor: '#fee',
+    backgroundColor: colors.notification + '20',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    borderColor: colors.notification,
+    borderWidth: 1,
   },
   errorText: {
-    color: '#d32f2f',
+    color: colors.notification,
     fontSize: 14,
     textAlign: 'center',
   },
   signUpButton: {
-    backgroundColor: '#6c5ce7',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
   },
   disabledButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: colors.textSecondary,
   },
   signUpButtonText: {
-    color: 'white',
+    color: colors.headerText,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -416,12 +293,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   footerText: {
-    color: '#666',
+    color: colors.textSecondary,
     fontSize: 14,
     marginRight: 8,
   },
   loginText: {
-    color: '#6c5ce7',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -429,9 +306,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#dadce0',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -442,7 +319,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   googleButtonText: {
-    color: '#3c4043',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -454,11 +331,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#dadce0',
+    backgroundColor: colors.border,
   },
   dividerText: {
     marginHorizontal: 16,
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
 });

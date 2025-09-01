@@ -1,4 +1,3 @@
-
 /**
  * React Hooks for Business Management (Firebase Version)
  * Custom hooks for managing business listings and reviews with real Firebase data
@@ -7,71 +6,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useFirebaseAuth';
-import { getFirestore, collection, query, where, limit, getDocs, DocumentData, updateDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, limit, getDocs, DocumentData, updateDoc, doc, FieldValue } from 'firebase/firestore';
 import firebaseApp from '../services/firebase';
+import { BusinessCategory as ServiceBusinessCategory } from '../services/businessService';
+import { BusinessListing } from '../types/business';
 
-export interface BusinessListing {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  location: {
-    address: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    coordinates?: {
-      latitude: number;
-      longitude: number;
-    };
-  };
-  contact?: {
-    phone?: string;
-    email?: string;
-    website?: string;
-    socialMedia?: {
-      facebook?: string;
-      instagram?: string;
-      twitter?: string;
-      linkedin?: string;
-    };
-  };
-  hours?: {
-    [key: string]: {
-      open: string;
-      close: string;
-      closed: boolean;
-    };
-  };
-  lgbtqFriendly?: {
-    verified: boolean;
-    certifications: string[];
-    inclusivityFeatures: string[];
-  };
-  accessibility?: {
-    wheelchairAccessible: boolean;
-    brailleMenus: boolean;
-    signLanguageSupport: boolean;
-    quietSpaces: boolean;
-    accessibilityNotes: string;
-  };
-  ownerId?: string;
-  status?: 'pending' | 'approved' | 'rejected' | 'suspended';
-  featured?: boolean;
-  images?: string[];
-  tags?: string[];
-  averageRating: number;
-  totalReviews?: number;
-  createdAt?: any;
-  updatedAt?: any;
-}
+export type TimestampField = Date | FieldValue;
 
 export type BusinessFilters = {
   category?: string;
   // Add other filters as needed
 };
 
-export type BusinessCategory = string;
+export type BusinessCategory = ServiceBusinessCategory;
 
 // Hook for business listings with pagination and filtering
 
@@ -100,8 +47,8 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
       });
       setBusinesses(result);
       setHasMore(result.length === pageLimit);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
       console.error('Error loading businesses:', err);
     } finally {
       setLoading(false);
@@ -148,8 +95,8 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
         });
         setBusinesses(result);
         setHasMore(result.length === pageLimit);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
       }
     },
     filterByCategory: async (categoryValue: BusinessCategory) => {
@@ -169,8 +116,8 @@ export const useBusinesses = (filters: BusinessFilters = {}, pageLimit: number =
         });
         setBusinesses(result);
         setHasMore(result.length === pageLimit);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
       }
     }
   };
@@ -199,8 +146,8 @@ export const usePendingBusinesses = () => {
         } as BusinessListing;
       });
       setBusinesses(result);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
       console.error('Error loading pending businesses:', err);
     } finally {
       setLoading(false);
@@ -233,9 +180,10 @@ export const useBusinessActions = () => {
     try {
       const businessRef = doc(db, 'businesses', businessId);
       await updateDoc(businessRef, { status: 'approved' });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error approving business:', error);
-      throw error;
+      if (error instanceof Error) throw error;
+      throw new Error('An unknown error occurred while approving the business');
     } finally {
       setLoading(false);
     }
@@ -249,9 +197,10 @@ export const useBusinessActions = () => {
     try {
       const businessRef = doc(db, 'businesses', businessId);
       await updateDoc(businessRef, { status: 'rejected' });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error rejecting business:', error);
-      throw error;
+      if (error instanceof Error) throw error;
+      throw new Error('An unknown error occurred while rejecting the business');
     } finally {
       setLoading(false);
     }

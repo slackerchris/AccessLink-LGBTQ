@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,256 +10,235 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth as useFirebaseAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
+import { useBusinessPortal } from '../../hooks/useBusinessPortal';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
 import { useTheme } from '../../hooks/useTheme';
+import { User } from 'firebase/auth';
+import { BusinessListing } from '../../types/business';
+
+type BusinessPortalScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Portal'>;
 
 interface BusinessPortalScreenProps {
-  navigation: any;
+  navigation: BusinessPortalScreenNavigationProp;
 }
 
-export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navigation }) => {
-  const { user, logout } = useFirebaseAuth();
-  const { getMyBusinesses } = useBusinessActions();
-  const { theme, toggleTheme, colors } = useTheme();
-  const [business, setBusiness] = useState<any>(null);
+// --- Memoized Sub-components ---
 
-  useEffect(() => {
-    loadBusiness();
-  }, []);
+const Header: React.FC<{ firstName: string }> = React.memo(({ firstName }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <Text style={styles.headerTitle}>Business Portal</Text>
+      <Text style={styles.headerSubtitle}>
+        Welcome back, {firstName}! Manage your business and settings
+      </Text>
+    </View>
+  );
+});
 
-  const loadBusiness = async () => {
-    try {
-      const businesses = await getMyBusinesses();
-      if (businesses.length > 0) {
-        setBusiness(businesses[0]);
-      }
-    } catch (error) {
-      console.error('Error loading business:', error);
+type PortalCardVariant = 'primary' | 'info' | 'success' | 'warning' | 'notification';
+
+interface PortalCardProps {
+  title: string;
+  subtitle: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  variant: PortalCardVariant;
+  onPress: () => void;
+}
+
+const PortalCard: React.FC<PortalCardProps> = React.memo(({ title, subtitle, icon, variant, onPress }) => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+
+  const getVariantColors = () => {
+    switch (variant) {
+      case 'primary':
+        return { iconColor: colors.primary, backgroundColor: colors.primaryMuted };
+      case 'info':
+        return { iconColor: colors.info, backgroundColor: colors.infoMuted };
+      case 'success':
+        return { iconColor: colors.success, backgroundColor: colors.successMuted };
+      case 'warning':
+        return { iconColor: colors.warning, backgroundColor: colors.warningMuted };
+      case 'notification':
+        return { iconColor: colors.notification, backgroundColor: colors.notificationMuted };
+      default:
+        return { iconColor: colors.text, backgroundColor: colors.surface };
     }
   };
 
-  const handleSignOut = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-            } catch (error: any) {
-              Alert.alert('Sign Out Error', error.message);
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const firstName = user?.displayName?.split(' ')[0] || 'Business Owner';
+  const { iconColor, backgroundColor } = getVariantColors();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.header }]}>
-        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Business Portal</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.headerText }]}>
-          Welcome back, {firstName}! Manage your business and settings
-        </Text>
+    <TouchableOpacity
+      style={styles.portalCard}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={subtitle}
+    >
+      <View style={[styles.portalIconContainer, { backgroundColor }]}>
+        <Ionicons name={icon} size={28} color={iconColor} />
       </View>
+      <Text style={styles.portalCardTitle}>{title}</Text>
+      <Text style={styles.portalCardSubtitle}>{subtitle}</Text>
+    </TouchableOpacity>
+  );
+});
 
-      <ScrollView style={[styles.content, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
+const ThemeToggleCard: React.FC<{
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}> = React.memo(({ theme, toggleTheme }) => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  const isDark = theme === 'dark';
+  return (
+    <View
+      style={styles.portalCard}
+      accessibilityRole="switch"
+      accessibilityLabel="Theme toggle"
+      accessibilityHint={`Currently in ${theme} mode. Toggle to switch.`}
+    >
+      <View style={[styles.portalIconContainer, { backgroundColor: isDark ? colors.surface : colors.warningMuted }]}>
+        <Ionicons name={isDark ? 'moon' : 'sunny'} size={28} color={colors.warning} />
+      </View>
+      <Text style={styles.portalCardTitle}>Theme</Text>
+      <View style={styles.themeToggleContainer}>
+        <Text style={styles.themeToggleLabel}>{isDark ? 'Dark' : 'Light'} Mode</Text>
+        <Switch
+          value={isDark}
+          onValueChange={toggleTheme}
+          trackColor={{ false: '#e5e7eb', true: colors.primary }}
+          thumbColor="#ffffff"
+          ios_backgroundColor="#e5e7eb"
+        />
+      </View>
+    </View>
+  );
+});
+
+const AccountInfo: React.FC<{
+  user: User | null;
+  business: BusinessListing | null;
+  businessLoading: boolean;
+}> = React.memo(({ user, business, businessLoading }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.accountInfo}>
+      <Text style={styles.accountTitle}>Business Account</Text>
+      <View style={styles.accountCard}>
+        <View style={styles.accountRow}>
+          <Text style={styles.accountLabel}>Email</Text>
+          <Text style={styles.accountValue}>{user?.email}</Text>
+        </View>
+        <View style={styles.accountRow}>
+          <Text style={styles.accountLabel}>Account Type</Text>
+          <Text style={styles.accountValue}>Business Owner</Text>
+        </View>
+        <View style={[styles.accountRow, { borderBottomWidth: 0 }]}>
+          <Text style={styles.accountLabel}>Business Name</Text>
+          <Text style={styles.accountValue}>
+            {businessLoading ? 'Loading...' : business?.name || 'Not Set'}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+});
+
+// --- Main Component ---
+
+export const BusinessPortalScreen: React.FC<BusinessPortalScreenProps> = ({ navigation }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const {
+    user,
+    business,
+    businessLoading,
+    firstName,
+    theme,
+    toggleTheme,
+    handleSignOut,
+  } = useBusinessPortal();
+
+  const portalActions: { title: string; subtitle: string; icon: any; screen: string; variant: PortalCardVariant }[] = [
+    { title: 'Business Profiles', subtitle: 'Manage your businesses', icon: 'business', variant: 'primary', screen: 'BusinessProfilesList' },
+    { title: 'Services', subtitle: 'Manage offerings', icon: 'list', variant: 'info', screen: 'ServicesManagement' },
+    { title: 'Reviews', subtitle: 'Customer feedback', icon: 'star', variant: 'warning', screen: 'Reviews' },
+    { title: 'Media Gallery', subtitle: 'Photos & videos', icon: 'images', variant: 'warning', screen: 'MediaGallery' },
+    { title: 'Add Business', subtitle: 'Register new location', icon: 'add-circle', variant: 'info', screen: 'AddBusiness' },
+    { title: 'Events', subtitle: 'Manage events', icon: 'calendar', variant: 'success', screen: 'EventsManagement' },
+  ];
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Header firstName={firstName} />
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.portalGrid}>
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('BusinessProfilesList')}
-            accessibilityRole="button"
-            accessibilityLabel="Manage Business Profiles"
-            accessibilityHint="View and edit your business profiles"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#ede9fe' }]}>
-              <Ionicons name="business" size={28} color="#8b5cf6" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Business Profiles</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Manage your businesses</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('ServicesManagement')}
-            accessibilityRole="button"
-            accessibilityLabel="Manage Services"
-            accessibilityHint="Add, edit, or remove your business services"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#dbeafe' }]}>
-              <Ionicons name="list" size={28} color="#3b82f6" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Services</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Manage offerings</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('Reviews')}
-            accessibilityRole="button"
-            accessibilityLabel="Manage Reviews"
-            accessibilityHint="View and manage customer reviews"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#fef2e5' }]}>
-              <Ionicons name="star" size={28} color="#f59e0b" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Reviews</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Customer feedback</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('MediaGallery')}
-            accessibilityRole="button"
-            accessibilityLabel="Media Gallery"
-            accessibilityHint="Manage photos and media for your business"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#fef3c7' }]}>
-              <Ionicons name="images" size={28} color="#f59e0b" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Media Gallery</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Photos & videos</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('AddBusiness')}
-            accessibilityRole="button"
-            accessibilityLabel="Add New Business"
-            accessibilityHint="Register another business to your account"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#e0f2fe' }]}>
-              <Ionicons name="add-circle" size={28} color="#0284c7" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Add Business</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Register new location</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('EventsManagement')}
-            accessibilityRole="button"
-            accessibilityLabel="Events Management"
-            accessibilityHint="Create and manage business events"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="calendar" size={28} color="#10b981" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Events</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Manage events</Text>
-          </TouchableOpacity>
-
-          {/* Theme Toggle Card */}
-          <View
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            accessibilityRole="switch"
-            accessibilityLabel="Theme toggle"
-            accessibilityHint={`Currently in ${theme} mode. Toggle to switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: theme === 'light' ? '#fef3c7' : '#374151' }]}>
-              <Ionicons 
-                name={theme === 'light' ? 'sunny' : 'moon'} 
-                size={28} 
-                color={theme === 'light' ? '#f59e0b' : '#fbbf24'} 
-              />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Theme</Text>
-            <View style={styles.themeToggleContainer}>
-              <Text style={[styles.themeToggleLabel, { color: colors.textSecondary }]}>
-                {theme === 'light' ? 'Light' : 'Dark'} Mode
-              </Text>
-              <Switch
-                value={theme === 'dark'}
-                onValueChange={toggleTheme}
-                trackColor={{ false: '#e5e7eb', true: colors.primary }}
-                thumbColor="#ffffff"
-                ios_backgroundColor="#e5e7eb"
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+          {portalActions.map(action => (
+            <PortalCard
+              key={action.screen}
+              title={action.title}
+              subtitle={action.subtitle}
+              icon={action.icon}
+              variant={action.variant}
+              onPress={() => navigation.navigate(action.screen as any)}
+            />
+          ))}
+          <ThemeToggleCard theme={theme} toggleTheme={toggleTheme} />
+          <PortalCard
+            title="Support"
+            subtitle="Get help"
+            icon="help-circle"
+            variant="notification"
             onPress={() => Alert.alert('Support', 'Contact: support@accesslinklgbtq.app')}
-            accessibilityRole="button"
-            accessibilityLabel="Support"
-            accessibilityHint="Get help with your business account"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#fed7d7' }]}>
-              <Ionicons name="help-circle" size={28} color="#f56565" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Support</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Get help</Text>
-          </TouchableOpacity>
-
+          />
         </View>
 
-        {/* Sign Out Button - Separate from main grid */}
         <View style={styles.signOutSection}>
-          <TouchableOpacity
-            style={[styles.portalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+          <PortalCard
+            title="Sign Out"
+            subtitle="Logout from app"
+            icon="log-out"
+            variant="notification"
             onPress={handleSignOut}
-            accessibilityRole="button"
-            accessibilityLabel="Sign Out"
-            accessibilityHint="Sign out of your business account"
-          >
-            <View style={[styles.portalIconContainer, { backgroundColor: '#fed7d7' }]}>
-              <Ionicons name="log-out" size={28} color="#ef4444" />
-            </View>
-            <Text style={[styles.portalCardTitle, { color: colors.text }]}>Sign Out</Text>
-            <Text style={[styles.portalCardSubtitle, { color: colors.textSecondary }]}>Logout from app</Text>
-          </TouchableOpacity>
+          />
         </View>
 
-        <View style={styles.accountInfo}>
-          <Text style={[styles.accountTitle, { color: colors.text }]}>Business Account</Text>
-          <View style={[styles.accountCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={[styles.accountRow, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.accountLabel, { color: colors.textSecondary }]}>Email</Text>
-              <Text style={[styles.accountValue, { color: colors.text }]}>{user?.email}</Text>
-            </View>
-            <View style={[styles.accountRow, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.accountLabel, { color: colors.textSecondary }]}>Account Type</Text>
-              <Text style={[styles.accountValue, { color: colors.text }]}>Business Owner</Text>
-            </View>
-            <View style={styles.accountRow}>
-              <Text style={[styles.accountLabel, { color: colors.textSecondary }]}>Business Name</Text>
-              <Text style={[styles.accountValue, { color: colors.text }]}>
-                {business?.name || 'Not Set'}
-              </Text>
-            </View>
-          </View>
-        </View>
+        <AccountInfo user={user} business={business} businessLoading={businessLoading} />
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = (colors: any, shadows: any) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   header: {
     paddingTop: 20,
     paddingBottom: 24,
     paddingHorizontal: 20,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 4,
+    color: colors.text,
   },
   headerSubtitle: {
     fontSize: 16,
     lineHeight: 22,
-    opacity: 0.9,
+    color: colors.textSecondary,
   },
   content: {
     flex: 1,
@@ -278,16 +257,14 @@ const styles = StyleSheet.create({
   portalCard: {
     borderRadius: 16,
     padding: 20,
-    flexBasis: '31%',
-    minHeight: 120,
+    width: '48%',
+    minHeight: 180,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: colors.card,
+    ...shadows.medium,
     borderWidth: 1,
+    borderColor: colors.border,
     marginBottom: 16,
   },
   portalIconContainer: {
@@ -304,11 +281,13 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     textAlign: 'center',
     lineHeight: 20,
+    color: colors.text,
   },
   portalCardSubtitle: {
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 18,
+    color: colors.textSecondary,
   },
   accountInfo: {
     marginTop: 16,
@@ -317,16 +296,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
+    color: colors.text,
   },
   accountCard: {
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: colors.card,
+    ...shadows.small,
     borderWidth: 1,
+    borderColor: colors.border,
   },
   accountRow: {
     flexDirection: 'row',
@@ -334,16 +312,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   accountLabel: {
     fontSize: 14,
     fontWeight: '500',
+    color: colors.textSecondary,
   },
   accountValue: {
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
     textAlign: 'right',
+    color: colors.text,
   },
   themeToggleContainer: {
     alignItems: 'center',
@@ -354,5 +335,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 8,
     textAlign: 'center',
+    color: colors.textSecondary,
   },
 });

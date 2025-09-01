@@ -252,10 +252,14 @@ export async function uploadBusinessPhoto(
   return result;
 }
 
+export async function deleteBusinessPhoto(downloadURL: string): Promise<boolean> {
+  return deletePhoto(downloadURL);
+}
+
 /**
- * Remove business photo from gallery
+ * Remove business photo from gallery and Firestore
  */
-export async function removeBusinessPhoto(
+export async function removeBusinessPhotoFromFirestore(
   businessId: string,
   downloadURL: string
 ): Promise<boolean> {
@@ -294,6 +298,7 @@ export const photoUploadService = {
   deletePhoto,
   uploadUserProfilePhoto,
   uploadBusinessPhoto,
-  removeBusinessPhoto,
+  deleteBusinessPhoto,
+  removeBusinessPhotoFromFirestore,
   generateFileName
 };

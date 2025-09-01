@@ -31,6 +31,9 @@ import {
   BusinessByLocation,
   FeaturedBusiness
 } from './properBusinessService';
+import { ServiceItem } from '../types/service';
+import { Review, BusinessResponse } from '../types/review';
+import { BusinessEvent } from '../types/event';
 
 // Import our new services
 import { dataValidation } from './dataValidationService';
@@ -476,6 +479,302 @@ class EnhancedBusinessService {
 
     // Commit all changes
     await batch.commit();
+  }
+
+  /**
+   * Get all services for a business
+   */
+  public async getServices(businessId: string): Promise<DbResult<ServiceItem[]>> {
+    const cacheKey = `services_${businessId}`;
+    try {
+      const cached = businessCache.get<ServiceItem[]>(cacheKey);
+      if (cached) {
+        return { success: true, data: cached };
+      }
+
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const servicesCol = collection(db, this.businessCollection, businessId, 'services');
+        const snapshot = await getDocs(servicesCol);
+        const services = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        })) as ServiceItem[];
+        
+        businessCache.set(cacheKey, services);
+        return services;
+      });
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Add a new service to a business
+   */
+  public async addService(businessId: string, serviceData: Omit<ServiceItem, 'id'>): Promise<DbResult<string>> {
+    try {
+      // TODO: Add validation for service data
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const servicesCol = collection(db, this.businessCollection, businessId, 'services');
+        const docRef = await addDoc(servicesCol, serviceData);
+        return docRef.id;
+      });
+
+      if (result.success) {
+        businessCache.delete(`services_${businessId}`);
+      }
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Update an existing service for a business
+   */
+  public async updateService(businessId: string, serviceId: string, updates: Partial<ServiceItem>): Promise<DbResult<void>> {
+    try {
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const serviceRef = doc(db, this.businessCollection, businessId, 'services', serviceId);
+        await updateDoc(serviceRef, updates);
+      });
+
+      if (result.success) {
+        businessCache.delete(`services_${businessId}`);
+      }
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Delete a service from a business
+   */
+  public async deleteService(businessId: string, serviceId: string): Promise<DbResult<void>> {
+    try {
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const serviceRef = doc(db, this.businessCollection, businessId, 'services', serviceId);
+        await deleteDoc(serviceRef);
+      });
+
+      if (result.success) {
+        businessCache.delete(`services_${businessId}`);
+      }
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Get all reviews for a business with responses
+   */
+  public async getBusinessReviews(businessId: string, count: number = 100): Promise<DbResult<Review[]>> {
+    const cacheKey = `reviews_${businessId}_${count}`;
+    try {
+      const cached = businessCache.get<Review[]>(cacheKey);
+      if (cached) {
+        return { success: true, data: cached };
+      }
+
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const reviewsCol = collection(db, 'reviews');
+        const q = query(reviewsCol, where('businessId', '==', businessId), orderBy('createdAt', 'desc'), limit(count));
+        const snapshot = await getDocs(q);
+        
+        const reviews = await Promise.all(snapshot.docs.map(async (docSnap) => {
+          const reviewData = { id: docSnap.id, ...docSnap.data() } as Review;
+          
+          // Fetch the business response for each review
+          const responseResult = await this.getBusinessResponseByReviewId(reviewData.id);
+          if (responseResult.success && responseResult.data) {
+            reviewData.businessResponse = responseResult.data;
+          }
+          
+          return reviewData;
+        }));
+
+        businessCache.set(cacheKey, reviews);
+        return reviews;
+      });
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Get a business response by review ID
+   */
+  public async getBusinessResponseByReviewId(reviewId: string): Promise<DbResult<BusinessResponse | null>> {
+    try {
+      return await databaseResilience.executeWithRetry(async () => {
+        const responsesCol = collection(db, 'business_responses');
+        const q = query(responsesCol, where('reviewId', '==', reviewId), limit(1));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          return null;
+        }
+
+        return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as BusinessResponse;
+      });
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Add or update a response to a review
+   */
+  public async respondToReview(
+    reviewId: string,
+    businessId: string,
+    ownerId: string,
+    ownerName: string,
+    message: string
+  ): Promise<DbResult<string>> {
+    try {
+      return await databaseResilience.executeWithRetry(async () => {
+        const existingResponseResult = await this.getBusinessResponseByReviewId(reviewId);
+        
+        if (existingResponseResult.success && existingResponseResult.data) {
+          // Update existing response
+          const responseRef = doc(db, 'business_responses', existingResponseResult.data.id);
+          await updateDoc(responseRef, {
+            message,
+            updatedAt: serverTimestamp(),
+          });
+          return existingResponseResult.data.id;
+        } else {
+          // Add new response
+          const responseCol = collection(db, 'business_responses');
+          const newResponse: Omit<BusinessResponse, 'id'> = {
+            reviewId,
+            businessId,
+            businessOwnerId: ownerId,
+            businessOwnerName: ownerName,
+            message,
+            ...createTimestamps(),
+          };
+          const docRef = await addDoc(responseCol, newResponse);
+          return docRef.id;
+        }
+      });
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Get all events for a business
+   */
+  public async getBusinessEvents(businessId: string): Promise<DbResult<BusinessEvent[]>> {
+    const cacheKey = `events_${businessId}`;
+    try {
+      const cached = businessCache.get<BusinessEvent[]>(cacheKey);
+      if (cached) {
+        return { success: true, data: cached };
+      }
+
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const eventsCol = collection(db, this.businessCollection, businessId, 'events');
+        const snapshot = await getDocs(query(eventsCol, orderBy('date', 'desc')));
+        const events = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          businessId: businessId,
+          ...docSnap.data()
+        })) as BusinessEvent[];
+        
+        businessCache.set(cacheKey, events);
+        return events;
+      });
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Add a new event to a business
+   */
+  public async addBusinessEvent(businessId: string, eventData: Omit<BusinessEvent, 'id' | 'businessId' | 'createdAt' | 'updatedAt'>): Promise<DbResult<BusinessEvent>> {
+    try {
+      // TODO: Add validation for event data
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const eventsCol = collection(db, this.businessCollection, businessId, 'events');
+        const docRef = await addDoc(eventsCol, {
+          ...eventData,
+          ...createTimestamps(),
+        });
+        const newDocSnap = await getDoc(docRef);
+        const newEvent = {
+          id: newDocSnap.id,
+          businessId,
+          ...newDocSnap.data(),
+        } as BusinessEvent;
+        return newEvent;
+      });
+
+      if (result.success) {
+        businessCache.delete(`events_${businessId}`);
+      }
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Update an existing event for a business
+   */
+  public async updateBusinessEvent(businessId: string, eventId: string, updates: Partial<BusinessEvent>): Promise<DbResult<void>> {
+    try {
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const eventRef = doc(db, this.businessCollection, businessId, 'events', eventId);
+        await updateDoc(eventRef, {
+          ...updates,
+          ...updateTimestamp(),
+        });
+      });
+
+      if (result.success) {
+        businessCache.delete(`events_${businessId}`);
+      }
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
+  }
+
+  /**
+   * Delete an event from a business
+   */
+  public async deleteBusinessEvent(businessId: string, eventId: string): Promise<DbResult<void>> {
+    try {
+      const result = await databaseResilience.executeWithRetry(async () => {
+        const eventRef = doc(db, this.businessCollection, businessId, 'events', eventId);
+        await deleteDoc(eventRef);
+      });
+
+      if (result.success) {
+        businessCache.delete(`events_${businessId}`);
+      }
+
+      return result;
+    } catch (error) {
+      return databaseResilience.handleError(error);
+    }
   }
 }
 

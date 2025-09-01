@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "jsEngine": "hermes",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#6c5ce7"

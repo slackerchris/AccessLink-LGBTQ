@@ -1,278 +1,262 @@
-/**
- * User Home Screen
- * Main dashboard for regular users
- */
-
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
-  Image,
-  TextInput
+  TextInput,
+  ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
-import { useBusinesses } from '../../hooks/useBusiness';
-import { useTheme } from '../../hooks/useTheme';
-import { prepareForNavigation, debouncedNavigate } from '../../utils/navigationHelpers';
-import { debounce } from '../../utils/performanceUtils';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
+import { BusinessListing } from '../../types/business';
+import { useUserHome } from '../../hooks/useUserHome';
 
-interface UserHomeScreenProps {
-  navigation: any;
-}
-
-// Memoized Business Card Component for better performance
-const BusinessCard = React.memo(({ business, index, onPress, colors }: any) => (
-  <TouchableOpacity
-    key={`business-${business.id || index}`}
-    style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-    activeOpacity={0.7}
-    onPress={onPress}
-    accessibilityRole="button"
-    accessibilityLabel={`${business.name} business`}
-    accessibilityHint={`View details for ${business.name}, a ${business.category} business with ${business.averageRating.toFixed(1)} star rating`}
-  >
-    <View style={styles.businessInfo}>
-      <Text style={[styles.businessName, { color: colors.text }]} numberOfLines={1}>
-        {business.name}
-      </Text>
-      <Text style={[styles.businessCategory, { color: colors.primary }]} numberOfLines={1}>
-        {business.category}
-      </Text>
-      <Text style={[styles.businessDescription, { color: colors.textSecondary }]} numberOfLines={2}>
-        {business.description}
-      </Text>
-      <View style={styles.businessMeta}>
-        <View style={styles.ratingContainer}>
-          <Ionicons name="star" size={16} color="#fbbf24" />
-          <Text style={[styles.ratingText, { color: colors.text }]}>
-            {business.averageRating.toFixed(1)}
-          </Text>
-        </View>
-        <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>
-          {business.totalReviews || 0} reviews
-        </Text>
+const Header = React.memo(({ firstName }: { firstName: string }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <View>
+        <Text style={styles.greeting}>Welcome back,</Text>
+        <Text style={styles.userName}>{firstName}! 🏳️‍🌈</Text>
+        <Text style={styles.subtitle}>Find your community</Text>
       </View>
     </View>
-    <View style={styles.businessIcon}>
-      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-    </View>
-  </TouchableOpacity>
-));
-
-export const UserHomeScreen: React.FC<UserHomeScreenProps> = ({ navigation }) => {
-  const { userProfile } = useFirebaseAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const { colors, shadows } = useTheme();
-
-  // Memoize the filters to prevent infinite re-renders
-  const businessFilters = useMemo(() => ({}), []);
-  const { businesses } = useBusinesses(businessFilters, 6); // Get first 6 businesses
-
-  // Memoize featured businesses to prevent re-calculations
-  const featuredBusinesses = useMemo(() => businesses.slice(0, 3), [businesses]);
-
-  // Debug business data - only log when businesses actually change
-  useEffect(() => {
-    if (businesses.length > 0) {
-      console.log('Businesses data:', businesses.map((b, i) => ({ index: i, name: b.name, id: b.id })));
-    }
-  }, [businesses.length]); // Only log when count changes
-
-  // Optimized navigation handler with debouncing
-  const handleBusinessPress = useCallback((business: any, index: number) => {
-    console.log('🔥 BUSINESS CLICKED:', business.name, 'Index:', index, 'ID:', business.id);
-    try {
-      const serializedBusiness = prepareForNavigation(business);
-      console.log('🔥 Navigating to Directory -> BusinessDetails with business:', serializedBusiness.name);
-      debouncedNavigate(navigation, 'Directory', { 
-        screen: 'BusinessDetails', 
-        params: { business: serializedBusiness } 
-      });
-    } catch (error) {
-      console.error('🔥 Navigation error:', error);
-      // Fallback - try just businessId
-      debouncedNavigate(navigation, 'Directory', { 
-        screen: 'BusinessDetails', 
-        params: { businessId: business.id } 
-      });
-    }
-  }, [navigation]);
-
-  // Optimized search handler with debouncing
-  const debouncedSearch = useMemo(
-    () => debounce(() => {
-      if (searchQuery.trim()) {
-        navigation.navigate('Directory', { searchQuery: searchQuery.trim() });
-      } else {
-        navigation.navigate('Directory');
-      }
-    }, 300),
-    [searchQuery, navigation]
   );
+});
 
-  const handleSearch = useCallback(() => {
-    debouncedSearch();
-  }, [debouncedSearch]);
+const SearchBar = React.memo(({
+  searchQuery,
+  setSearchQuery,
+  handleSearch,
+}: {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleSearch: () => void;
+}) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.searchContainer}>
+      <Text style={styles.sectionTitle}>Find LGBTQ+ Friendly Businesses</Text>
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search for restaurants, cafes, services..."
+          placeholderTextColor={colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={handleSearch}
+          returnKeyType="search"
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <Text style={styles.searchButtonText}>Search</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
 
-  const firstName = userProfile?.displayName?.split(' ')[0] || 'Friend';
+const BusinessCard = React.memo(({ business, onPress }: { business: BusinessListing; onPress: () => void; }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <TouchableOpacity
+      style={styles.businessCard}
+      activeOpacity={0.7}
+      onPress={onPress}
+    >
+      <View style={styles.businessInfo}>
+        <Text style={styles.businessName} numberOfLines={1}>{business.name}</Text>
+        <Text style={styles.businessCategory} numberOfLines={1}>{business.category}</Text>
+        <Text style={styles.businessDescription} numberOfLines={2}>{business.description}</Text>
+        <View style={styles.businessMeta}>
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={16} color={colors.warning} />
+            <Text style={styles.ratingText}>{business.averageRating?.toFixed(1) || 'N/A'}</Text>
+          </View>
+          <Text style={styles.reviewCount}>{business.totalReviews || 0} reviews</Text>
+        </View>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+    </TouchableOpacity>
+  );
+});
+
+const FeaturedSection = React.memo(({
+  businesses,
+  loading,
+  error,
+  onBusinessPress,
+  onSeeAll,
+}: {
+  businesses: BusinessListing[];
+  loading: boolean;
+  error: string | null;
+  onBusinessPress: (business: BusinessListing) => void;
+  onSeeAll: () => void;
+}) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+
+  const renderContent = () => {
+    if (loading) {
+      return <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />;
+    }
+    if (error) {
+      return <Text style={styles.errorText}>{error}</Text>;
+    }
+    if (businesses.length === 0) {
+        return <Text style={styles.emptyText}>No featured businesses found.</Text>;
+    }
+    return (
+      <FlatList
+        data={businesses}
+        renderItem={({ item }) => (
+          <BusinessCard
+            business={item}
+            onPress={() => onBusinessPress(item)}
+          />
+        )}
+        keyExtractor={(item) => item.id}
+        scrollEnabled={false}
+      />
+    );
+  };
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <View style={styles.featuredContainer}>
+      <View style={styles.featuredHeader}>
+        <Text style={styles.sectionTitle}>Featured Businesses</Text>
+        <TouchableOpacity onPress={onSeeAll}>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+      </View>
+      {renderContent()}
+    </View>
+  );
+});
+
+export const UserHomeScreen: React.FC = () => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const {
+    firstName,
+    searchQuery,
+    setSearchQuery,
+    featuredBusinesses,
+    loading,
+    error,
+    handleBusinessPress,
+    handleSearch,
+    handleSeeAll,
+  } = useUserHome();
+
+  return (
+    <ScrollView
+      style={styles.container}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.header }]}>
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={[styles.greeting, { color: colors.headerText + 'CC' }]}>Welcome back,</Text>
-            <Text style={[styles.userName, { color: colors.headerText }]}>{firstName}! 🏳️‍🌈</Text>
-            <Text style={[styles.subtitle, { color: colors.headerText + 'CC' }]}>Find your community</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Find LGBTQ+ Friendly Businesses</Text>
-        <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Search for restaurants, cafes, services..."
-            placeholderTextColor={colors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
-          <TouchableOpacity 
-            style={[styles.searchButton, { backgroundColor: colors.primary }]}
-            activeOpacity={0.7}
-            onPress={handleSearch}
-          >
-            <Text style={styles.searchButtonText}>Search</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Featured Businesses */}
-      <View style={styles.featuredContainer}>
-        <View style={styles.featuredHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Featured Businesses</Text>
-          <TouchableOpacity 
-            activeOpacity={0.7}
-            onPress={(e) => {
-              e.stopPropagation();
-              navigation.navigate('Directory');
-            }}
-          >
-            <Text style={[styles.seeAllText, { color: colors.primary }]}>See All</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {featuredBusinesses.map((business, index) => (
-          <BusinessCard
-            key={`business-${business.id || index}`}
-            business={business}
-            index={index}
-            onPress={() => handleBusinessPress(business, index)}
-            colors={colors}
-          />
-        ))}
-      </View>
+      <Header firstName={firstName} />
+      <SearchBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        handleSearch={handleSearch}
+      />
+      <FeaturedSection
+        businesses={featuredBusinesses}
+        loading={loading}
+        error={error}
+        onBusinessPress={handleBusinessPress}
+        onSeeAll={handleSeeAll}
+      />
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   header: {
-    paddingTop: 60, // Safe area padding
-    paddingBottom: 30, 
+    backgroundColor: colors.header,
+    paddingTop: 60,
+    paddingBottom: 30,
     paddingHorizontal: 24,
   },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   greeting: {
-    fontSize: 18, // Increased for better mobile readability
+    fontSize: 18,
+    color: colors.headerText + 'CC',
   },
   userName: {
-    fontSize: 28, // Increased for better mobile impact
+    fontSize: 28,
     fontWeight: 'bold',
     marginTop: 4,
     lineHeight: 34,
+    color: colors.headerText,
   },
   subtitle: {
-    fontSize: 16, // Increased for better mobile readability
+    fontSize: 16,
     marginTop: 4,
-  },
-  profileButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 24, // Larger for better touch target
-    padding: 8, // Increased padding
-    minWidth: 48, // Ensure good touch target
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    color: colors.headerText + 'CC',
   },
   searchContainer: {
     padding: 24,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 18, // Increased for better touch target
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5,
-    minHeight: 60, // Increased minimum height for better touch
-    borderWidth: 1,
-  },
-  searchIcon: {
-    marginRight: 12, // Increased spacing
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 0,
-  },
-  searchButton: {
-    paddingHorizontal: 22, // Increased for better touch
-    paddingVertical: 10, // Increased for better touch
-    borderRadius: 10, // Slightly more rounded
-    marginLeft: 12, // Increased spacing
-    minHeight: 44, // Ensure minimum touch target
-  },
-  searchButtonText: {
-    color: '#fff',
-    fontSize: 16, // Increased for better readability
-    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
+    color: colors.text,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+    minHeight: 60,
+    borderWidth: 1,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
+    color: colors.text,
+  },
+  searchButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginLeft: 12,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  searchButtonText: {
+    color: colors.headerText,
+    fontSize: 16,
+    fontWeight: '600',
   },
   featuredContainer: {
-    padding: 20,
+    padding: 24,
     paddingTop: 0,
-    overflow: 'hidden',
   },
   featuredHeader: {
     flexDirection: 'row',
@@ -283,39 +267,45 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 16,
     fontWeight: '600',
+    color: colors.primary,
   },
   businessCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 18, // Increased padding for better touch
-    borderRadius: 16, // More rounded for modern feel
-    marginBottom: 12, // Increased spacing
-    shadowColor: '#000',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, // Slightly stronger shadow
+    shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 3,
-    overflow: 'hidden',
-    minHeight: 90, // Increased minimum height
+    minHeight: 90,
     borderWidth: 1,
   },
   businessInfo: {
     flex: 1,
+    marginRight: 10,
   },
   businessName: {
-    fontSize: 18, // Increased for better readability
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4, // Increased spacing
+    marginBottom: 4,
+    color: colors.text,
   },
   businessCategory: {
-    fontSize: 14, // Increased for better readability
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 6, // Increased spacing
+    marginBottom: 6,
+    color: colors.primary,
   },
   businessDescription: {
-    fontSize: 15, // Increased for better readability
-    marginBottom: 10, // Increased spacing
-    lineHeight: 22, // Better line height
+    fontSize: 15,
+    marginBottom: 10,
+    lineHeight: 22,
+    color: colors.textSecondary,
   },
   businessMeta: {
     flexDirection: 'row',
@@ -326,44 +316,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  rating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   ratingText: {
     fontSize: 14,
     marginLeft: 4,
+    color: colors.text,
   },
   reviewCount: {
     fontSize: 12,
     marginLeft: 8,
+    color: colors.textSecondary,
   },
-  businessIcon: {
-    marginLeft: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  location: {
-    fontSize: 12,
-  },
-  userBanner: {
-    backgroundColor: '#8b5cf6',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: '#7c3aed',
-  },
-  userBannerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
+  errorText: {
+    color: colors.notification,
     textAlign: 'center',
+    marginTop: 20,
   },
-  userBannerSubtext: {
-    fontSize: 16,
-    color: '#ddd6fe',
+  emptyText: {
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: 5,
+    marginTop: 20,
+    fontStyle: 'italic',
   },
 });

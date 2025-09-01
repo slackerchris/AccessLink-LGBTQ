@@ -1,132 +1,95 @@
-/**
- * Events Screen
- * Shows community events for users
- */
-
-import React, { useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../hooks/useTheme';
-import { debouncedNavigate } from '../../utils/navigationHelpers';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
+import { EventsScreenNavigationProp } from '../../types/navigation';
+import { Event } from '../../types/events';
+import { useEvents } from '../../hooks/useEvents';
 
 interface EventsScreenProps {
-  navigation: any;
+  navigation: EventsScreenNavigationProp;
 }
 
+const EventCard = React.memo(({ item, onPress }: { item: Event, onPress: () => void }) => {
+    const { colors, createStyles } = useTheme();
+    const styles = createStyles(localStyles);
+    return (
+        <TouchableOpacity
+            style={styles.eventCard}
+            onPress={onPress}
+        >
+            <View style={[styles.eventCategory, { backgroundColor: item.color || colors.primary }]}>
+                <Text style={styles.eventCategoryText}>{item.category}</Text>
+            </View>
+            <Text style={styles.eventTitle}>{item.title}</Text>
+            <View style={styles.eventDetails}>
+                <View style={styles.eventDetail}>
+                    <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                    <Text style={styles.eventDetailText}>{item.date}</Text>
+                </View>
+                <View style={styles.eventDetail}>
+                    <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                    <Text style={styles.eventDetailText}>{item.time}</Text>
+                </View>
+                <View style={styles.eventDetail}>
+                    <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+                    <Text style={styles.eventDetailText} numberOfLines={1}>{item.location}</Text>
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
+});
+
+const ListHeader = React.memo(() => {
+    const { colors, createStyles } = useTheme();
+    const styles = createStyles(localStyles);
+    return (
+        <View style={styles.header}>
+            <Text style={styles.headerTitle}>Community Events</Text>
+            <Text style={styles.headerSubtitle}>
+                Connect with your community at these upcoming events
+            </Text>
+        </View>
+    );
+});
+
+const ListFooter = React.memo(() => {
+    const { colors, createStyles } = useTheme();
+    const styles = createStyles(localStyles);
+    return (
+        <View style={styles.comingSoon}>
+            <Ionicons name="calendar" size={48} color={colors.textSecondary} />
+            <Text style={styles.comingSoonTitle}>More Events Coming Soon!</Text>
+            <Text style={styles.comingSoonText}>
+                We're working on adding more community events. Check back regularly for updates.
+            </Text>
+        </View>
+    );
+});
+
 export const EventsScreen: React.FC<EventsScreenProps> = ({ navigation }) => {
-  const { colors } = useTheme();
-  
-  // Memoized events data for better performance
-  const events = useMemo(() => [
-    {
-      id: 1,
-      title: 'Pride Month Celebration',
-      date: 'June 15, 2025',
-      time: '6:00 PM',
-      location: 'Rainbow Park',
-      category: 'Community',
-      color: '#ec4899',
-      ownerId: 'business-owner-123',
-      description: 'Celebrate Pride Month with live music, speakers, and community booths.',
-      contact: { phone: '(555) 111-2222', website: 'pride.example.org' }
-    },
-    {
-      id: 2,
-      title: 'LGBTQ+ Business Mixer',
-      date: 'July 20, 2025',
-      time: '7:00 PM',
-      location: 'Downtown Convention Center',
-      category: 'Networking',
-      color: colors.primary,
-      ownerId: 'business-owner-123',
-      description: 'Meet local LGBTQ+ entrepreneurs and allies. Snacks and refreshments provided.',
-      contact: { phone: '(555) 222-3333', website: 'mixers.example.com' }
-    },
-    {
-      id: 3,
-      title: 'Wellness Workshop',
-      date: 'August 5, 2025',
-      time: '2:00 PM',
-      location: 'Pride Health Center',
-      category: 'Health',
-      color: '#10b981',
-      ownerId: 'org-abc',
-      description: 'Mindfulness and self-care techniques to support mental wellness.',
-      contact: { phone: '(555) 333-4444', website: 'wellness.example.net' }
-    }
-  ], [colors.primary]);
-
-  // Memoized event card handler
-  const handleEventPress = useCallback((event: any) => {
-    console.log('📅 EventsScreen: Event pressed:', event.title);
-    debouncedNavigate(navigation, 'EventDetails', { event });
-  }, [navigation]);
-
-  // Memoized event card component
-  const EventCard = React.memo(({ event }: { event: any }) => (
-    <TouchableOpacity
-      key={event.id}
-      style={[styles.eventCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-      onPress={() => handleEventPress(event)}
-    >
-      <View style={[styles.eventCategory, { backgroundColor: event.color }]}>
-        <Text style={styles.eventCategoryText}>{event.category}</Text>
-      </View>
-      
-      <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
-      
-      <View style={styles.eventDetails}>
-        <View style={styles.eventDetail}>
-          <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.date}</Text>
-        </View>
-        
-        <View style={styles.eventDetail}>
-          <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.time}</Text>
-        </View>
-        
-        <View style={styles.eventDetail}>
-          <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.eventDetailText, { color: colors.textSecondary }]}>{event.location}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  ));
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const { events, handleEventPress } = useEvents();
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <FlatList
+      style={styles.container}
+      data={events}
+      renderItem={({ item }) => <EventCard item={item} onPress={() => handleEventPress(item)} />}
+      keyExtractor={(item) => item.id.toString()}
+      ListHeaderComponent={<ListHeader />}
+      ListFooterComponent={<ListFooter />}
       showsVerticalScrollIndicator={false}
-      removeClippedSubviews={true}
-    >
-      <View style={[styles.header, { backgroundColor: colors.header }]}>
-        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Community Events</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}>
-          Connect with your community at these upcoming events
-        </Text>
-      </View>
-
-      <View style={styles.content}>
-        {events.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
-
-        <View style={styles.comingSoon}>
-          <Ionicons name="calendar" size={48} color={colors.textSecondary} />
-          <Text style={[styles.comingSoonTitle, { color: colors.text }]}>More Events Coming Soon!</Text>
-          <Text style={[styles.comingSoonText, { color: colors.textSecondary }]}>
-            We're working on adding more community events. Check back regularly for updates.
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
+      contentContainerStyle={styles.content}
+    />
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   header: {
     padding: 20,
@@ -136,10 +99,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: colors.headerText,
   },
   headerSubtitle: {
     fontSize: 16,
     lineHeight: 22,
+    color: colors.headerText + 'CC',
   },
   content: {
     padding: 20,
@@ -148,7 +113,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -162,7 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   eventCategoryText: {
-    color: '#fff',
+    color: colors.headerText,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -170,6 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
+    color: colors.text,
   },
   eventDetails: {
     gap: 8,
@@ -181,6 +150,8 @@ const styles = StyleSheet.create({
   },
   eventDetailText: {
     fontSize: 14,
+    color: colors.textSecondary,
+    flexShrink: 1,
   },
   comingSoon: {
     alignItems: 'center',
@@ -192,10 +163,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 16,
     marginBottom: 8,
+    color: colors.text,
   },
   comingSoonText: {
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+    color: colors.textSecondary,
   },
 });

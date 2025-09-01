@@ -6,6 +6,8 @@
 import { addDoc, collection, serverTimestamp, query, where, orderBy, getDocs, Timestamp, runTransaction, doc, limit } from 'firebase/firestore';
 import { db } from './firebase';
 
+export interface Review extends UserReview {}
+
 export interface CreateReviewInput {
   businessId: string;
   userId: string;
@@ -13,10 +15,11 @@ export interface CreateReviewInput {
   comment: string;
   photos?: string[];
   businessName?: string;
+  accessibilityTags?: string[];
 }
 
 export async function addReview(input: CreateReviewInput): Promise<string> {
-  const { businessId, userId, rating, comment, photos = [], businessName } = input;
+  const { businessId, userId, rating, comment, photos = [], businessName, accessibilityTags = [] } = input;
 
   if (!businessId) throw new Error('businessId is required');
   if (!userId) throw new Error('userId is required');
@@ -30,6 +33,7 @@ export async function addReview(input: CreateReviewInput): Promise<string> {
     comment: comment.trim(),
     photos,
     businessName: businessName || null,
+    accessibilityTags,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -69,42 +73,40 @@ export interface UserReview {
   rating: number;
   comment: string;
   photos: string[];
-  createdAt: string; // ISO
-  updatedAt: string; // ISO
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  userId?: string;
 }
 
 export async function getUserReviews(userId: string): Promise<UserReview[]> {
   console.log('🔍 getUserReviews: Called with userId:', userId);
-  
+
   try {
     const q = query(
       collection(db, 'reviews'),
       where('userId', '==', userId),
       orderBy('createdAt', 'desc')
     );
-    
+
     console.log('🔍 getUserReviews: Query created, executing...');
     const snap = await getDocs(q);
     console.log('🔍 getUserReviews: Query executed, found', snap.size, 'documents');
-    
-    const results = snap.docs.map((d) => {
-      const data = d.data() as any;
+
+    const results = snap.docs.map(d => {
+      const data = d.data();
       console.log('🔍 getUserReviews: Processing document:', d.id, 'with data:', {
         userId: data.userId,
         businessId: data.businessId,
         rating: data.rating,
         comment: data.comment?.substring(0, 50),
-        createdAt: data.createdAt
+        createdAt: data.createdAt,
       });
-      
-      const toIso = (t: any) => {
-        if (!t) return new Date(0).toISOString();
-        if (t instanceof Timestamp) return t.toDate().toISOString();
-        if (typeof t?.toDate === 'function') return t.toDate().toISOString();
-        // already ISO string or millis
-        if (typeof t === 'string') return t;
-        if (typeof t === 'number') return new Date(t).toISOString();
-        return new Date().toISOString();
+
+      const toTimestamp = (t: any): Timestamp => {
+        if (!t) return Timestamp.now();
+        if (t instanceof Timestamp) return t;
+        if (typeof t?.toDate === 'function') return t;
+        return Timestamp.fromDate(new Date(t));
       };
       return {
         id: d.id,
@@ -113,11 +115,12 @@ export async function getUserReviews(userId: string): Promise<UserReview[]> {
         rating: data.rating,
         comment: data.comment,
         photos: Array.isArray(data.photos) ? data.photos : [],
-        createdAt: toIso(data.createdAt),
-        updatedAt: toIso(data.updatedAt),
+        createdAt: toTimestamp(data.createdAt),
+        updatedAt: toTimestamp(data.updatedAt),
+        userId: data.userId,
       } as UserReview;
     });
-    
+
     console.log('✅ getUserReviews: Returning', results.length, 'processed reviews');
     return results;
   } catch (error) {
@@ -126,10 +129,43 @@ export async function getUserReviews(userId: string): Promise<UserReview[]> {
   }
 }
 
+export async function getAllReviews(): Promise<{ reviews: UserReview[] }> {
+  const snapshot = await getDocs(collection(db, 'reviews'));
+  const reviews = snapshot.docs.map(d => {
+    const data = d.data();
+    const toTimestamp = (t: any): Timestamp => {
+      if (!t) return Timestamp.now();
+      if (t instanceof Timestamp) return t;
+      if (typeof t?.toDate === 'function') return t;
+      return Timestamp.fromDate(new Date(t));
+    };
+    return {
+      id: d.id,
+      businessId: data.businessId,
+      businessName: data.businessName ?? null,
+      rating: data.rating,
+      comment: data.comment,
+      photos: Array.isArray(data.photos) ? data.photos : [],
+      createdAt: toTimestamp(data.createdAt),
+      updatedAt: toTimestamp(data.updatedAt),
+      userId: data.userId,
+    } as UserReview;
+  });
+  return { reviews };
+}
+
 // Get recent reviews for a business (for BusinessDetailsScreen)
-export async function getBusinessReviews(businessId: string, limitCount: number = 3): Promise<UserReview[]> {
-  console.log('🔍 getBusinessReviews: Called with businessId:', businessId, 'limit:', limitCount);
-  
+export async function getBusinessReviews(
+  businessId: string,
+  limitCount: number = 3
+): Promise<UserReview[]> {
+  console.log(
+    '🔍 getBusinessReviews: Called with businessId:',
+    businessId,
+    'limit:',
+    limitCount
+  );
+
   try {
     // Use a simpler query to avoid index requirements
     const q = query(
@@ -137,29 +173,35 @@ export async function getBusinessReviews(businessId: string, limitCount: number 
       where('businessId', '==', businessId),
       limit(limitCount * 2) // Get more to sort client-side
     );
-    
+
     console.log('🔍 getBusinessReviews: Query created, executing...');
     const snap = await getDocs(q);
-    console.log('🔍 getBusinessReviews: Query executed, found', snap.size, 'documents');
-    
-    const results = snap.docs.map((d) => {
-      const data = d.data() as any;
-      console.log('🔍 getBusinessReviews: Processing document:', d.id, 'with data:', {
-        userId: data.userId,
-        businessId: data.businessId,
-        rating: data.rating,
-        comment: data.comment?.substring(0, 50),
-        createdAt: data.createdAt
-      });
-      
-      const toIso = (t: any) => {
-        if (!t) return new Date(0).toISOString();
-        if (t instanceof Timestamp) return t.toDate().toISOString();
-        if (typeof t?.toDate === 'function') return t.toDate().toISOString();
-        // already ISO string or millis
-        if (typeof t === 'string') return t;
-        if (typeof t === 'number') return new Date(t).toISOString();
-        return new Date().toISOString();
+    console.log(
+      '🔍 getBusinessReviews: Query executed, found',
+      snap.size,
+      'documents'
+    );
+
+    const results = snap.docs.map(d => {
+      const data = d.data();
+      console.log(
+        '🔍 getBusinessReviews: Processing document:',
+        d.id,
+        'with data:',
+        {
+          userId: data.userId,
+          businessId: data.businessId,
+          rating: data.rating,
+          comment: data.comment?.substring(0, 50),
+          createdAt: data.createdAt,
+        }
+      );
+
+      const toTimestamp = (t: any): Timestamp => {
+        if (!t) return Timestamp.now();
+        if (t instanceof Timestamp) return t;
+        if (typeof t?.toDate === 'function') return t;
+        return Timestamp.fromDate(new Date(t));
       };
       return {
         id: d.id,
@@ -168,18 +210,22 @@ export async function getBusinessReviews(businessId: string, limitCount: number 
         rating: data.rating,
         comment: data.comment,
         photos: Array.isArray(data.photos) ? data.photos : [],
-        createdAt: toIso(data.createdAt),
-        updatedAt: toIso(data.updatedAt),
+        createdAt: toTimestamp(data.createdAt),
+        updatedAt: toTimestamp(data.updatedAt),
         userId: data.userId, // Include userId for display
       } as UserReview;
     });
-    
+
     // Sort by createdAt client-side and limit results
     const sortedResults = results
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
       .slice(0, limitCount);
-    
-    console.log('✅ getBusinessReviews: Returning', sortedResults.length, 'processed reviews');
+
+    console.log(
+      '✅ getBusinessReviews: Returning',
+      sortedResults.length,
+      'processed reviews'
+    );
     return sortedResults;
   } catch (error) {
     console.error('❌ getBusinessReviews: Error occurred:', error);

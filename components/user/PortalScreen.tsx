@@ -1,312 +1,206 @@
-import React, { useMemo, useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   SafeAreaView,
   Switch,
+  StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
-import { useTheme } from '../../hooks/useTheme';
-import { debouncedNavigate } from '../../utils/navigationHelpers';
+import { usePortal } from '../../hooks/usePortal';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
+import { UserProfile } from '../../types/user';
+
+type PortalScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Portal'>;
 
 interface PortalScreenProps {
-  navigation: any;
+  navigation: PortalScreenNavigationProp;
 }
 
-export default function PortalScreen({ navigation }: { navigation: any }) {
-  const { user, userProfile, logout } = useFirebaseAuth();
-  const { theme, toggleTheme, colors, shadows } = useTheme();
+const ScreenHeader = React.memo(({ firstName }: { firstName: string }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <Text style={styles.headerTitle}>Portal</Text>
+      <Text style={styles.headerSubtitle}>
+        Welcome back, {firstName}! Manage your account and preferences
+      </Text>
+    </View>
+  );
+});
 
-  const handleSignOut = useCallback(async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-            } catch (error: any) {
-              Alert.alert('Sign Out Error', error.message);
-            }
-          }
-        }
-      ]
-    );
-  }, [logout]);
-
-  const firstName = useMemo(() => 
-    userProfile?.profile?.details.firstName || 
-    userProfile?.displayName?.split(' ')[0] || 
-    'Friend'
-  , [userProfile]);
-
-  // Memoized navigation handlers for better performance
-  const navigationHandlers = useMemo(() => ({
-    editProfile: () => {
-      console.log('🚀 PortalScreen: Navigating to EditProfile');
-      debouncedNavigate(navigation, 'EditProfile');
-    },
-    savedPlaces: () => {
-      console.log('🚀 PortalScreen: Navigating to SavedPlaces');
-      debouncedNavigate(navigation, 'SavedPlaces');
-    },
-    reviewHistory: () => {
-      console.log('🚀 PortalScreen: Navigating to ReviewHistory');
-      debouncedNavigate(navigation, 'ReviewHistory');
-    },
-    accessibility: () => {
-      console.log('🚀 PortalScreen: Navigating to AccessibilityPreferences');
-      debouncedNavigate(navigation, 'AccessibilityPreferences');
-    },
-    identity: () => {
-      console.log('🚀 PortalScreen: Navigating to LGBTQIdentity');
-      debouncedNavigate(navigation, 'LGBTQIdentity');
-    }
-  }), [navigation]);
-
-  const dynamicStyles = useMemo(() => StyleSheet.create({
-    portalCard: {
-      ...styles.portalCard,
-      ...shadows.button, // Use optimized shadows
-      backgroundColor: colors.card,
-      borderColor: colors.border,
-    },
-    portalIconContainer: {
-      ...styles.portalIconContainer,
-      ...shadows.card, // Use optimized shadows for icon container
-      backgroundColor: colors.surface,
-    },
-    portalCardTitle: {
-      ...styles.portalCardTitle,
-      color: colors.text,
-    },
-    portalCardSubtitle: {
-      ...styles.portalCardSubtitle,
-      color: colors.textSecondary,
-    },
-    themeToggleLabel: {
-      ...styles.themeToggleLabel,
-      color: colors.textSecondary,
-    },
-    accountTitle: {
-      ...styles.accountTitle,
-      color: colors.text,
-    },
-    accountCard: {
-      ...styles.accountCard,
-      ...shadows.card, // Use optimized shadows
-      backgroundColor: colors.card,
-      borderColor: colors.border,
-    },
-    accountRow: {
-      ...styles.accountRow,
-      borderBottomColor: colors.border,
-    },
-    accountLabel: {
-      ...styles.accountLabel,
-      color: colors.textSecondary,
-    },
-    accountValue: {
-      ...styles.accountValue,
-      color: colors.text,
-    },
-  }), [colors, shadows]);
-
-  // Memoized portal card component
-  const PortalCard = React.memo(({ 
-    onPress, 
-    iconName, 
-    iconColor, 
-    title, 
-    subtitle, 
-    accessibilityLabel,
-    accessibilityHint 
-  }: {
-    onPress: () => void;
-    iconName: string;
-    iconColor: string;
-    title: string;
-    subtitle: string;
-    accessibilityLabel: string;
-    accessibilityHint: string;
-  }) => (
+const PortalCard = React.memo(({
+  onPress, iconName, iconColor, title, subtitle, accessibilityLabel, accessibilityHint
+}: {
+  onPress: () => void; iconName: keyof typeof Ionicons.glyphMap; iconColor: string; title: string; subtitle: string; accessibilityLabel: string; accessibilityHint: string;
+}) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
     <TouchableOpacity
-      style={dynamicStyles.portalCard}
+      style={styles.portalCard}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
     >
-      <View style={dynamicStyles.portalIconContainer}>
-        <Ionicons name={iconName as any} size={28} color={iconColor} />
+      <View style={[styles.portalIconContainer, { backgroundColor: `${iconColor}30` }]}>
+        <Ionicons name={iconName} size={28} color={iconColor} />
       </View>
-      <Text style={dynamicStyles.portalCardTitle}>{title}</Text>
-      <Text style={dynamicStyles.portalCardSubtitle}>{subtitle}</Text>
+      <Text style={styles.portalCardTitle}>{title}</Text>
+      <Text style={styles.portalCardSubtitle}>{subtitle}</Text>
     </TouchableOpacity>
-  ));
+  );
+});
+
+const ThemeToggleCard = React.memo(({ theme, toggleTheme }: { theme: 'light' | 'dark', toggleTheme: () => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.portalCard}>
+      <View style={[styles.portalIconContainer, { backgroundColor: colors.warningMuted }]}>
+        <Ionicons name={theme === 'light' ? 'sunny' : 'moon'} size={28} color={colors.warning} />
+      </View>
+      <Text style={styles.portalCardTitle}>Theme</Text>
+      <View style={styles.themeToggleContainer}>
+        <Text style={styles.themeToggleLabel}>
+          {theme === 'light' ? 'Light' : 'Dark'} Mode
+        </Text>
+        <Switch
+          value={theme === 'dark'}
+          onValueChange={toggleTheme}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={colors.card}
+        />
+      </View>
+    </View>
+  );
+});
+
+const AccountInfo = React.memo(({ userProfile }: { userProfile: UserProfile | null }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const getRoleName = (role?: string) => {
+    switch (role) {
+      case 'user': return 'Community Member';
+      case 'bizowner': return 'Business Owner';
+      case 'bizmanager': return 'Business Manager';
+      case 'admin': return 'Administrator';
+      case 'moderator': return 'Community Moderator';
+      default: return 'Unknown';
+    }
+  };
+
+  const memberSince = userProfile?.createdAt
+    ? (userProfile.createdAt instanceof Date ? userProfile.createdAt.toLocaleDateString() : 'N/A')
+    : 'N/A';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
-      <View style={[styles.header, { backgroundColor: colors.header }]}> 
-        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Portal</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.headerText + 'CC' }]}> 
-          Welcome back, {firstName}! Manage your account and preferences
-        </Text>
+    <View style={styles.accountInfo}>
+      <Text style={styles.accountTitle}>Account Information</Text>
+      <View style={styles.accountCard}>
+        <View style={styles.accountRow}>
+          <Text style={styles.accountLabel}>Email</Text>
+          <Text style={styles.accountValue}>{userProfile?.email}</Text>
+        </View>
+        <View style={styles.accountRow}>
+          <Text style={styles.accountLabel}>Account Type</Text>
+          <Text style={styles.accountValue}>{getRoleName(userProfile?.role)}</Text>
+        </View>
+        <View style={[styles.accountRow, { borderBottomWidth: 0 }]}>
+          <Text style={styles.accountLabel}>Member Since</Text>
+          <Text style={styles.accountValue}>{memberSince}</Text>
+        </View>
       </View>
+    </View>
+  );
+});
 
-      <ScrollView 
-        style={styles.content} 
+export default function PortalScreen({ navigation }: PortalScreenProps) {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const {
+    userProfile,
+    theme,
+    toggleTheme,
+    handleSignOut,
+    firstName,
+    navigationHandlers,
+  } = usePortal(navigation);
+
+  const portalActions = [
+    { handler: navigationHandlers.editProfile, icon: 'person', color: colors.primary, title: 'My Profile', subtitle: 'Edit personal details' },
+    { handler: navigationHandlers.savedPlaces, icon: 'bookmark', color: '#6366f1', title: 'Saved Places', subtitle: 'Your saved businesses' },
+    { handler: navigationHandlers.reviewHistory, icon: 'star', color: colors.warning, title: 'My Reviews', subtitle: 'View your reviews' },
+    { handler: navigationHandlers.accessibility, icon: 'accessibility', color: colors.success, title: 'Accessibility', subtitle: 'Customize preferences' },
+    { handler: navigationHandlers.identity, icon: 'heart', color: '#ec4899', title: 'Identity Settings', subtitle: 'LGBTQ+ identity preferences' },
+  ];
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScreenHeader firstName={firstName} />
+
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
-      > 
-        <View style={styles.portalGrid}> 
-          <PortalCard
-            onPress={navigationHandlers.editProfile}
-            iconName="person"
-            iconColor="#8b5cf6"
-            title="My Profile"
-            subtitle="Edit personal details"
-            accessibilityLabel="Edit Profile"
-            accessibilityHint="Opens screen to edit your personal profile information"
+      >
+        <View style={styles.portalGrid}>
+          {portalActions.map((action) => (
+            <PortalCard 
+              key={action.title}
+              onPress={action.handler} 
+              iconName={action.icon as any} 
+              iconColor={action.color} 
+              title={action.title} 
+              subtitle={action.subtitle} 
+              accessibilityLabel={action.title} 
+              accessibilityHint={action.subtitle} 
+            />
+          ))}
+          <ThemeToggleCard theme={theme} toggleTheme={toggleTheme} />
+          <PortalCard 
+            onPress={handleSignOut} 
+            iconName="log-out" 
+            iconColor={colors.notification} 
+            title="Sign Out" 
+            subtitle="Logout from app" 
+            accessibilityLabel="Sign Out" 
+            accessibilityHint="Sign out of your account" 
           />
-
-          <PortalCard
-            onPress={navigationHandlers.savedPlaces}
-            iconName="bookmark"
-            iconColor="#6366f1"
-            title="Saved Places"
-            subtitle="Your saved businesses"
-            accessibilityLabel="Saved Places"
-            accessibilityHint="View and manage your saved businesses"
-          />
-
-          <PortalCard
-            onPress={navigationHandlers.reviewHistory}
-            iconName="star"
-            iconColor="#f59e0b"
-            title="My Reviews"
-            subtitle="View your reviews"
-            accessibilityLabel="My Reviews"
-            accessibilityHint="View and manage your business reviews"
-          />
-
-          <PortalCard
-            onPress={navigationHandlers.accessibility}
-            iconName="accessibility"
-            iconColor="#10b981"
-            title="Accessibility"
-            subtitle="Customize preferences"
-            accessibilityLabel="Accessibility Settings"
-            accessibilityHint="Configure your accessibility preferences and needs"
-          />
-
-          <PortalCard
-            onPress={navigationHandlers.identity}
-            iconName="heart"
-            iconColor="#ec4899"
-            title="Identity Settings"
-            subtitle="LGBTQ+ identity preferences"
-            accessibilityLabel="Identity Settings"
-            accessibilityHint="Manage your LGBTQ+ identity and visibility preferences"
-          />
-
-          <View style={dynamicStyles.portalCard}>
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name={theme === 'light' ? 'sunny' : 'moon'} size={28} color="#f59e0b" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>Theme</Text>
-            <View style={styles.themeToggleContainer}>
-              <Text style={dynamicStyles.themeToggleLabel}>
-                {theme === 'light' ? 'Light' : 'Dark'} Mode
-              </Text>
-              <Switch
-                value={theme === 'dark'}
-                onValueChange={toggleTheme}
-                trackColor={{ false: '#e5e7eb', true: colors.primary }}
-                thumbColor={theme === 'dark' ? '#ffffff' : '#ffffff'}
-                accessibilityRole="switch"
-                accessibilityLabel="Theme toggle"
-                accessibilityHint={`Currently in ${theme} mode. Toggle to switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={dynamicStyles.portalCard}
-            onPress={handleSignOut}
-            accessibilityRole="button"
-            accessibilityLabel="Sign Out"
-            accessibilityHint="Sign out of your account"
-          >
-            <View style={dynamicStyles.portalIconContainer}>
-              <Ionicons name="log-out" size={28} color="#ef4444" />
-            </View>
-            <Text style={dynamicStyles.portalCardTitle}>Sign Out</Text>
-            <Text style={dynamicStyles.portalCardSubtitle}>Logout from app</Text>
-          </TouchableOpacity>
         </View>
 
-        <View style={styles.accountInfo}>
-          <Text style={dynamicStyles.accountTitle}>Account Information</Text>
-          <View style={dynamicStyles.accountCard}>
-            <View style={dynamicStyles.accountRow}>
-              <Text style={dynamicStyles.accountLabel}>Email</Text>
-              <Text style={dynamicStyles.accountValue}>{userProfile?.email}</Text>
-            </View>
-            <View style={dynamicStyles.accountRow}>
-              <Text style={dynamicStyles.accountLabel}>Account Type</Text>
-              <Text style={dynamicStyles.accountValue}>
-                {userProfile?.role === 'user' ? 'Community Member' : 
-                 userProfile?.role === 'bizowner' ? 'Business Owner' : 
-                 userProfile?.role === 'bizmanager' ? 'Business Manager' : 
-             userProfile?.role === 'admin' ? 'Administrator' : 
-             userProfile?.role === 'moderator' ? 'Community Moderator' : 
-             '*Unknown*'}
-          </Text>
-            </View>
-            <View style={dynamicStyles.accountRow}>
-              <Text style={dynamicStyles.accountLabel}>Member Since</Text>
-              <Text style={dynamicStyles.accountValue}>
-                {userProfile?.createdAt
-                      ? (userProfile.createdAt.toDate
-                          ? userProfile.createdAt.toDate().toLocaleDateString()
-                              : new Date(userProfile.createdAt).toLocaleDateString())
-                                  : 'N/A'}
-              </Text>
-            </View>
-          </View>
-        </View>
+        <AccountInfo userProfile={userProfile} />
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   header: {
     paddingTop: 20,
     paddingBottom: 24,
     paddingHorizontal: 20,
+    backgroundColor: colors.header,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 4,
+    color: colors.headerText,
   },
   headerSubtitle: {
     fontSize: 16,
     lineHeight: 22,
+    color: colors.headerText + 'CC',
   },
   content: {
     flex: 1,
@@ -316,18 +210,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    //gap: 16,
     marginBottom: 32,
   },
   portalCard: {
     borderRadius: 16,
     padding: 20,
-    flexBasis: '48%',
-    minHeight: 120, // Ensure adequate touch target height
+    width: '48%',
+    minHeight: 120,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     marginBottom: 16,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
   portalIconContainer: {
     width: 64,
@@ -342,12 +237,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 6,
     textAlign: 'center',
-    lineHeight: 20, // Better line height for readability
+    lineHeight: 20,
+    color: colors.text,
   },
   portalCardSubtitle: {
-    fontSize: 14, // Increased from 13px for better readability
+    fontSize: 14,
     textAlign: 'center',
     lineHeight: 18,
+    color: colors.textSecondary,
   },
   themeToggleContainer: {
     flexDirection: 'row',
@@ -360,6 +257,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
     textAlign: 'left',
+    color: colors.textSecondary,
   },
   accountInfo: {
     marginBottom: 32,
@@ -368,11 +266,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
+    color: colors.text,
   },
   accountCard: {
     borderRadius: 12,
     padding: 20,
     borderWidth: 1,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
   accountRow: {
     flexDirection: 'row',
@@ -380,13 +281,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   accountLabel: {
     fontSize: 14,
     fontWeight: '500',
+    color: colors.textSecondary,
   },
   accountValue: {
     fontSize: 14,
     fontWeight: '600',
+    color: colors.text,
   },
 });

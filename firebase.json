@@ -13,5 +13,8 @@
   },
   "projects": {
     "default": "demo-project"
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
   }
 }

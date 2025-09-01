@@ -136,7 +136,7 @@ export default function PhotoUploadComponent({
           onPress: async () => {
             try {
               if (uploadType === 'business-gallery' && businessId) {
-                const success = await photoUploadService.removeBusinessPhoto(
+                const success = await photoUploadService.removeBusinessPhotoFromFirestore(
                   businessId,
                   currentPhotoURL
                 );
@@ -197,10 +197,10 @@ export default function PhotoUploadComponent({
           />
           {!disabled && (
             <TouchableOpacity
-              style={[styles.removeButton, { backgroundColor: '#ef4444' }]}
+              style={[styles.removeButton, { backgroundColor: colors.notification }]}
               onPress={handlePhotoRemove}
             >
-              <Ionicons name="close" size={16} color="white" />
+              <Ionicons name="close" size={16} color={colors.headerText} />
             </TouchableOpacity>
           )}
         </View>

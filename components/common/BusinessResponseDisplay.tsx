@@ -1,100 +1,90 @@
-/**
- * Business Response Display Component
- * Shows business owner responses to reviews in public-facing screens
- */
-
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
 import { BusinessResponse } from '../../services/businessResponseService';
 
 interface BusinessResponseDisplayProps {
   response: BusinessResponse;
-  compact?: boolean; // For smaller displays like in business details screen
+  compact?: boolean;
 }
 
-export const BusinessResponseDisplay: React.FC<BusinessResponseDisplayProps> = ({
+const formatDate = (dateValue: any) => {
+  try {
+    const date = dateValue?.toDate ? dateValue.toDate() : new Date(dateValue);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
+};
+
+export const BusinessResponseDisplay: React.FC<BusinessResponseDisplayProps> = React.memo(({
   response,
   compact = false,
 }) => {
-  const { colors } = useTheme();
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
 
-  const formatDate = (dateValue: string) => {
-    try {
-      const date = new Date(dateValue);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
+  const createdAtFormatted = formatDate(response.createdAt);
+  const updatedAtFormatted = response.updatedAt ? formatDate(response.updatedAt) : createdAtFormatted;
 
   return (
     <View style={[
-      styles.container, 
-      { 
-        backgroundColor: colors.surface, 
-        borderColor: colors.border 
-      },
+      styles.container,
       compact && styles.compactContainer
     ]}>
-      {/* Response Header */}
       <View style={styles.header}>
         <View style={styles.authorContainer}>
-          <View style={[styles.businessIcon, { backgroundColor: colors.primary + '20' }]}>
+          <View style={styles.businessIcon}>
             <Ionicons name="storefront" size={14} color={colors.primary} />
           </View>
           <View style={styles.authorInfo}>
-            <Text style={[styles.authorName, { color: colors.text }]}>
+            <Text style={styles.authorName}>
               {response.businessOwnerName}
             </Text>
-            <Text style={[styles.authorLabel, { color: colors.textSecondary }]}>
+            <Text style={styles.authorLabel}>
               Business Owner
             </Text>
           </View>
         </View>
         
         <View style={styles.dateContainer}>
-          <Text style={[styles.responseDate, { color: colors.textSecondary }]}>
-            {formatDate(response.createdAt)}
+          <Text style={styles.responseDate}>
+            {createdAtFormatted}
           </Text>
-          {response.updatedAt !== response.createdAt && (
-            <Text style={[styles.editedIndicator, { color: colors.textSecondary }]}>
+          {updatedAtFormatted !== createdAtFormatted && (
+            <Text style={styles.editedIndicator}>
               (edited)
             </Text>
           )}
         </View>
       </View>
 
-      {/* Response Content */}
       <Text style={[
-        styles.responseContent, 
-        { color: colors.text },
+        styles.responseContent,
         compact && styles.compactContent
       ]}>
         {response.message}
       </Text>
     </View>
   );
-};
+});
 
-const styles = StyleSheet.create({
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     marginTop: 12,
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderLeftWidth: 4,
-    borderLeftColor: '#10b981', // Green accent for business responses
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderLeftColor: colors.success,
   },
   compactContainer: {
     marginTop: 8,
@@ -118,6 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
+    backgroundColor: colors.primaryMuted,
   },
   authorInfo: {
     flex: 1,
@@ -126,25 +117,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 2,
+    color: colors.text,
   },
   authorLabel: {
     fontSize: 11,
     fontStyle: 'italic',
+    color: colors.textSecondary,
   },
   dateContainer: {
     alignItems: 'flex-end',
   },
   responseDate: {
     fontSize: 12,
+    color: colors.textSecondary,
   },
   editedIndicator: {
     fontSize: 10,
     fontStyle: 'italic',
     marginTop: 2,
+    color: colors.textSecondary,
   },
   responseContent: {
     fontSize: 14,
     lineHeight: 20,
+    color: colors.text,
   },
   compactContent: {
     fontSize: 13,

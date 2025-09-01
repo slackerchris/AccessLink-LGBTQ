@@ -1,4 +1,3 @@
-
 import {
   collection,
   doc,
@@ -14,10 +13,11 @@ import {
   startAfter,
   serverTimestamp,
   DocumentSnapshot,
-  QueryConstraint
+  QueryConstraint,
+  DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { UserProfile } from './authService';
+import { UserProfile, TimestampField } from '../hooks/useFirebaseAuth';
 
 export interface BusinessListing {
   id?: string;
@@ -26,15 +26,15 @@ export interface BusinessListing {
   category: BusinessCategory;
   location: {
     address: string;
-    city: string;
-    state: string;
-    zipCode: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
     coordinates?: {
       latitude: number;
       longitude: number;
     };
   };
-  contact: {
+  contact?: {
     phone?: string;
     email?: string;
     website?: string;
@@ -45,34 +45,34 @@ export interface BusinessListing {
       linkedin?: string;
     };
   };
-  hours: {
+  hours?: {
     [key: string]: {
       open: string;
       close: string;
       closed: boolean;
     };
   };
-  lgbtqFriendly: {
+  lgbtqFriendly?: {
     verified: boolean;
     certifications: string[];
     inclusivityFeatures: string[];
   };
-  accessibility: {
+  accessibility?: {
     wheelchairAccessible: boolean;
     brailleMenus: boolean;
     signLanguageSupport: boolean;
     quietSpaces: boolean;
     accessibilityNotes: string;
   };
-  ownerId: string;
-  status: 'pending' | 'approved' | 'rejected' | 'suspended';
-  featured: boolean;
-  images: string[];
-  tags: string[];
-  averageRating: number;
-  totalReviews: number;
-  createdAt: any;
-  updatedAt: any;
+  ownerId?: string;
+  status?: 'pending' | 'approved' | 'rejected' | 'suspended';
+  featured?: boolean;
+  images?: string[];
+  tags?: string[];
+  averageRating?: number;
+  totalReviews?: number;
+  createdAt?: TimestampField;
+  updatedAt?: TimestampField;
 }
 
 export type BusinessCategory = 
@@ -88,7 +88,67 @@ export type BusinessCategory =
   | 'other';
 
 class BusinessService {
+  private businessesCollection = collection(db, 'businesses');
 
+  private toBusinessListing(doc: DocumentSnapshot<DocumentData>): BusinessListing {
+    const data = doc.data();
+    if (!data) {
+      throw new Error('Document data is empty');
+    }
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+      updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(),
+    } as BusinessListing;
+  }
+
+  async getBusinessById(businessId: string): Promise<BusinessListing | null> {
+    const businessRef = doc(this.businessesCollection, businessId);
+    const docSnap = await getDoc(businessRef);
+    if (docSnap.exists()) {
+      return this.toBusinessListing(docSnap);
+    }
+    return null;
+  }
+
+  async getAllBusinesses(): Promise<{ businesses: BusinessListing[] }> {
+    const snapshot = await getDocs(this.businessesCollection);
+    const businesses = snapshot.docs.map(doc => this.toBusinessListing(doc));
+    return { businesses };
+  }
+
+  async approveBusiness(businessId: string, adminUser: UserProfile): Promise<void> {
+    if (adminUser.role !== 'admin') {
+      throw new Error('User does not have permission to approve businesses.');
+    }
+    const businessRef = doc(this.businessesCollection, businessId);
+    await updateDoc(businessRef, {
+      status: 'approved',
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  async rejectBusiness(businessId: string): Promise<void> {
+    const businessRef = doc(this.businessesCollection, businessId);
+    await updateDoc(businessRef, {
+      status: 'rejected',
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  async toggleBusinessFeature(businessId: string, featured: boolean): Promise<void> {
+    const businessRef = doc(this.businessesCollection, businessId);
+    await updateDoc(businessRef, {
+      featured: featured,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  async deleteBusiness(businessId: string): Promise<void> {
+    const businessRef = doc(this.businessesCollection, businessId);
+    await deleteDoc(businessRef);
+  }
 }
 
 // Export singleton instance

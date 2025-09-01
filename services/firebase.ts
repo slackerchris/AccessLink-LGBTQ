@@ -9,18 +9,21 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import 'dotenv/config';
 
 // Initialize Firebase
-console.log('🔥 Firebase Debug - Using hardcoded new project configuration');
+console.log('🔥 Firebase Debug - Using environment variables for configuration');
 
-const app = initializeApp({
-  apiKey: "AIzaSyCIOMEqs_o2VTxj7HnVqGMtG5u2qRuT6TU",
-  authDomain: "acceslink-lgbtq.firebaseapp.com",
-  projectId: "acceslink-lgbtq",
-  storageBucket: "acceslink-lgbtq.firebasestorage.app",
-  messagingSenderId: "595597079040",
-  appId: "1:595597079040:android:598b0e16a92f0fb2c49ee5",
-});
+const firebaseConfig = {
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+};
+
+const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase Auth with React Native AsyncStorage persistence
 let auth;

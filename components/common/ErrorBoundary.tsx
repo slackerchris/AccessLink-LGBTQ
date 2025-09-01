@@ -1,87 +1,109 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { ErrorBoundary as ReactErrorBoundary, FallbackProps } from 'react-error-boundary';
+import { Ionicons } from '@expo/vector-icons';
 import { logger } from '../../utils/logger';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
 
-interface Props {
-  children: ReactNode;
-}
+const logError = (error: Error, info: { componentStack: string }) => {
+  const errorId = Math.random().toString(36).substring(2, 9);
+  logger.error('Uncaught error in ErrorBoundary', {
+    errorId,
+    error: error.toString(),
+    componentStack: info.componentStack,
+  });
+};
 
-interface State {
-  hasError: boolean;
-  errorId?: string;
-}
+const ErrorFallbackComponent: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
 
-class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-  };
-
-  public static getDerivedStateFromError(_: Error): State {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const errorId = Math.random().toString(36).substring(2, 9);
-    this.setState({ errorId });
-
-    logger.error('Uncaught error in ErrorBoundary', {
-      errorId,
-      error: error.toString(),
-      componentStack: errorInfo.componentStack,
-    });
-  }
-
-  private handleReset = () => {
-    // This is a simple reset. In a real app, you might want to navigate
-    // the user away or try to reload resources.
-    this.setState({ hasError: false, errorId: undefined });
-  };
-
-  public render() {
-    if (this.state.hasError) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.title}>Oops! Something went wrong.</Text>
-          <Text style={styles.message}>
-            An unexpected error occurred. Please try again.
-          </Text>
-          {this.state.errorId && (
-            <Text style={styles.errorId}>Error ID: {this.state.errorId}</Text>
-          )}
-          <Button title="Try Again" onPress={this.handleReset} />
+  return (
+    <View style={styles.container}>
+      <Ionicons name="alert-circle-outline" size={64} color={colors.notification} />
+      <Text style={styles.title}>Oops! Something went wrong.</Text>
+      <Text style={styles.message}>
+        An unexpected error occurred. Please try again or restart the application.
+      </Text>
+      
+      {__DEV__ && (
+        <View style={styles.errorDetails}>
+          <Text style={styles.errorName}>{error.name}</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
         </View>
-      );
-    }
+      )}
 
-    return this.props.children;
-  }
-}
+      <TouchableOpacity style={styles.button} onPress={resetErrorBoundary}>
+        <Text style={styles.buttonText}>Try Again</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const ErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <ReactErrorBoundary
+      FallbackComponent={ErrorFallbackComponent}
+      onError={logError}
+    >
+      {children}
+    </ReactErrorBoundary>
+  );
+};
+
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fef2f2',
+    padding: 24,
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#b91c1c',
-    marginBottom: 10,
+    color: colors.text,
+    marginTop: 20,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   message: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#dc2626',
-    marginBottom: 20,
+    color: colors.textSecondary,
+    marginBottom: 24,
+    lineHeight: 22,
   },
-  errorId: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginBottom: 20,
+  errorDetails: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 24,
+    width: '100%',
+  },
+  errorName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.notification,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: colors.text,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  button: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.headerText,
   },
 });
 

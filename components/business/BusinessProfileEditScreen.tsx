@@ -1,9 +1,4 @@
-/**
- * Business Profile Edit Screen
- * Allows business owners to edit their business profile information
- */
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -11,468 +6,243 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
-  Switch
+  Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth, useBusinessActions } from '../../hooks/useFirebaseAuth';
+import { useBusinessProfileEdit } from '../../hooks/useBusinessProfileEdit';
 import PhotoUploadComponent from '../common/PhotoUploadComponent';
+import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../hooks/useTheme';
+import { BusinessListing } from '../../types/business';
 
-interface BusinessProfileEditScreenProps {
-  navigation: any;
-}
+// --- Memoized Sub-components ---
 
-export const BusinessProfileEditScreen: React.FC<BusinessProfileEditScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
-  const { getMyBusinesses, updateBusiness } = useBusinessActions();
-  
-  const [userBusiness, setUserBusiness] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  
-  // Load user's business
-  useEffect(() => {
-    const loadBusiness = async () => {
-      try {
-        const businesses = await getMyBusinesses();
-        if (businesses.length > 0) {
-          setUserBusiness(businesses[0]); // Get the first business
-        }
-      } catch (error) {
-        console.error('Error loading business:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    if (user) {
-      loadBusiness();
-    }
-  }, [user, getMyBusinesses]);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    categories: [] as string[],
-    phone: '',
-    email: '',
-    website: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    // Hours
-    mondayHours: '',
-    tuesdayHours: '',
-    wednesdayHours: '',
-    thursdayHours: '',
-    fridayHours: '',
-    saturdayHours: '',
-    sundayHours: '',
-    // Accessibility features
-    wheelchairAccessible: false,
-    brailleMenus: false,
-    signLanguage: false,
-    hearingLoop: false,
-    accessibleParking: false,
-    accessibleRestrooms: false,
-    lowCounters: false,
-    quietSpaces: false,
-    largeprint: false,
-    sensoryFriendly: false
-  });
+const Header: React.FC<{ isSaving: boolean; onSave: () => void }> = React.memo(({ isSaving, onSave }) => {
+  const navigation = useNavigation();
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color={colors.headerText} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Edit Business Profile</Text>
+      <TouchableOpacity onPress={onSave} disabled={isSaving} style={styles.saveButton}>
+        {isSaving ? <ActivityIndicator size="small" color={colors.headerText} /> : <Text style={styles.saveButtonText}>Save</Text>}
+      </TouchableOpacity>
+    </View>
+  );
+});
 
-  const [isLoading, setIsLoading] = useState(false);
+const LoadingState: React.FC = React.memo(() => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.centeredContainer}>
+      <ActivityIndicator size="large" color={colors.primary} />
+      <Text style={styles.loadingText}>Loading Business...</Text>
+    </View>
+  );
+});
 
-  // Load business data on component mount
-  useEffect(() => {
-    if (userBusiness) {
-      setFormData({
-        name: userBusiness.name || '',
-        description: userBusiness.description || '',
-        categories: userBusiness.categories || [],
-        phone: userBusiness.contact?.phone || '',
-        email: userBusiness.contact?.email || '',
-        website: userBusiness.contact?.website || '',
-        address: userBusiness.location?.address || '',
-        city: userBusiness.location?.city || '',
-        state: userBusiness.location?.state || '',
-        zipCode: userBusiness.location?.zipCode || '',
-        // Default hours
-        mondayHours: '9:00 AM - 5:00 PM',
-        tuesdayHours: '9:00 AM - 5:00 PM',
-        wednesdayHours: '9:00 AM - 5:00 PM',
-        thursdayHours: '9:00 AM - 5:00 PM',
-        fridayHours: '9:00 AM - 5:00 PM',
-        saturdayHours: '10:00 AM - 4:00 PM',
-        sundayHours: 'Closed',
-        // Accessibility features
-        wheelchairAccessible: userBusiness.accessibility?.wheelchairAccessible || false,
-        brailleMenus: userBusiness.accessibility?.visuallyImpairedFriendly || false,
-        signLanguage: userBusiness.accessibility?.hearingImpairedFriendly || false,
-        hearingLoop: userBusiness.accessibility?.hearingImpairedFriendly || false,
-        accessibleParking: false, // Not in current interface, defaulting to false
-        accessibleRestrooms: false, // Not in current interface, defaulting to false
-        lowCounters: false, // Not in current interface, defaulting to false
-        quietSpaces: false, // Not in current interface, defaulting to false
-        largeprint: userBusiness.accessibility?.visuallyImpairedFriendly || false,
-        sensoryFriendly: false // Not in current interface, defaulting to false
-      });
-    }
-  }, [userBusiness]);
+const ErrorState: React.FC = React.memo(() => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.centeredContainer}>
+      <Ionicons name="alert-circle" size={48} color={colors.notification} />
+      <Text style={styles.errorTitle}>No Business Found</Text>
+      <Text style={styles.errorText}>No business profile is associated with your account.</Text>
+    </View>
+  );
+});
 
-  const handleSave = async () => {
-    setIsLoading(true);
-    try {
-      // Build accessibility object
-      const accessibility = {
-        wheelchairAccessible: formData.wheelchairAccessible,
-        visuallyImpairedFriendly: formData.brailleMenus || formData.largeprint,
-        hearingImpairedFriendly: formData.signLanguage || formData.hearingLoop,
-        notes: 'Updated accessibility features'
-      };
+const FormSection: React.FC<{ title: string; subtitle?: string; children: React.ReactNode }> = React.memo(({ title, subtitle, children }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {subtitle && <Text style={styles.sectionSubtitle}>{subtitle}</Text>}
+      {children}
+    </View>
+  );
+});
 
-      // Build hours object
-      const hours = {
-        monday: { open: formData.mondayHours.split(' - ')[0] || '9:00 AM', close: formData.mondayHours.split(' - ')[1] || '5:00 PM', closed: formData.mondayHours === 'Closed' },
-        tuesday: { open: formData.tuesdayHours.split(' - ')[0] || '9:00 AM', close: formData.tuesdayHours.split(' - ')[1] || '5:00 PM', closed: formData.tuesdayHours === 'Closed' },
-        wednesday: { open: formData.wednesdayHours.split(' - ')[0] || '9:00 AM', close: formData.wednesdayHours.split(' - ')[1] || '5:00 PM', closed: formData.wednesdayHours === 'Closed' },
-        thursday: { open: formData.thursdayHours.split(' - ')[0] || '9:00 AM', close: formData.thursdayHours.split(' - ')[1] || '5:00 PM', closed: formData.thursdayHours === 'Closed' },
-        friday: { open: formData.fridayHours.split(' - ')[0] || '9:00 AM', close: formData.fridayHours.split(' - ')[1] || '5:00 PM', closed: formData.fridayHours === 'Closed' },
-        saturday: { open: formData.saturdayHours.split(' - ')[0] || '10:00 AM', close: formData.saturdayHours.split(' - ')[1] || '4:00 PM', closed: formData.saturdayHours === 'Closed' },
-        sunday: { open: formData.sundayHours.split(' - ')[0] || '10:00 AM', close: formData.sundayHours.split(' - ')[1] || '4:00 PM', closed: formData.sundayHours === 'Closed' }
-      };
+const FormInput: React.FC<{ label: string; value: string; onChangeText: (text: string) => void; placeholder: string; multiline?: boolean; keyboardType?: any; autoCapitalize?: any }> = React.memo(({ label, ...props }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput style={[styles.textInput, props.multiline && styles.textArea]} {...props} />
+    </View>
+  );
+});
 
-      const updatedBusiness = {
-        ...userBusiness,
-        name: formData.name,
-        description: formData.description,
-        categories: formData.categories,
-        contact: {
-          phone: formData.phone,
-          email: formData.email,
-          website: formData.website
-        },
-        location: {
-          ...userBusiness?.location,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode
-        },
-        hours,
-        accessibility,
-        updatedAt: new Date()
-      };
+const CategorySelector: React.FC<{ selectedCategory: string; onSelect: (category: string) => void }> = React.memo(({ selectedCategory, onSelect }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const categories = ['Restaurant', 'Cafe', 'Bar/Club', 'Retail', 'Healthcare', 'Fitness', 'Beauty & Spa', 'Professional Services', 'Education', 'Entertainment', 'Other'];
+  return (
+    <View style={styles.categoryContainer}>
+      {categories.map(category => {
+        const isSelected = selectedCategory === category;
+        return (
+          <TouchableOpacity key={category} style={[styles.categoryChip, isSelected && styles.selectedCategory]} onPress={() => onSelect(category)}>
+            <Text style={[styles.categoryText, isSelected && styles.selectedCategoryText]}>{category}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+});
 
-      // Save to Firebase using the business actions
-      await updateBusiness(userBusiness.id, updatedBusiness);
-      
-      Alert.alert(
-        'Success',
-        'Your business profile has been updated successfully!',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
-    } catch (error: any) {
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const HoursEditor: React.FC<{ day: string; hours: any; onChange: (day: string, field: string, value: any) => void }> = React.memo(({ day, hours, onChange }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const dayHours = hours?.[day] || {};
+  return (
+    <View style={styles.hoursRow}>
+      <Text style={styles.dayLabel}>{day}</Text>
+      <TextInput
+        style={styles.hoursInput}
+        value={dayHours.closed ? 'Closed' : `${dayHours.open || ''} - ${dayHours.close || ''}`}
+        onChangeText={text => {
+          if (text.toLowerCase() !== 'closed') {
+            const [open, close] = text.split(' - ');
+            onChange(day, 'open', open || '');
+            onChange(day, 'close', close || '');
+          }
+        }}
+        placeholder="9:00 AM - 5:00 PM"
+        editable={!dayHours.closed}
+      />
+      <Switch value={dayHours.closed || false} onValueChange={value => onChange(day, 'closed', value)} />
+    </View>
+  );
+});
 
-  const categories = [
-    'Restaurant', 'Cafe', 'Bar/Club', 'Retail', 'Healthcare', 'Fitness', 
-    'Beauty & Spa', 'Professional Services', 'Education', 'Entertainment', 'Other'
-  ];
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>Loading...</Text>
-        </View>
+const AccessibilitySwitch: React.FC<{ label: string; icon: any; value: boolean; onValueChange: (value: boolean) => void }> = React.memo(({ label, icon, value, onValueChange }) => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.switchRow}>
+      <View style={styles.switchLabel}>
+        <Ionicons name={icon} size={20} color={colors.primary} />
+        <Text style={styles.switchText}>{label}</Text>
       </View>
-    );
-  }
+      <Switch value={value} onValueChange={onValueChange} trackColor={{ false: colors.border, true: colors.primary }} thumbColor={value ? colors.primary : colors.surface} />
+    </View>
+  );
+});
 
-  if (!userBusiness) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={48} color="#ef4444" />
-          <Text style={styles.errorTitle}>No Business Found</Text>
-          <Text style={styles.errorText}>
-            You don't have a business profile associated with your account.
-          </Text>
-        </View>
-      </View>
-    );
-  }
+// --- Main Component ---
+
+export const BusinessProfileEditScreen: React.FC = () => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const {
+    userBusiness,
+    loading,
+    isSaving,
+    formData,
+    handleSave,
+    handleFormChange,
+    handleNestedChange,
+    handleHoursChange,
+    onPhotoUploaded,
+    onPhotoRemoved,
+  } = useBusinessProfileEdit();
+
+  if (loading) return <LoadingState />;
+  if (!userBusiness) return <ErrorState />;
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Business Profile</Text>
-        <TouchableOpacity onPress={handleSave} disabled={isLoading} style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.content}>
-        {/* Business Profile Photo */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Business Photo</Text>
-          <PhotoUploadComponent
-            uploadType="business-profile"
-            businessId={userBusiness?.id}
-            currentPhotoURL={(userBusiness as any)?.profilePhoto}
-            onPhotoUploaded={(downloadURL) => {
-              console.log('✅ Business profile photo uploaded:', downloadURL);
-              // Update the local business data
-              setUserBusiness(prev => ({ ...prev, profilePhoto: downloadURL }));
-            }}
-            onPhotoRemoved={() => {
-              console.log('🗑️ Business profile photo removed');
-              // Handle profile photo removal if needed
-              setUserBusiness(prev => ({ ...prev, profilePhoto: null }));
-            }}
-            disabled={isLoading}
-            style={{ marginVertical: 16 }}
-          />
-        </View>
-
-        {/* Basic Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Business Name *</Text>
-            <TextInput
-              style={styles.textInput}
-              value={formData.name}
-              onChangeText={(text) => setFormData({...formData, name: text})}
-              placeholder="Enter business name"
+    <View style={{ flex: 1 }}>
+      <Header isSaving={isSaving} onSave={handleSave} />
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          <FormSection title="Business Photo">
+            <PhotoUploadComponent
+              uploadType="business-profile"
+              businessId={userBusiness?.id}
+              currentPhotoURL={formData.profilePhoto}
+              onPhotoUploaded={onPhotoUploaded}
+              onPhotoRemoved={onPhotoRemoved}
+              disabled={isSaving}
+              style={{ marginVertical: 16 }}
             />
-          </View>
+          </FormSection>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Description *</Text>
-            <TextInput
-              style={[styles.textInput, styles.textArea]}
-              value={formData.description}
-              onChangeText={(text) => setFormData({...formData, description: text})}
-              placeholder="Describe your business and what makes it LGBTQ+ friendly"
-              multiline
-              numberOfLines={4}
-            />
-          </View>
+          <FormSection title="Basic Information">
+            <FormInput label="Business Name *" value={formData.name} onChangeText={text => handleFormChange('name', text)} placeholder="Enter business name" />
+            <FormInput label="Description *" value={formData.description} onChangeText={text => handleFormChange('description', text)} placeholder="Describe your business..." multiline />
+            <CategorySelector selectedCategory={formData.category} onSelect={category => handleFormChange('category', category)} />
+          </FormSection>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Categories (Select all that apply)</Text>
-            <Text style={styles.categoryHelper}>Tap categories to select/deselect. You can choose multiple categories.</Text>
-            <View style={styles.categoryContainer}>
-              {categories.map((category) => {
-                const isSelected = formData.categories.includes(category);
-                return (
-                  <TouchableOpacity
-                    key={category}
-                    style={[
-                      styles.categoryChip,
-                      isSelected && styles.selectedCategory
-                    ]}
-                    onPress={() => {
-                      if (isSelected) {
-                        // Remove category if already selected
-                        setFormData({
-                          ...formData, 
-                          categories: formData.categories.filter(c => c !== category)
-                        });
-                      } else {
-                        // Add category if not selected
-                        setFormData({
-                          ...formData, 
-                          categories: [...formData.categories, category]
-                        });
-                      }
-                    }}
-                  >
-                    <Text style={[
-                      styles.categoryText,
-                      isSelected && styles.selectedCategoryText
-                    ]}>
-                      {isSelected && '✓ '}{category}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        </View>
+          <FormSection title="Contact Information">
+            <FormInput label="Phone Number" value={formData.contact?.phone} onChangeText={text => handleNestedChange('contact', 'phone', text)} placeholder="(555) 123-4567" keyboardType="phone-pad" />
+            <FormInput label="Email Address" value={formData.contact?.email} onChangeText={text => handleNestedChange('contact', 'email', text)} placeholder="contact@business.com" keyboardType="email-address" autoCapitalize="none" />
+            <FormInput label="Website" value={formData.contact?.website} onChangeText={text => handleNestedChange('contact', 'website', text)} placeholder="https://www.business.com" keyboardType="url" autoCapitalize="none" />
+          </FormSection>
 
-        {/* Contact Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={styles.textInput}
-              value={formData.phone}
-              onChangeText={(text) => setFormData({...formData, phone: text})}
-              placeholder="(555) 123-4567"
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.textInput}
-              value={formData.email}
-              onChangeText={(text) => setFormData({...formData, email: text})}
-              placeholder="contact@business.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Website</Text>
-            <TextInput
-              style={styles.textInput}
-              value={formData.website}
-              onChangeText={(text) => setFormData({...formData, website: text})}
-              placeholder="https://www.business.com"
-              keyboardType="url"
-              autoCapitalize="none"
-            />
-          </View>
-        </View>
-
-        {/* Location */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Street Address *</Text>
-            <TextInput
-              style={styles.textInput}
-              value={formData.address}
-              onChangeText={(text) => setFormData({...formData, address: text})}
-              placeholder="123 Main Street"
-            />
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 2 }]}>
-              <Text style={styles.label}>City *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={formData.city}
-                onChangeText={(text) => setFormData({...formData, city: text})}
-                placeholder="City"
-              />
-            </View>
-
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-              <Text style={styles.label}>State *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={formData.state}
-                onChangeText={(text) => setFormData({...formData, state: text})}
-                placeholder="State"
-              />
-            </View>
-
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-              <Text style={styles.label}>ZIP Code *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={formData.zipCode}
-                onChangeText={(text) => setFormData({...formData, zipCode: text})}
-                placeholder="12345"
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Operating Hours */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Operating Hours</Text>
-          
-          {[
-            { day: 'Monday', key: 'mondayHours' },
-            { day: 'Tuesday', key: 'tuesdayHours' },
-            { day: 'Wednesday', key: 'wednesdayHours' },
-            { day: 'Thursday', key: 'thursdayHours' },
-            { day: 'Friday', key: 'fridayHours' },
-            { day: 'Saturday', key: 'saturdayHours' },
-            { day: 'Sunday', key: 'sundayHours' }
-          ].map(({ day, key }) => (
-            <View key={day} style={styles.hoursRow}>
-              <Text style={styles.dayLabel}>{day}</Text>
-              <TextInput
-                style={styles.hoursInput}
-                value={formData[key as keyof typeof formData] as string}
-                onChangeText={(text) => setFormData({...formData, [key]: text})}
-                placeholder="9:00 AM - 5:00 PM or Closed"
-              />
-            </View>
-          ))}
-        </View>
-
-        {/* Accessibility Features */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Accessibility Features</Text>
-          <Text style={styles.sectionSubtitle}>
-            Select all accessibility features available at your business
-          </Text>
-          
-          {[
-            { key: 'wheelchairAccessible', label: 'Wheelchair Accessible', icon: 'accessibility' },
-            { key: 'accessibleParking', label: 'Accessible Parking', icon: 'car' },
-            { key: 'accessibleRestrooms', label: 'Accessible Restrooms', icon: 'home' },
-            { key: 'brailleMenus', label: 'Braille Menus', icon: 'book' },
-            { key: 'largeprint', label: 'Large Print Materials', icon: 'text' },
-            { key: 'signLanguage', label: 'Sign Language Support', icon: 'hand-left' },
-            { key: 'hearingLoop', label: 'Hearing Loop System', icon: 'ear' },
-            { key: 'lowCounters', label: 'Low Service Counters', icon: 'resize' },
-            { key: 'quietSpaces', label: 'Quiet Spaces Available', icon: 'volume-mute' },
-            { key: 'sensoryFriendly', label: 'Sensory-Friendly Environment', icon: 'sparkles' }
-          ].map(({ key, label, icon }) => (
-            <View key={key} style={styles.switchRow}>
-              <View style={styles.switchLabel}>
-                <Ionicons name={icon as any} size={20} color="#6366f1" />
-                <Text style={styles.switchText}>{label}</Text>
+          <FormSection title="Location">
+            <FormInput label="Street Address *" value={formData.location?.address} onChangeText={text => handleNestedChange('location', 'address', text)} placeholder="123 Main Street" />
+            <View style={styles.row}>
+              <View style={{ flex: 2 }}>
+                <FormInput label="City *" value={formData.location?.city} onChangeText={text => handleNestedChange('location', 'city', text)} placeholder="City" />
               </View>
-              <Switch
-                value={formData[key as keyof typeof formData] as boolean}
-                onValueChange={(value) => setFormData({...formData, [key]: value})}
-                trackColor={{ false: '#d1d5db', true: '#a5b4fc' }}
-                thumbColor={formData[key as keyof typeof formData] ? '#6366f1' : '#f3f4f6'}
-              />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <FormInput label="State *" value={formData.location?.state} onChangeText={text => handleNestedChange('location', 'state', text)} placeholder="State" />
+              </View>
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <FormInput label="ZIP Code *" value={formData.location?.zipCode} onChangeText={text => handleNestedChange('location', 'zipCode', text)} placeholder="12345" keyboardType="numeric" />
+              </View>
             </View>
-          ))}
-        </View>
+          </FormSection>
 
-        <View style={styles.bottomPadding} />
-      </View>
-    </ScrollView>
+          <FormSection title="Operating Hours">
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+              <HoursEditor key={day} day={day} hours={formData.hours} onChange={handleHoursChange} />
+            ))}
+          </FormSection>
+
+          <FormSection title="Accessibility Features" subtitle="Select all accessibility features available at your business">
+            <AccessibilitySwitch label="Wheelchair Accessible" icon="accessibility" value={!!formData.accessibility?.wheelchairAccessible} onValueChange={value => handleNestedChange('accessibility', 'wheelchairAccessible', value)} />
+            <AccessibilitySwitch label="Braille Menus" icon="book" value={!!formData.accessibility?.brailleMenus} onValueChange={value => handleNestedChange('accessibility', 'brailleMenus', value)} />
+            <AccessibilitySwitch label="Sign Language Support" icon="hand-left" value={!!formData.accessibility?.signLanguageSupport} onValueChange={value => handleNestedChange('accessibility', 'signLanguageSupport', value)} />
+            <AccessibilitySwitch label="Quiet Spaces Available" icon="volume-mute" value={!!formData.accessibility?.quietSpaces} onValueChange={value => handleNestedChange('accessibility', 'quietSpaces', value)} />
+            <FormInput label="Additional Notes" value={formData.accessibility?.accessibilityNotes} onChangeText={text => handleNestedChange('accessibility', 'accessibilityNotes', text)} placeholder="e.g., Ramps available at the north entrance" multiline />
+          </FormSection>
+
+          <View style={styles.bottomPadding} />
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = (colors: any, shadows: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
+  },
+  centeredContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: colors.textSecondary,
   },
   header: {
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -484,7 +254,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerTitle: {
-    color: '#fff',
+    color: colors.headerText,
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
@@ -492,13 +262,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   saveButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: colors.primaryMuted,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    minWidth: 60,
+    alignItems: 'center',
   },
   saveButtonText: {
-    color: '#fff',
+    color: colors.headerText,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -506,25 +278,21 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.small,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: colors.text,
     marginBottom: 5,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 15,
   },
   inputGroup: {
@@ -533,18 +301,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.text,
     marginBottom: 8,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#1f2937',
-    backgroundColor: '#fff',
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   textArea: {
     height: 80,
@@ -555,34 +323,28 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
-  categoryHelper: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 12,
-    fontStyle: 'italic',
-  },
   categoryChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#f9fafb',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   selectedCategory: {
-    backgroundColor: '#6366f1',
-    borderColor: '#6366f1',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   categoryText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: colors.textSecondary,
   },
   selectedCategoryText: {
-    color: '#fff',
+    color: colors.headerText,
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   hoursRow: {
     flexDirection: 'row',
@@ -593,18 +355,19 @@ const styles = StyleSheet.create({
     width: 80,
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
+    color: colors.text,
   },
   hoursInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
-    color: '#1f2937',
-    backgroundColor: '#fff',
+    color: colors.text,
+    backgroundColor: colors.surface,
+    marginRight: 10,
   },
   switchRow: {
     flexDirection: 'row',
@@ -612,7 +375,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: colors.border,
   },
   switchLabel: {
     flexDirection: 'row',
@@ -621,25 +384,20 @@ const styles = StyleSheet.create({
   },
   switchText: {
     fontSize: 14,
-    color: '#374151',
+    color: colors.text,
     marginLeft: 12,
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
   },
   errorTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: colors.notification,
     marginTop: 16,
     marginBottom: 8,
+    textAlign: 'center',
   },
   errorText: {
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },

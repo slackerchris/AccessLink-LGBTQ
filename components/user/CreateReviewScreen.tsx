@@ -1,318 +1,134 @@
-/**
- * Create Review Screen with Photo Upload
- * Allows users to write reviews and upload photos for businesses
- */
-
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Image,
   TextInput,
   SafeAreaView,
   FlatList,
   Dimensions,
+  StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Modal } from '../common/FixedModal';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth as useFirebaseAuth } from '../../hooks/useFirebaseAuth';
-import { addReview as addReviewToDb } from '../../services/reviewService';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../types/navigation';
+import { useCreateReview, PhotoUpload } from '../../hooks/useCreateReview';
 
-const { width: screenWidth } = Dimensions.get('window');
-
-interface PhotoUpload {
-  id: string;
-  uri: string;
-  caption: string;
-  category: 'accessibility' | 'interior' | 'exterior' | 'menu' | 'staff' | 'event' | 'other';
-}
+type CreateReviewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreateReview'>;
+type CreateReviewScreenRouteProp = RouteProp<RootStackParamList, 'CreateReview'>;
 
 interface CreateReviewScreenProps {
-  navigation: any;
-  route: {
-    params: {
-      businessId: string;
-      businessName: string;
-    };
-  };
+  navigation: CreateReviewScreenNavigationProp;
+  route: CreateReviewScreenRouteProp;
 }
 
-export default function CreateReviewScreen({ navigation, route }: CreateReviewScreenProps) {
-  const { businessId, businessName } = route.params;
-  // Debug: check if inside React context
-  let user, colors;
-  try {
-    user = useFirebaseAuth().user;
-    colors = useTheme().colors;
-    if (!colors) {
-      throw new Error('colors is undefined from useTheme()');
-    }
-    console.log('🔍 DEBUG: CreateReviewScreen rendered inside AuthProvider.');
-    console.log('🔍 DEBUG: colors object:', colors);
-  } catch (e) {
-    console.error('❌ DEBUG: CreateReviewScreen context or theme error!', e);
-    // Fallback colors to prevent crash
-    colors = {
-      background: '#fff',
-      card: '#fff',
-      text: '#1f2937',
-      textSecondary: '#6b7280',
-      border: '#d1d5db',
-      primary: '#6366f1',
-      surface: '#ede9fe',
-      header: '#fff',
-      headerText: '#1f2937',
-    };
-    console.log('🔍 DEBUG: Using fallback colors:', colors);
-  }
-  // Debug logging for route params and initial state
-  console.log('🔍 DEBUG: CreateReviewScreen mounted');
-  console.log('🔍 DEBUG: route.params =', route.params);
-  console.log('🔍 DEBUG: businessId =', businessId);
-  console.log('🔍 DEBUG: businessName =', businessName);
-  console.log('🔍 DEBUG: user =', user ? 'logged in' : 'not logged in');
-  
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [photos, setPhotos] = useState<PhotoUpload[]>([]);
-  const [accessibilityTags, setAccessibilityTags] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [editingPhoto, setEditingPhoto] = useState<PhotoUpload | null>(null);
+const availableAccessibilityTags = [
+  'Wheelchair Accessible', 'Wide Doorways', 'Accessible Bathroom', 'Braille Menus',
+  'Sign Language Friendly', 'Quiet Environment', 'Good Lighting', 'Easy Navigation',
+  'Accessible Parking', 'Elevator Access', 'Audio Descriptions', 'Staff Assistance Available'
+];
 
-  // Available accessibility tags
-  const availableAccessibilityTags = [
-    'Wheelchair Accessible',
-    'Wide Doorways',
-    'Accessible Bathroom',
-    'Braille Menus',
-    'Sign Language Friendly',
-    'Quiet Environment',
-    'Good Lighting', 
-    'Easy Navigation',
-    'Accessible Parking',
-    'Elevator Access',
-    'Audio Descriptions',
-    'Staff Assistance Available'
-  ];
+const photoCategories = [
+  { value: 'accessibility', label: 'Accessibility Features', icon: 'accessibility-outline' },
+  { value: 'interior', label: 'Interior', icon: 'home-outline' },
+  { value: 'exterior', label: 'Exterior', icon: 'business-outline' },
+  { value: 'menu', label: 'Menu/Signage', icon: 'restaurant-outline' },
+  { value: 'staff', label: 'Staff/Service', icon: 'people-outline' },
+  { value: 'event', label: 'Events', icon: 'calendar-outline' },
+  { value: 'other', label: 'Other', icon: 'images-outline' }
+];
 
-  // Photo categories
-  const photoCategories = [
-    { value: 'accessibility', label: 'Accessibility Features', icon: 'accessibility-outline' },
-    { value: 'interior', label: 'Interior', icon: 'home-outline' },
-    { value: 'exterior', label: 'Exterior', icon: 'business-outline' },
-    { value: 'menu', label: 'Menu/Signage', icon: 'restaurant-outline' },
-    { value: 'staff', label: 'Staff/Service', icon: 'people-outline' },
-    { value: 'event', label: 'Events', icon: 'calendar-outline' },
-    { value: 'other', label: 'Other', icon: 'images-outline' }
-  ];
-
-  const handleRatingPress = (selectedRating: number) => {
-    console.log('🔍 DEBUG: Rating selected =', selectedRating);
-    setRating(selectedRating);
-    console.log('🔍 DEBUG: Rating state updated to =', selectedRating);
-  };
-
-  const handleAddPhoto = () => {
-    // Simulate photo picker
-    Alert.alert(
-      'Add Photo',
-      'Choose how to add a photo',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Camera', onPress: () => simulatePhotoCapture('camera') },
-        { text: 'Photo Library', onPress: () => simulatePhotoCapture('library') }
-      ]
-    );
-  };
-
-  const simulatePhotoCapture = (source: 'camera' | 'library') => {
-    // Simulate photo capture/selection
-    const samplePhotos = [
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80', // Restaurant interior
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80', // Restaurant exterior
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80', // Restaurant tables
-      'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80', // Accessibility ramp
-      'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&q=80'  // Menu board
-    ];
-
-    const randomPhoto = samplePhotos[Math.floor(Math.random() * samplePhotos.length)];
-    
-    const newPhoto: PhotoUpload = {
-      id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      uri: randomPhoto,
-      caption: '',
-      category: 'other'
-    };
-
-    setPhotos(prev => [...prev, newPhoto]);
-    setEditingPhoto(newPhoto);
-    setShowPhotoModal(true);
-  };
-
-  const handleSavePhotoDetails = (photoDetails: { caption: string; category: string }) => {
-    if (!editingPhoto) return;
-
-    setPhotos(prev => prev.map(photo => 
-      photo.id === editingPhoto.id 
-        ? { ...photo, ...photoDetails, category: photoDetails.category as PhotoUpload['category'], }
-        : photo
-    ));
-    setEditingPhoto(null);
-    setShowPhotoModal(false);
-  };
-
-  const handleRemovePhoto = (photoId: string) => {
-    Alert.alert(
-      'Remove Photo',
-      'Are you sure you want to remove this photo?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Remove', 
-          style: 'destructive',
-          onPress: () => setPhotos(prev => prev.filter(photo => photo.id !== photoId))
-        }
-      ]
-    );
-  };
-
-  const toggleAccessibilityTag = (tag: string) => {
-    setAccessibilityTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
-  };
-
-  const handleSubmitReview = async () => {
-    console.log('🔍 DEBUG: handleSubmitReview called');
-    console.log('🔍 DEBUG: rating =', rating);
-    console.log('🔍 DEBUG: comment =', comment);
-    console.log('🔍 DEBUG: businessId =', businessId);
-    console.log('🔍 DEBUG: businessName =', businessName);
-    console.log('🔍 DEBUG: isSubmitting =', isSubmitting);
-    
-    if (rating === 0) {
-      console.log('⚠️ DEBUG: Validation failed - no rating selected');
-      Alert.alert('Rating Required', 'Please select a rating before submitting your review.');
-      return;
-    }
-
-    if (comment.trim().length === 0) {
-      console.log('⚠️ DEBUG: Validation failed - no comment entered');
-      Alert.alert('Review Required', 'Please write a review before submitting.');
-      return;
-    }
-
-    console.log('✅ DEBUG: Validation passed, starting submission');
-    setIsSubmitting(true);
-    
-    try {
-      // Convert photos to the expected format (just URLs)
-      const reviewPhotos = photos.map(photo => photo.uri);
-
-      console.log('🔍 DEBUG: Calling addReview service with:', {
-        businessId,
-        rating,
-        comment: comment.trim(),
-        photosCount: reviewPhotos.length
-      });
-
-      if (!user) {
-        throw new Error('Not authenticated');
-      }
-      await addReviewToDb({
-        businessId,
-        userId: user.uid,
-        rating,
-        comment: comment.trim(),
-        photos: reviewPhotos,
-        businessName,
-      });
-      
-      console.log('✅ DEBUG: addReview completed successfully');
-      console.log('🔍 DEBUG: About to show success alert');
-      
-      // Show visible success message
-      setShowSuccessMessage(true);
-      console.log('🔍 DEBUG: Success message state set to true');
-      
-      // Enhanced success notification with better visibility
-      Alert.alert(
-        '✅ Review Successfully Saved!',
-        `Your ${rating}-star review for ${businessName} has been saved and will help other community members discover inclusive businesses. Thank you for contributing to our community!`,
-        [
-          { 
-            text: 'Great!', 
-            style: 'default',
-            onPress: () => {
-              console.log('🔍 DEBUG: Success alert button pressed - navigating back');
-              setShowSuccessMessage(false);
-              // Use setTimeout to prevent double navigation
-              setTimeout(() => {
-                navigation.goBack();
-              }, 100);
-            }
-          }
-        ],
-        { 
-          cancelable: false // Prevent accidental dismissal
-        }
-      );
-      
-      console.log('🔍 DEBUG: Alert.alert called - should be showing now');
-    } catch (error) {
-      console.error('❌ DEBUG: addReview failed:', error);
-      Alert.alert(
-        'Submission Error', 
-        'Unable to save your review at this time. Please check your internet connection and try again.',
-        [{ text: 'Try Again', style: 'default' }]
-      );
-    } finally {
-      console.log('🔍 DEBUG: Setting isSubmitting to false');
-      setIsSubmitting(false);
-    }
-  };
-
-  const renderStar = (index: number) => (
-    <TouchableOpacity
-      key={index}
-      onPress={() => handleRatingPress(index + 1)}
-      style={styles.starButton}
-    >
-      <Ionicons
-        name={index < rating ? 'star' : 'star-outline'}
-        size={32}
-        color={index < rating ? '#fbbf24' : colors.border}
-      />
-    </TouchableOpacity>
+const ScreenHeader = React.memo(({ onGoBack }: { onGoBack: () => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <TouchableOpacity onPress={onGoBack}>
+        <Ionicons name="arrow-back" size={24} color={colors.headerText} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Write Review</Text>
+      <View style={styles.headerSpacer} />
+    </View>
   );
+});
 
-  const renderPhoto = ({ item }: { item: PhotoUpload }) => (
+const BusinessInfo = React.memo(({ businessName }: { businessName: string }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.businessInfo}>
+      <Text style={styles.businessName}>{businessName}</Text>
+      <Text style={styles.reviewPrompt}>Share your experience</Text>
+    </View>
+  );
+});
+
+const RatingSection = React.memo(({ rating, onRate }: { rating: number, onRate: (r: number) => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Rating *</Text>
+      <View style={styles.starsContainer}>
+        {[0, 1, 2, 3, 4].map((index) => (
+          <TouchableOpacity key={index} onPress={() => onRate(index + 1)} style={styles.starButton}>
+            <Ionicons
+              name={index < rating ? 'star' : 'star-outline'}
+              size={32}
+              color={index < rating ? colors.warning : colors.border}
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+      {rating > 0 && (
+        <Text style={styles.ratingText}>
+          {rating} star{rating !== 1 ? 's' : ''}
+        </Text>
+      )}
+    </View>
+  );
+});
+
+const ReviewInput = React.memo(({ comment, setComment }: { comment: string, setComment: (c: string) => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Your Review *</Text>
+      <TextInput
+        style={styles.reviewInput}
+        placeholder="Share your experience with this business..."
+        placeholderTextColor={colors.textSecondary}
+        value={comment}
+        onChangeText={setComment}
+        multiline
+        numberOfLines={6}
+        maxLength={1000}
+        textAlignVertical="top"
+      />
+      <Text style={styles.characterCount}>{comment.length}/1000</Text>
+    </View>
+  );
+});
+
+const PhotoItem = React.memo(({ item, onEdit, onRemove }: { item: PhotoUpload, onEdit: () => void, onRemove: () => void }) => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
     <View style={styles.photoContainer}>
       <Image source={{ uri: item.uri }} style={styles.photoImage} />
       <View style={styles.photoOverlay}>
-        <TouchableOpacity
-          style={styles.photoEditButton}
-          onPress={() => {
-            setEditingPhoto(item);
-            setShowPhotoModal(true);
-          }}
-        >
-          <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+        <TouchableOpacity style={styles.photoEditButton} onPress={onEdit}>
+          <Ionicons name="create-outline" size={16} color={colors.headerText} />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.photoRemoveButton}
-          onPress={() => handleRemovePhoto(item.id)}
-        >
-          <Ionicons name="close" size={16} color="#FFFFFF" />
+        <TouchableOpacity style={styles.photoRemoveButton} onPress={onRemove}>
+          <Ionicons name="close" size={16} color={colors.headerText} />
         </TouchableOpacity>
       </View>
       {item.caption && (
@@ -327,695 +143,235 @@ export default function CreateReviewScreen({ navigation, route }: CreateReviewSc
       </View>
     </View>
   );
+});
 
-  const renderPhotoModal = () => (
-    <Modal visible={showPhotoModal} animationType="slide" presentationStyle="pageSheet">
+const PhotosSection = React.memo(({ photos, onAdd, onEdit, onRemove }: { photos: PhotoUpload[], onAdd: () => void, onEdit: (item: PhotoUpload) => void, onRemove: (id: string) => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Photos</Text>
+        <TouchableOpacity onPress={onAdd} style={styles.addPhotoButton}>
+          <Ionicons name="camera" size={20} color={colors.primary} />
+          <Text style={styles.addPhotoText}>Add Photo</Text>
+        </TouchableOpacity>
+      </View>
+      
+      {photos.length > 0 ? (
+        <FlatList
+          data={photos}
+          renderItem={({ item }) => (
+            <PhotoItem
+              item={item}
+              onEdit={() => onEdit(item)}
+              onRemove={() => onRemove(item.id)}
+            />
+          )
+          }
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.photosContainer}
+        />
+      ) : (
+        <View style={styles.noPhotosContainer}>
+          <Ionicons name="images-outline" size={40} color={colors.border} />
+          <Text style={styles.noPhotosText}>Add photos to help other users</Text>
+          <Text style={styles.noPhotosSubtext}>
+            Show accessibility features, atmosphere, or anything helpful
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+});
+
+const AccessibilityTags = React.memo(({ selectedTags, onToggleTag }: { selectedTags: string[], onToggleTag: (tag: string) => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Accessibility Features</Text>
+      <Text style={styles.sectionSubtitle}>Tag accessibility features you experienced</Text>
+      <View style={styles.tagsContainer}>
+        {availableAccessibilityTags.map(tag => (
+          <TouchableOpacity
+            key={tag}
+            style={[
+              styles.tagItem,
+              selectedTags.includes(tag) && styles.tagItemSelected
+            ]}
+            onPress={() => onToggleTag(tag)}
+          >
+            <Text style={[
+              styles.tagText,
+              selectedTags.includes(tag) && styles.tagTextSelected
+            ]}>
+              {tag}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+});
+
+const SubmitFooter = React.memo(({ isSubmitting, onSubmit }: { isSubmitting: boolean, onSubmit: () => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.footer}>
+      <TouchableOpacity
+        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+        onPress={onSubmit}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color={colors.headerText} />
+        ) : (
+          <Text style={styles.submitButtonText}>Submit Review</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+});
+
+const PhotoDetailsModal = React.memo(({ visible, onClose, onSave, editingPhoto, setEditingPhoto }: any) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  
+  if (!editingPhoto) return null;
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowPhotoModal(false)}>
+          <TouchableOpacity onPress={onClose}>
             <Text style={styles.modalCancelButton}>Cancel</Text>
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Photo Details</Text>
-          <TouchableOpacity onPress={() => {
-            if (editingPhoto) {
-              handleSavePhotoDetails({
-                caption: editingPhoto.caption,
-                category: editingPhoto.category
-              });
-            }
-          }}>
+          <TouchableOpacity onPress={onSave}>
             <Text style={styles.modalSaveButton}>Save</Text>
           </TouchableOpacity>
         </View>
-
         <ScrollView style={styles.modalContent}>
-          {editingPhoto && (
-            <>
-              <Image source={{ uri: editingPhoto.uri }} style={styles.modalPhoto} />
-              
-              <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Caption</Text>
-                <TextInput
-                  id="photo-caption-input"
-                  style={styles.modalTextInput}
-                  placeholder="Add a caption for this photo..."
-                  value={editingPhoto.caption}
-                  onChangeText={(text) => setEditingPhoto(prev => prev ? { ...prev, caption: text } : null)}
-                  multiline
-                  maxLength={200}
-                />
-              </View>
-
-              <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Category</Text>
-                <View style={styles.categoryGrid}>
-                  {photoCategories.map(category => (
-                    <TouchableOpacity
-                      key={category.value}
-                      style={[
-                        styles.categoryItem,
-                        editingPhoto.category === category.value && styles.categoryItemSelected
-                      ]}
-                      onPress={() => setEditingPhoto(prev => prev ? { ...prev, category: category.value as PhotoUpload['category'] } : null)}
-                    >
-                      <Ionicons 
-                        name={category.icon as any} 
-                        size={20} 
-                        color={editingPhoto.category === category.value ? colors.primary : colors.textSecondary} 
-                      />
-                      <Text style={[
-                        styles.categoryItemText,
-                        editingPhoto.category === category.value && styles.categoryItemTextSelected
-                      ]}>
-                        {category.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </>
-          )}
+          <Image source={{ uri: editingPhoto.uri }} style={styles.modalPhoto} />
+          <View style={styles.modalSection}>
+            <Text style={styles.modalSectionTitle}>Caption</Text>
+            <TextInput
+              style={styles.modalTextInput}
+              placeholder="Add a caption for this photo..."
+              value={editingPhoto.caption}
+              onChangeText={(text) => setEditingPhoto({ ...editingPhoto, caption: text })}
+              multiline
+              maxLength={200}
+            />
+          </View>
+          <View style={styles.modalSection}>
+            <Text style={styles.modalSectionTitle}>Category</Text>
+            <View style={styles.categoryGrid}>
+              {photoCategories.map(category => (
+                <TouchableOpacity
+                  key={category.value}
+                  style={[
+                    styles.categoryItem,
+                    editingPhoto.category === category.value && styles.categoryItemSelected
+                  ]}
+                  onPress={() => setEditingPhoto({ ...editingPhoto, category: category.value })}
+                >
+                  <Ionicons
+                    name={category.icon as any}
+                    size={20}
+                    color={editingPhoto.category === category.value ? colors.headerText : colors.textSecondary}
+                  />
+                  <Text style={[
+                    styles.categoryItemText,
+                    editingPhoto.category === category.value && styles.categoryItemTextSelected
+                  ]}>
+                    {category.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
   );
+});
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    headerSpacer: {
-      width: 24,
-    },
-    content: {
-      flex: 1,
-      padding: 20,
-    },
-    businessInfo: {
-      alignItems: 'center',
-      marginBottom: 32,
-    },
-    businessName: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: colors.text,
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    reviewPrompt: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: 'center',
-    },
-    section: {
-      marginBottom: 32,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 12,
-    },
-    sectionSubtitle: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      marginBottom: 16,
-    },
-    starsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      marginBottom: 8,
-    },
-    starButton: {
-      marginHorizontal: 4,
-    },
-    ratingLabel: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginBottom: 24,
-    },
-    textInput: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 12,
-      padding: 16,
-      fontSize: 16,
-      color: colors.text,
-      backgroundColor: colors.card,
-      minHeight: 120,
-      textAlignVertical: 'top',
-    },
-    addPhotoButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
-      gap: 8,
-    },
-    addPhotoText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: colors.primary,
-    },
-    photosGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 12,
-      marginTop: 16,
-    },
-    photoContainer: {
-      position: 'relative',
-      width: 100,
-      height: 100,
-    },
-    photoImage: {
-      width: '100%',
-      height: '100%',
-      borderRadius: 8,
-    },
-    photoOverlay: {
-      position: 'absolute',
-      top: 4,
-      right: 4,
-      flexDirection: 'row',
-      gap: 4,
-    },
-    photoEditButton: {
-      backgroundColor: 'rgba(0,0,0,0.6)',
-      borderRadius: 12,
-      padding: 4,
-    },
-    photoRemoveButton: {
-      backgroundColor: 'rgba(239,68,68,0.8)',
-      borderRadius: 12,
-      padding: 4,
-    },
-    noPhotosContainer: {
-      alignItems: 'center',
-      paddingVertical: 40,
-      borderWidth: 2,
-      borderColor: colors.border,
-      borderStyle: 'dashed',
-      borderRadius: 12,
-      marginTop: 16,
-    },
-    noPhotosText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: colors.text,
-      marginTop: 12,
-    },
-    noPhotosSubtext: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginTop: 4,
-    },
-    accessibilityTagsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-    },
-    accessibilityTag: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    accessibilityTagSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    accessibilityTagText: {
-      fontSize: 14,
-      color: colors.text,
-      fontWeight: '500',
-    },
-    accessibilityTagTextSelected: {
-      color: '#FFFFFF',
-    },
-    submitButton: {
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: 'center',
-      marginTop: 32,
-      marginBottom: 20,
-    },
-    submitButtonDisabled: {
-      backgroundColor: colors.surface,
-    },
-    submitButtonText: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#FFFFFF',
-    },
-    submitButtonTextDisabled: {
-      color: colors.textSecondary,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalContent: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 24,
-      margin: 20,
-      maxWidth: 400,
-      width: '100%',
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 16,
-      textAlign: 'center',
-    },
-    captionInput: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
-      color: colors.text,
-      backgroundColor: colors.background,
-      marginBottom: 16,
-    },
-    categoryGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-      marginBottom: 24,
-    },
-    categoryItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      gap: 6,
-    },
-    categoryItemSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    categoryItemText: {
-      fontSize: 14,
-      color: colors.text,
-    },
-    categoryItemTextSelected: {
-      color: '#FFFFFF',
-    },
-    modalActions: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    modalButton: {
-      flex: 1,
-      paddingVertical: 12,
-      borderRadius: 8,
-      alignItems: 'center',
-    },
-    modalButtonPrimary: {
-      backgroundColor: colors.primary,
-    },
-    modalButtonSecondary: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    modalButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    modalButtonTextPrimary: {
-      color: '#FFFFFF',
-    },
-    modalButtonTextSecondary: {
-      color: colors.text,
-    },
-    photoCaptionContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      padding: 4,
-      borderBottomLeftRadius: 8,
-      borderBottomRightRadius: 8,
-    },
-    photoCaption: {
-      color: '#FFFFFF',
-      fontSize: 12,
-      textAlign: 'center',
-    },
-    photoCategoryBadge: {
-      position: 'absolute',
-      top: 4,
-      left: 4,
-      backgroundColor: colors.primary,
-      borderRadius: 4,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-    },
-    photoCategoryText: {
-      color: '#FFFFFF',
-      fontSize: 10,
-      fontWeight: '500',
-    },
-    modalContainer: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    modalCancelButton: {
-      color: colors.textSecondary,
-      fontSize: 16,
-    },
-    modalSaveButton: {
-      color: colors.primary,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    modalPhoto: {
-      width: '100%',
-      height: 200,
-      borderRadius: 8,
-      marginBottom: 16,
-    },
-    modalSection: {
-      marginBottom: 20,
-    },
-    modalSectionTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 8,
-    },
-    modalTextInput: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
-      color: colors.text,
-      backgroundColor: colors.card,
-    },
-    ratingText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: 'center',
-    },
-    reviewInput: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 12,
-      padding: 16,
-      fontSize: 16,
-      minHeight: 120,
-      textAlignVertical: 'top',
-    },
-    characterCount: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      textAlign: 'right',
-      marginTop: 4,
-    },
-    photosContainer: {
-      padding: 16,
-    },
-    tagsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-    },
-    tagItem: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-    },
-    tagItemSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    tagText: {
-      fontSize: 14,
-      color: colors.text,
-      fontWeight: '500',
-    },
-    tagTextSelected: {
-      color: '#FFFFFF',
-    },
-    // Success message styles
-    successOverlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000,
-    },
-    successMessage: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 32,
-      margin: 20,
-      alignItems: 'center',
-      maxWidth: 320,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
-    },
-    successTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: colors.text,
-      textAlign: 'center',
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    successSubtitle: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    successNote: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      fontStyle: 'italic',
-    },
-  });
+export default function CreateReviewScreen({ navigation, route }: CreateReviewScreenProps) {
+  const { businessId, businessName } = route.params;
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const {
+    rating,
+    comment,
+    setComment,
+    photos,
+    accessibilityTags,
+    isSubmitting,
+    showPhotoModal,
+    setShowPhotoModal,
+    editingPhoto,
+    setEditingPhoto,
+    handleRatingPress,
+    handleAddPhoto,
+    handleSavePhotoDetails,
+    handleRemovePhoto,
+    toggleAccessibilityTag,
+    handleSubmitReview,
+  } = useCreateReview(businessId, businessName);
+
+  const handleSaveModal = () => {
+    if (editingPhoto) {
+      handleSavePhotoDetails({
+        caption: editingPhoto.caption,
+        category: editingPhoto.category
+      });
+    }
+  };
+
+  const handleEditPhoto = (item: PhotoUpload) => {
+    setEditingPhoto(item);
+    setShowPhotoModal(true);
+  };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.headerText} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.headerText }]}>Write Review</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScreenHeader onGoBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.businessInfo}>
-          <Text style={[styles.businessName, { color: colors.text }]}>{businessName}</Text>
-          <Text style={[styles.reviewPrompt, { color: colors.textSecondary }]}>Share your experience</Text>
-        </View>
-
-        {/* Rating Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Rating *</Text>
-          <View style={styles.starsContainer}>
-            {[0, 1, 2, 3, 4].map(renderStar)}
-          </View>
-          {rating > 0 && (
-            <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
-              {rating} star{rating !== 1 ? 's' : ''}
-            </Text>
-          )}
-        </View>
-
-        {/* Review Text Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Review *</Text>
-          <TextInput
-            id="review-comment-input"
-            style={[styles.reviewInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-            placeholder="Share your experience with this business. How was the accessibility? What did you like most?"
-            placeholderTextColor={colors.textSecondary}
-            value={comment}
-            onChangeText={setComment}
-            multiline
-            numberOfLines={6}
-            maxLength={1000}
-            textAlignVertical="top"
-          />
-          <Text style={styles.characterCount}>{comment.length}/1000</Text>
-        </View>
-
-        {/* Photos Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Photos</Text>
-            <TouchableOpacity onPress={handleAddPhoto} style={styles.addPhotoButton}>
-              <Ionicons name="camera" size={20} color={colors.primary} />
-              <Text style={styles.addPhotoText}>Add Photo</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {photos.length > 0 ? (
-            <FlatList
-              data={photos}
-              renderItem={renderPhoto}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.photosContainer}
-            />
-          ) : (
-            <View style={styles.noPhotosContainer}>
-              <Ionicons name="images-outline" size={40} color={colors.border} />
-              <Text style={styles.noPhotosText}>Add photos to help other users</Text>
-              <Text style={styles.noPhotosSubtext}>
-                Show accessibility features, atmosphere, or anything helpful
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Accessibility Tags Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Accessibility Features</Text>
-          <Text style={styles.sectionSubtitle}>Tag accessibility features you experienced</Text>
-          <View style={styles.tagsContainer}>
-            {availableAccessibilityTags.map(tag => (
-              <TouchableOpacity
-                key={tag}
-                style={[
-                  styles.tagItem,
-                  accessibilityTags.includes(tag) && styles.tagItemSelected
-                ]}
-                onPress={() => toggleAccessibilityTag(tag)}
-              >
-                <Text style={[
-                  styles.tagText,
-                  accessibilityTags.includes(tag) && styles.tagTextSelected
-                ]}>
-                  {tag}
-                </Text>
-                {accessibilityTags.includes(tag) && (
-                  <Ionicons name="checkmark" size={16} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Submit Button */}
-        <TouchableOpacity
-          style={[
-            styles.submitButton, 
-            { backgroundColor: colors.primary },
-            isSubmitting && { 
-              backgroundColor: colors.border, 
-              opacity: 0.7 
-            }
-          ]}
-          onPress={() => {
-            console.log('🔍 DEBUG: Submit button pressed!');
-            console.log('🔍 DEBUG: Button disabled state =', isSubmitting);
-            handleSubmitReview();
-          }}
-          disabled={isSubmitting}
-          accessibilityRole="button"
-          accessibilityLabel={isSubmitting ? 'Submitting review' : 'Submit review'}
-          accessibilityHint={isSubmitting ? 'Please wait while your review is being saved' : 'Saves your review and returns to previous screen'}
-          accessibilityState={{ disabled: isSubmitting }}
-        >
-          <Text style={[
-            styles.submitButtonText, 
-            { color: '#ffffff' }
-          ]}>
-            {isSubmitting ? '💾 Saving Review...' : '📝 Submit Review'}
-          </Text>
-        </TouchableOpacity>
+        <BusinessInfo businessName={businessName} />
+        <RatingSection rating={rating} onRate={handleRatingPress} />
+        <ReviewInput comment={comment} setComment={setComment} />
+        <PhotosSection 
+          photos={photos}
+          onAdd={handleAddPhoto}
+          onEdit={handleEditPhoto}
+          onRemove={handleRemovePhoto}
+        />
+        <AccessibilityTags selectedTags={accessibilityTags} onToggleTag={toggleAccessibilityTag} />
       </ScrollView>
 
-      {/* Success Message Overlay */}
-      {showSuccessMessage && (
-        <View style={styles.successOverlay}>
-          <View style={styles.successMessage}>
-            <Ionicons name="checkmark-circle" size={48} color="#10B981" />
-            <Text style={styles.successTitle}>Review Saved Successfully! ✅</Text>
-            <Text style={styles.successSubtitle}>
-              Your {rating}-star review for {businessName} has been saved.
-            </Text>
-            <Text style={styles.successNote}>Returning to previous screen...</Text>
-          </View>
-        </View>
-      )}
+      <SubmitFooter isSubmitting={isSubmitting} onSubmit={handleSubmitReview} />
 
-      {renderPhotoModal()}
+      <PhotoDetailsModal
+        visible={showPhotoModal}
+        onClose={() => setShowPhotoModal(false)}
+        onSave={handleSaveModal}
+        editingPhoto={editingPhoto}
+        setEditingPhoto={setEditingPhoto}
+      />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -1023,12 +379,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    backgroundColor: colors.header,
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: colors.headerText,
   },
   headerSpacer: {
     width: 24,
@@ -1044,14 +401,14 @@ const styles = StyleSheet.create({
   businessName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
     textAlign: 'center',
     marginBottom: 8,
+    color: colors.text,
   },
   reviewPrompt: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
+    color: colors.textSecondary,
   },
   section: {
     marginBottom: 32,
@@ -1065,13 +422,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
     marginBottom: 12,
+    color: colors.text,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
     marginBottom: 16,
+    color: colors.textSecondary,
   },
   starsContainer: {
     flexDirection: 'row',
@@ -1079,125 +436,96 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   starButton: {
-    padding: 4,
+    marginHorizontal: 4,
   },
   ratingText: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 14,
     textAlign: 'center',
+    color: colors.textSecondary,
   },
   reviewInput: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     fontSize: 16,
     minHeight: 120,
-    color: '#1f2937',
+    textAlignVertical: 'top',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    color: colors.text,
   },
   characterCount: {
     fontSize: 12,
-    color: '#6b7280',
     textAlign: 'right',
     marginTop: 4,
+    color: colors.textSecondary,
   },
   addPhotoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
-    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#6366f1',
-    borderStyle: 'dashed',
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   addPhotoText: {
-    color: '#6366f1',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
-    marginLeft: 4,
+    color: colors.primary,
   },
   photosContainer: {
     paddingVertical: 8,
   },
   photoContainer: {
-    width: 120,
+    position: 'relative',
+    width: 100,
+    height: 100,
     marginRight: 12,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   photoImage: {
     width: '100%',
-    height: 80,
-    resizeMode: 'cover',
+    height: '100%',
+    borderRadius: 8,
   },
   photoOverlay: {
     position: 'absolute',
     top: 4,
     right: 4,
     flexDirection: 'row',
+    gap: 4,
   },
   photoEditButton: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: colors.shadow + '99',
     borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 4,
+    padding: 4,
   },
   photoRemoveButton: {
-    backgroundColor: 'rgba(239,68,68,0.8)',
+    backgroundColor: colors.notification + 'CC',
     borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoCaptionContainer: {
-    padding: 8,
-    paddingBottom: 4,
-  },
-  photoCaption: {
-    fontSize: 11,
-    color: '#4b5563',
-    lineHeight: 14,
-  },
-  photoCategoryBadge: {
-    backgroundColor: '#e0e7ff',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    margin: 8,
-    marginTop: 0,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  photoCategoryText: {
-    fontSize: 10,
-    color: '#6366f1',
-    fontWeight: '500',
+    padding: 4,
   },
   noPhotosContainer: {
     alignItems: 'center',
-    padding: 32,
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    paddingVertical: 40,
+    borderWidth: 2,
     borderStyle: 'dashed',
+    borderRadius: 12,
+    marginTop: 16,
+    borderColor: colors.border,
   },
   noPhotosText: {
     fontSize: 16,
-    color: '#6b7280',
-    marginTop: 8,
-    marginBottom: 4,
+    fontWeight: '500',
+    marginTop: 12,
+    color: colors.text,
   },
   noPhotosSubtext: {
     fontSize: 14,
-    color: '#9ca3af',
     textAlign: 'center',
+    marginTop: 4,
+    color: colors.textSecondary,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -1205,43 +533,52 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagItem: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    gap: 6,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   tagItemSelected: {
-    borderColor: '#6366f1',
-    backgroundColor: '#ede9fe',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   tagText: {
     fontSize: 14,
-    color: '#6b7280',
-    marginRight: 4,
+    fontWeight: '500',
+    color: colors.text,
   },
   tagTextSelected: {
-    color: '#6366f1',
-    fontWeight: '500',
+    color: colors.headerText,
+  },
+  footer: {
+    padding: 20,
+    paddingBottom: 30,
+    borderTopWidth: 1,
+    backgroundColor: colors.card,
+    borderTopColor: colors.border,
   },
   submitButton: {
-    paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    marginBottom: 32,
-    minHeight: 56, // Ensure good touch target
+    backgroundColor: colors.primary,
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
   submitButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
+    color: colors.headerText,
   },
-  // Modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1249,21 +586,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: colors.border,
   },
   modalCancelButton: {
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.textSecondary,
+  },
+  modalSaveButton: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
-  },
-  modalSaveButton: {
-    fontSize: 16,
-    color: '#6366f1',
-    fontWeight: '600',
+    color: colors.text,
   },
   modalContent: {
     flex: 1,
@@ -1273,99 +610,82 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 8,
-    marginBottom: 24,
-    resizeMode: 'cover',
+    marginBottom: 16,
   },
   modalSection: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   modalSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
     marginBottom: 8,
+    color: colors.text,
   },
   modalTextInput: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     minHeight: 80,
     textAlignVertical: 'top',
+    borderColor: colors.border,
+    color: colors.text,
+    backgroundColor: colors.card,
   },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#fff',
-    minWidth: 100,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   categoryItemSelected: {
-    borderColor: '#6366f1',
-    backgroundColor: '#ede9fe',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   categoryItemText: {
     fontSize: 14,
-    color: '#6b7280',
-    marginLeft: 8,
+    color: colors.text,
   },
   categoryItemTextSelected: {
-    color: '#6366f1',
-    fontWeight: '500',
+    color: colors.headerText,
   },
-  // Success message styles
-  successOverlay: {
+  photoCaptionContainer: {
     position: 'absolute',
-    top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
+    backgroundColor: colors.shadow + 'B3',
+    padding: 4,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
   },
-  successMessage: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 32,
-    margin: 20,
-    alignItems: 'center',
-    maxWidth: 320,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  successTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
+  photoCaption: {
+    color: colors.headerText,
+    fontSize: 12,
     textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 8,
   },
-  successSubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 8,
+  photoCategoryBadge: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: colors.shadow + '99',
   },
-  successNote: {
-    fontSize: 14,
-    color: '#9ca3af',
-    textAlign: 'center',
-    fontStyle: 'italic',
+  photoCategoryText: {
+    color: colors.headerText,
+    fontSize: 10,
+    fontWeight: '500',
   },
 });

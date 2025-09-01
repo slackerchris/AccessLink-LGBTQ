@@ -1,16 +1,10 @@
-/**
- * Business Review Response Modal
- * Allows business owners to respond to customer reviews
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, memo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Modal,
   SafeAreaView,
@@ -19,29 +13,147 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../hooks/useTheme';
-import { 
-  createBusinessResponse, 
-  updateBusinessResponse, 
-  getBusinessResponseByReviewId,
-  BusinessResponse 
-} from '../../services/businessResponseService';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
+import { useReviewResponse } from '../../hooks/useReviewResponse';
+import { Review } from '../../types/review';
+import { formatTimestamp } from '../../utils/dateUtils';
 
 interface ReviewResponseModalProps {
   visible: boolean;
   onClose: () => void;
-  review: {
-    id: string;
-    businessId: string;
-    userName?: string;
-    rating: number;
-    comment: string;
-    createdAt: any;
-  };
+  review: Review;
   businessOwnerId: string;
   businessOwnerName: string;
   onResponseSubmitted: () => void;
 }
+
+const StarRating = memo(({ rating }: { rating: number }) => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      {[...Array(5)].map((_, i) => (
+        <Ionicons
+          key={i}
+          name={i < Math.round(rating) ? 'star' : 'star-outline'}
+          size={14}
+          color={i < Math.round(rating) ? '#fbbf24' : colors.border}
+        />
+      ))}
+    </View>
+  );
+});
+
+const ModalHeader = memo(({ isEditing, existingResponse, onCancel, onEdit }: { isEditing: boolean, existingResponse: any, onCancel: () => void, onEdit: () => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const showEditButton = existingResponse && !isEditing;
+
+  return (
+    <View style={styles.header}>
+      <TouchableOpacity onPress={onCancel} style={styles.headerButton}>
+        <Ionicons name="close" size={24} color={colors.headerText} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>
+        {existingResponse ? (isEditing ? 'Edit Response' : 'Your Response') : 'Respond to Review'}
+      </Text>
+      {showEditButton ? (
+        <TouchableOpacity onPress={onEdit} style={[styles.headerButton, styles.editButton]}>
+          <Ionicons name="pencil" size={20} color={colors.headerText} />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.headerButton} />
+      )}
+    </View>
+  );
+});
+
+const ReviewDetailsCard = memo(({ review }: { review: Review }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.reviewCard}>
+      <Text style={styles.cardTitle}>Customer Review</Text>
+      <View style={styles.reviewHeader}>
+        <View style={styles.reviewAuthor}>
+          <Text style={styles.reviewerName}>{review.userName || 'Anonymous Customer'}</Text>
+          <Text style={styles.reviewDate}>{formatTimestamp(review.createdAt)}</Text>
+        </View>
+        <StarRating rating={review.rating} />
+      </View>
+      <Text style={styles.reviewComment}>{review.comment}</Text>
+    </View>
+  );
+});
+
+const ResponseForm = memo(({ responseMessage, setResponseMessage }: { responseMessage: string, setResponseMessage: (text: string) => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.responseInput}>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Write a thoughtful response to this customer review..."
+        placeholderTextColor={colors.textSecondary}
+        value={responseMessage}
+        onChangeText={setResponseMessage}
+        multiline
+        numberOfLines={6}
+        textAlignVertical="top"
+        maxLength={1000}
+      />
+      <View style={styles.inputFooter}>
+        <Text style={styles.characterCount}>{responseMessage.length}/1000 characters</Text>
+        <View style={styles.inputHints}>
+          <Text style={styles.inputHint}>💡 Be professional and address their concerns</Text>
+          <Text style={styles.inputHint}>🤝 Thank them for their feedback</Text>
+        </View>
+      </View>
+    </View>
+  );
+});
+
+const ExistingResponse = memo(({ response }: { response: any }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.existingResponse}>
+      <View style={styles.responseHeader}>
+        <Text style={styles.businessOwnerName}>{response.businessOwnerName}</Text>
+        <Text style={styles.responseDate}>{formatTimestamp(response.createdAt)}</Text>
+      </View>
+      <Text style={styles.responseText}>{response.message}</Text>
+      {response.updatedAt > response.createdAt && (
+        <Text style={styles.editedIndicator}>(edited)</Text>
+      )}
+    </View>
+  );
+});
+
+const ActionButtons = memo(({ onCancel, onSubmit, loading, disabled, submitText }: { onCancel: () => void, onSubmit: () => void, loading: boolean, disabled: boolean, submitText: string }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.actionButtons}>
+      <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onCancel} disabled={loading}>
+        <Text style={[styles.buttonText, { color: colors.textSecondary }]}>Cancel</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, styles.submitButton, (loading || disabled) && styles.buttonDisabled]}
+        onPress={onSubmit}
+        disabled={loading || disabled}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <>
+            <Ionicons name="send" size={16} color="#ffffff" />
+            <Text style={[styles.buttonText, { color: '#ffffff' }]}>{submitText}</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+});
 
 export const ReviewResponseModal: React.FC<ReviewResponseModalProps> = ({
   visible,
@@ -51,139 +163,20 @@ export const ReviewResponseModal: React.FC<ReviewResponseModalProps> = ({
   businessOwnerName,
   onResponseSubmitted,
 }) => {
-  const { colors } = useTheme();
-  const [responseMessage, setResponseMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [existingResponse, setExistingResponse] = useState<BusinessResponse | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Load existing response when modal opens
-  useEffect(() => {
-    if (visible && review.id) {
-      loadExistingResponse();
-    }
-  }, [visible, review.id]);
-
-  const loadExistingResponse = async () => {
-    try {
-      const response = await getBusinessResponseByReviewId(review.id);
-      if (response) {
-        setExistingResponse(response);
-        setResponseMessage(response.message);
-        setIsEditing(false);
-      } else {
-        setExistingResponse(null);
-        setResponseMessage('');
-        setIsEditing(false);
-      }
-    } catch (error) {
-      console.error('Error loading existing response:', error);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!responseMessage.trim()) {
-      Alert.alert('Error', 'Please enter a response message.');
-      return;
-    }
-
-    if (responseMessage.trim().length < 10) {
-      Alert.alert('Error', 'Response must be at least 10 characters long.');
-      return;
-    }
-
-    if (responseMessage.trim().length > 1000) {
-      Alert.alert('Error', 'Response must be less than 1000 characters.');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      if (existingResponse) {
-        // Update existing response
-        await updateBusinessResponse(existingResponse.id, responseMessage.trim());
-        Alert.alert('Success', 'Your response has been updated!');
-      } else {
-        // Create new response
-        await createBusinessResponse({
-          reviewId: review.id,
-          businessId: review.businessId,
-          businessOwnerId,
-          businessOwnerName,
-          message: responseMessage.trim(),
-        });
-        Alert.alert('Success', 'Your response has been posted!');
-      }
-
-      setResponseMessage('');
-      setIsEditing(false);
-      onResponseSubmitted();
-      onClose();
-    } catch (error) {
-      console.error('Error submitting response:', error);
-      Alert.alert('Error', 'Failed to submit response. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    if (existingResponse && !isEditing) {
-      // Just viewing existing response
-      onClose();
-    } else if (existingResponse && isEditing) {
-      // Cancel editing, restore original message
-      setResponseMessage(existingResponse.message);
-      setIsEditing(false);
-    } else {
-      // Cancel new response
-      setResponseMessage('');
-      onClose();
-    }
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <Ionicons
-          key={i}
-          name={i <= rating ? 'star' : 'star-outline'}
-          size={14}
-          color={i <= rating ? '#fbbf24' : colors.border}
-        />
-      );
-    }
-    return stars;
-  };
-
-  const formatDate = (dateValue: any) => {
-    try {
-      let date: Date;
-      if (dateValue?.toDate) {
-        date = dateValue.toDate();
-      } else if (typeof dateValue === 'string') {
-        date = new Date(dateValue);
-      } else if (dateValue instanceof Date) {
-        date = dateValue;
-      } else {
-        return 'Unknown date';
-      }
-      
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const {
+    responseMessage,
+    setResponseMessage,
+    loading,
+    existingResponse,
+    isEditing,
+    setIsEditing,
+    handleSubmit,
+    handleCancel,
+  } = useReviewResponse(review, onResponseSubmitted, onClose);
 
   const canEdit = !existingResponse || isEditing;
-  const showEditButton = existingResponse && !isEditing;
 
   return (
     <Modal
@@ -192,28 +185,13 @@ export const ReviewResponseModal: React.FC<ReviewResponseModalProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Header */}
-        <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
-          <TouchableOpacity onPress={handleCancel} style={styles.headerButton}>
-            <Ionicons name="close" size={24} color={colors.headerText} />
-          </TouchableOpacity>
-          
-          <Text style={[styles.headerTitle, { color: colors.headerText }]}>
-            {existingResponse ? (isEditing ? 'Edit Response' : 'Your Response') : 'Respond to Review'}
-          </Text>
-          
-          {showEditButton ? (
-            <TouchableOpacity 
-              onPress={() => setIsEditing(true)} 
-              style={[styles.headerButton, styles.editButton]}
-            >
-              <Ionicons name="pencil" size={20} color={colors.headerText} />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.headerButton} />
-          )}
-        </View>
+      <SafeAreaView style={styles.container}>
+        <ModalHeader 
+          isEditing={isEditing}
+          existingResponse={existingResponse}
+          onCancel={handleCancel}
+          onEdit={() => setIsEditing(true)}
+        />
 
         <KeyboardAvoidingView 
           style={styles.content}
@@ -221,131 +199,29 @@ export const ReviewResponseModal: React.FC<ReviewResponseModalProps> = ({
           keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
         >
           <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {/* Original Review */}
-            <View style={[styles.reviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Customer Review</Text>
-              
-              <View style={styles.reviewHeader}>
-                <View style={styles.reviewAuthor}>
-                  <Text style={[styles.reviewerName, { color: colors.text }]}>
-                    {review.userName || 'Anonymous Customer'}
-                  </Text>
-                  <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>
-                    {formatDate(review.createdAt)}
-                  </Text>
-                </View>
-                <View style={styles.reviewRating}>
-                  {renderStars(review.rating)}
-                </View>
-              </View>
-              
-              <Text style={[styles.reviewComment, { color: colors.text }]}>
-                {review.comment}
-              </Text>
-            </View>
+            <ReviewDetailsCard review={review} />
 
-            {/* Response Section */}
-            <View style={[styles.responseCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
+            <View style={styles.responseCard}>
+              <Text style={styles.cardTitle}>
                 {existingResponse ? 'Your Response' : 'Write Your Response'}
               </Text>
               
               {existingResponse && !isEditing ? (
-                // Display existing response
-                <View style={styles.existingResponse}>
-                  <View style={styles.responseHeader}>
-                    <Text style={[styles.businessOwnerName, { color: colors.text }]}>
-                      {existingResponse.businessOwnerName}
-                    </Text>
-                    <Text style={[styles.responseDate, { color: colors.textSecondary }]}>
-                      {formatDate(existingResponse.createdAt)}
-                    </Text>
-                  </View>
-                  <Text style={[styles.responseText, { color: colors.text }]}>
-                    {existingResponse.message}
-                  </Text>
-                  {existingResponse.updatedAt !== existingResponse.createdAt && (
-                    <Text style={[styles.editedIndicator, { color: colors.textSecondary }]}>
-                      (edited)
-                    </Text>
-                  )}
-                </View>
+                <ExistingResponse response={existingResponse} />
               ) : (
-                // Response input
-                <View style={styles.responseInput}>
-                  <TextInput
-                    style={[
-                      styles.textInput,
-                      { 
-                        backgroundColor: colors.surface,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      }
-                    ]}
-                    placeholder="Write a thoughtful response to this customer review..."
-                    placeholderTextColor={colors.textSecondary}
-                    value={responseMessage}
-                    onChangeText={setResponseMessage}
-                    multiline
-                    numberOfLines={6}
-                    textAlignVertical="top"
-                    maxLength={1000}
-                  />
-                  
-                  <View style={styles.inputFooter}>
-                    <Text style={[styles.characterCount, { color: colors.textSecondary }]}>
-                      {responseMessage.length}/1000 characters
-                    </Text>
-                    
-                    <View style={styles.inputHints}>
-                      <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
-                        💡 Be professional and address their concerns
-                      </Text>
-                      <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
-                        🤝 Thank them for their feedback
-                      </Text>
-                    </View>
-                  </View>
-                </View>
+                <ResponseForm responseMessage={responseMessage} setResponseMessage={setResponseMessage} />
               )}
             </View>
           </ScrollView>
 
-          {/* Action Buttons */}
           {canEdit && (
-            <View style={[styles.actionButtons, { borderTopColor: colors.border }]}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
-                onPress={handleCancel}
-                disabled={loading}
-              >
-                <Text style={[styles.buttonText, { color: colors.textSecondary }]}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.button, 
-                  styles.submitButton, 
-                  { backgroundColor: colors.primary },
-                  loading && styles.buttonDisabled
-                ]}
-                onPress={handleSubmit}
-                disabled={loading || !responseMessage.trim()}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <>
-                    <Ionicons name="send" size={16} color="#ffffff" />
-                    <Text style={[styles.buttonText, { color: '#ffffff' }]}>
-                      {existingResponse ? 'Update Response' : 'Post Response'}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+            <ActionButtons 
+              onCancel={handleCancel}
+              onSubmit={() => handleSubmit(businessOwnerId, businessOwnerName)}
+              loading={loading}
+              disabled={!responseMessage.trim()}
+              submitText={existingResponse ? 'Update Response' : 'Post Response'}
+            />
           )}
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -353,9 +229,10 @@ export const ReviewResponseModal: React.FC<ReviewResponseModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -364,6 +241,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
+    backgroundColor: colors.primary,
+    borderBottomColor: colors.border,
   },
   headerButton: {
     padding: 8,
@@ -377,6 +256,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: colors.headerText,
   },
   content: {
     flex: 1,
@@ -390,16 +270,21 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
   responseCard: {
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
+    color: colors.text,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -414,16 +299,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 4,
+    color: colors.text,
   },
   reviewDate: {
     fontSize: 12,
-  },
-  reviewRating: {
-    flexDirection: 'row',
+    color: colors.textSecondary,
   },
   reviewComment: {
     fontSize: 14,
     lineHeight: 20,
+    color: colors.text,
   },
   existingResponse: {
     marginTop: 8,
@@ -437,18 +322,22 @@ const styles = StyleSheet.create({
   businessOwnerName: {
     fontSize: 14,
     fontWeight: '500',
+    color: colors.text,
   },
   responseDate: {
     fontSize: 12,
+    color: colors.textSecondary,
   },
   responseText: {
     fontSize: 14,
     lineHeight: 20,
+    color: colors.text,
   },
   editedIndicator: {
     fontSize: 11,
     fontStyle: 'italic',
     marginTop: 4,
+    color: colors.textSecondary,
   },
   responseInput: {
     marginTop: 8,
@@ -460,6 +349,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     minHeight: 120,
     lineHeight: 20,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    color: colors.text,
   },
   inputFooter: {
     marginTop: 8,
@@ -468,18 +360,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'right',
     marginBottom: 8,
+    color: colors.textSecondary,
   },
   inputHints: {
     gap: 4,
   },
   inputHint: {
     fontSize: 12,
+    color: colors.textSecondary,
   },
   actionButtons: {
     flexDirection: 'row',
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.card,
   },
   button: {
     flex: 1,
@@ -493,9 +389,10 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 1,
+    borderColor: colors.border,
   },
   submitButton: {
-    // backgroundColor set dynamically
+    backgroundColor: colors.primary,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -505,3 +402,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default ReviewResponseModal;

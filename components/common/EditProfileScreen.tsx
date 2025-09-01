@@ -1,305 +1,191 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth as useFirebaseAuth, useAuthActions as useFirebaseAuthActions } from '../../hooks/useFirebaseAuth';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme, ThemeColors } from '../../hooks/useTheme';
 import PhotoUploadComponent from './PhotoUploadComponent';
+import { useEditProfile } from '../../hooks/useEditProfile';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
 
+type EditProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EditProfile'>;
 
-export function EditProfileScreen({ navigation }: { navigation: any }) {
-  const { user, userProfile } = useFirebaseAuth();
-  const { updateProfile } = useFirebaseAuthActions();
-  const { colors } = useTheme();
+interface EditProfileScreenProps {
+  navigation: EditProfileScreenNavigationProp;
+}
 
-  const [formData, setFormData] = useState({
-    displayName: userProfile?.displayName || user?.displayName || '',
-    firstName: (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.firstName) ?? userProfile?.profile?.firstName ?? '',
-    lastName: userProfile?.profile?.details?.lastName ?? userProfile?.profile?.lastName ?? '',
-    phone: userProfile?.profile?.details?.phoneNumber ?? userProfile?.profile?.phoneNumber ?? '',
-    bio: userProfile?.profile?.details?.bio ?? userProfile?.profile?.bio ?? '',
-  });
+const commonInterests = [
+  'Arts & Culture', 'Music', 'Sports', 'Food & Dining', 'Nightlife',
+  'Shopping', 'Health & Wellness', 'Education', 'Community Events',
+  'Travel', 'Technology', 'Books', 'Movies', 'Volunteering'
+];
 
-  const [interests, setInterests] = useState<string[]>(
-    userProfile?.profile?.details?.interests ?? userProfile?.profile?.interests ?? []
-  );
-
-  // Sync form fields with userProfile when it changes
-  React.useEffect(() => {
-    setFormData({
-      displayName: userProfile?.displayName || user?.displayName || '',
-      firstName:
-      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.firstName) ??
-      userProfile?.profile?.firstName ??
-      '',
-      lastName:
-      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.lastName) ??
-      userProfile?.profile?.lastName ??
-      '',
-      phone:
-      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.phoneNumber) ??
-      userProfile?.profile?.phoneNumber ??
-      '',
-      bio:
-      (userProfile?.profile && 'details' in userProfile.profile && (userProfile.profile as any).details?.bio) ??
-      userProfile?.profile?.bio ??
-      '',
-      // preferredPronouns removed
-    });
-    setInterests(userProfile?.profile?.details?.interests ?? userProfile?.profile?.interests ?? []);
-  }, [userProfile]);
-
-  // accessibilityNeeds state moved to AccessibilityPreferencesScreen
-
-  // Accessibility preferences logic moved to AccessibilityPreferencesScreen
-
-  const [loading, setLoading] = useState(false);
-
-  const handleSave = async () => {
-    if (!formData.displayName.trim()) {
-      Alert.alert('Error', 'Display name is required');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      console.log('Updating profile with:', {
-        displayName: formData.displayName,
-        profile: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: formData.phone, 
-          bio: formData.bio,
-          interests,
-          // accessibilityNeeds moved to AccessibilityPreferencesScreen
-        }
-      });
-      
-      await updateProfile({
-        displayName: formData.displayName,
-        profile: {
-          ...userProfile?.profile, // preserve all other profile fields, including accessibilityPreferences
-          details: {
-          ...((userProfile?.profile && typeof userProfile.profile === 'object' && 'details' in userProfile.profile && userProfile.profile.details && typeof userProfile.profile.details === 'object') ? userProfile.profile.details : {}),
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            phoneNumber: formData.phone, // Note: Changed from phone to phoneNumber to match UserProfile type
-            bio: formData.bio,
-            interests,
-          }
-        }
-      });
-      
-      Alert.alert('Success', 'Profile updated successfully!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update profile');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleInterest = (interest: string) => {
-    setInterests(prev => 
-      prev.includes(interest) 
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
-    );
-  };
-
-  // toggleAccessibilityNeed moved to AccessibilityPreferencesScreen
-
-  const commonInterests = [
-    'Arts & Culture', 'Music', 'Sports', 'Food & Dining', 'Nightlife',
-    'Shopping', 'Health & Wellness', 'Education', 'Community Events',
-    'Travel', 'Technology', 'Books', 'Movies', 'Volunteering'
-  ];
-
-  // Accessibility needs moved to AccessibilityPreferencesScreen
-
+const ScreenHeader = React.memo(({ navigation, onSave, loading }: { navigation: EditProfileScreenNavigationProp, onSave: () => void, loading: boolean }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={[styles.header, { backgroundColor: colors.header }]}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            accessibilityHint="Returns to previous screen"
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.headerText} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.headerText }]}>Edit Profile</Text>
-          <TouchableOpacity 
-            style={[styles.saveButton, { backgroundColor: colors.primary }, loading && styles.disabledButton]}
-            onPress={handleSave}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Save profile"
-            accessibilityHint="Saves your profile changes"
-            accessibilityState={{ disabled: loading }}
-          >
-            <Text style={styles.saveButtonText}>
-              {loading ? 'Saving...' : 'Save'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color={colors.headerText} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Edit Profile</Text>
+      <TouchableOpacity
+        style={[styles.saveButton, loading && styles.disabledButton]}
+        onPress={onSave}
+        disabled={loading}
+      >
+        {loading ? <ActivityIndicator size="small" color={colors.headerText} /> : <Text style={styles.saveButtonText}>Save</Text>}
+      </TouchableOpacity>
+    </View>
+  );
+});
 
-        <View style={styles.profilePhotoSection}>
-          <PhotoUploadComponent
-            uploadType="user-profile"
-            userId={user?.uid}
-            currentPhotoURL={(userProfile as any)?.profilePhoto}
-            onPhotoUploaded={(downloadURL) => {
-              console.log('✅ Profile photo uploaded:', downloadURL);
-              // The photoUploadService already updates the user document
-              // We could trigger a profile refresh here if needed
-            }}
-            onPhotoRemoved={() => {
-              console.log('🗑️ Profile photo removed');
-              // Handle profile photo removal if needed
-            }}
-            disabled={loading}
+const ProfilePhotoSection = React.memo(({ userId, profilePhoto, onUpload, onRemove, loading }: { userId?: string, profilePhoto?: string, onUpload: (url: string) => void, onRemove: () => void, loading: boolean }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.profilePhotoSection}>
+      <PhotoUploadComponent
+        uploadType="user-profile"
+        userId={userId}
+        currentPhotoURL={profilePhoto}
+        onPhotoUploaded={onUpload}
+        onPhotoRemoved={onRemove}
+        disabled={loading}
+      />
+    </View>
+  );
+});
+
+const InfoSection = React.memo(({ formData, setFormData }: { formData: any, setFormData: any }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Basic Information</Text>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Display Name *</Text>
+        <TextInput
+          style={styles.input}
+          value={formData.displayName}
+          onChangeText={(text) => setFormData((p: any) => ({ ...p, displayName: text }))}
+          placeholder="How you'd like to be shown"
+          placeholderTextColor={colors.textSecondary}
+        />
+      </View>
+      <View style={styles.row}>
+        <View style={[styles.inputGroup, styles.halfWidth]}>
+          <Text style={styles.label}>First Name</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.firstName}
+            onChangeText={(text) => setFormData((p: any) => ({ ...p, firstName: text }))}
+            placeholder="First name"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Basic Information</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Display Name *</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-              value={formData.displayName}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, displayName: text }))}
-              placeholder="How you'd like to be shown"
-              placeholderTextColor={colors.textSecondary}
-              accessibilityLabel="Display name"
-              accessibilityHint="Enter the name you want others to see"
-              returnKeyType="next"
-            />
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={[styles.label, { color: colors.text }]}>First Name</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-                value={formData.firstName}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, firstName: text }))}
-                placeholder="First name"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
-
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={[styles.label, { color: colors.text }]}>Last Name</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-                value={formData.lastName}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
-                placeholder="Last name"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
-          </View>
-
-          {/* Preferred Pronouns field removed */}
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Phone Number</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-              value={formData.phone}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
-              placeholder="(555) 123-4567"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Bio</Text>
-            <TextInput
-              style={[styles.input, styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-              value={formData.bio}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, bio: text }))}
-              placeholder="Tell us a bit about yourself..."
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              numberOfLines={4}
-            />
-          </View>
+        <View style={[styles.inputGroup, styles.halfWidth]}>
+          <Text style={styles.label}>Last Name</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.lastName}
+            onChangeText={(text) => setFormData((p: any) => ({ ...p, lastName: text }))}
+            placeholder="Last name"
+            placeholderTextColor={colors.textSecondary}
+          />
         </View>
+      </View>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Bio</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={formData.bio}
+          onChangeText={(text) => setFormData((p: any) => ({ ...p, bio: text }))}
+          placeholder="Tell us a bit about yourself..."
+          placeholderTextColor={colors.textSecondary}
+          multiline
+        />
+      </View>
+    </View>
+  );
+});
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Interests</Text>
-          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-            Select topics you're interested in to help us recommend relevant businesses
-          </Text>
-          <View style={styles.tagContainer}>
-            {commonInterests.map((interest) => (
-              <TouchableOpacity
-                key={interest}
-                style={[
-                  styles.tag,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                  interests.includes(interest) && { backgroundColor: colors.primary, borderColor: colors.primary }
-                ]}
-                onPress={() => toggleInterest(interest)}
-                accessibilityRole="button"
-                accessibilityLabel={`${interest} interest`}
-                accessibilityHint={`${interests.includes(interest) ? 'Remove' : 'Add'} ${interest} from your interests`}
-                accessibilityState={{ selected: interests.includes(interest) }}
-              >
-                <Text style={[
-                  styles.tagText,
-                  { color: colors.text },
-                  interests.includes(interest) && { color: '#ffffff' }
-                ]}>
-                  {interest}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+const InterestsSection = React.memo(({ interests, onToggle }: { interests: string[], onToggle: (interest: string) => void }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Interests</Text>
+      <Text style={styles.sectionDescription}>
+        Select topics you're interested in to help us recommend relevant businesses
+      </Text>
+      <View style={styles.tagContainer}>
+        {commonInterests.map((interest) => (
+          <TouchableOpacity
+            key={interest}
+            style={[styles.tag, interests.includes(interest) && styles.selectedTag]}
+            onPress={() => onToggle(interest)}
+          >
+            <Text style={[styles.tagText, interests.includes(interest) && styles.selectedTagText]}>
+              {interest}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+});
 
-        {/* Accessibility preferences moved to AccessibilityPreferencesScreen */}
-        {/* Example: Button to demonstrate safe accessibility update (remove in real app) */}
-        {/*
-        <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: colors.primary }, loading && styles.disabledButton]}
-          onPress={() => handleSaveAccessibilityNeeds(['Wheelchair Accessible', 'Gender Neutral Restroom'])}
-          disabled={loading}
-        >
-          <Text style={styles.saveButtonText}>Update Accessibility Needs (Demo)</Text>
-        </TouchableOpacity>
-        */}
+export function EditProfileScreen({ navigation }: EditProfileScreenProps) {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const {
+    user,
+    formData,
+    setFormData,
+    interests,
+    toggleInterest,
+    loading,
+    handleSave,
+    handlePhotoUpload,
+    handlePhotoRemove,
+  } = useEditProfile(navigation);
 
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScreenHeader navigation={navigation} onSave={handleSave} loading={loading} />
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ProfilePhotoSection
+          userId={user?.uid}
+          profilePhoto={(user as any)?.profilePhoto}
+          onUpload={handlePhotoUpload}
+          onRemove={handlePhotoRemove}
+          loading={loading}
+        />
+        <InfoSection formData={formData} setFormData={setFormData} />
+        <InterestsSection interests={interests} onToggle={toggleInterest} />
         <View style={styles.bottomPadding} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const localStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -311,28 +197,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 20,
-    backgroundColor: '#fff',
+    backgroundColor: colors.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: colors.border,
   },
   backButton: {
-    padding: 12, // Increased for better touch target
-    minWidth: 44, // Ensure minimum touch target
+    padding: 12,
+    minWidth: 44,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20, // Increased for better readability
+    fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: colors.headerText,
   },
   saveButton: {
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 20, // Increased for better touch
-    paddingVertical: 12, // Increased for better touch
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 8,
-    minHeight: 44, // Ensure minimum touch target
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -340,9 +225,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
-    color: '#fff',
+    color: colors.headerText,
     fontWeight: '600',
-    fontSize: 16, // Added explicit font size
+    fontSize: 16,
   },
   profilePhotoSection: {
     alignItems: 'center',
@@ -355,12 +240,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
   },
   sectionDescription: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -377,22 +262,23 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: colors.text,
     marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
-    padding: 16, // Increased for better touch and readability
+    padding: 16,
     fontSize: 16,
-    backgroundColor: '#fafafa',
-    minHeight: 48, // Ensure adequate touch target
+    minHeight: 48,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    color: colors.text,
   },
   textArea: {
-    height: 120, // Increased for better usability
+    height: 120,
     textAlignVertical: 'top',
-    paddingTop: 16, // Ensure proper padding at top
+    paddingTop: 16,
   },
   tagContainer: {
     flexDirection: 'row',
@@ -400,29 +286,31 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16, // Increased for better touch
-    paddingVertical: 12, // Increased for better touch
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    minHeight: 44, // Ensure adequate touch target
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   selectedTag: {
-    backgroundColor: '#6366f1',
-    borderColor: '#6366f1',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   tagText: {
     fontSize: 14,
-    color: '#374151',
-    fontWeight: '500', // Added for better readability
+    fontWeight: '500',
+    color: colors.text,
   },
   selectedTagText: {
-    color: '#fff',
+    color: colors.headerText,
   },
   bottomPadding: {
     height: 50,
   },
 });
+
+export default EditProfileScreen;

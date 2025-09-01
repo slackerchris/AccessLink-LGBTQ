@@ -13,10 +13,13 @@ import {
   getDocs, 
   doc, 
   updateDoc,
+  deleteDoc,
   getDoc,
-  Timestamp 
+  Timestamp,
+  limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { TimestampField } from '../types/business';
 
 export interface BusinessResponse {
   id: string;
@@ -25,8 +28,9 @@ export interface BusinessResponse {
   businessOwnerId: string;
   businessOwnerName: string;
   message: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: TimestampField;
+  updatedAt: TimestampField;
+  isDeleted?: boolean;
 }
 
 export interface CreateBusinessResponseInput {
@@ -37,208 +41,157 @@ export interface CreateBusinessResponseInput {
   message: string;
 }
 
-/**
- * Create a business response to a customer review
- */
-export async function createBusinessResponse(input: CreateBusinessResponseInput): Promise<string> {
-  const { reviewId, businessId, businessOwnerId, businessOwnerName, message } = input;
+const toBusinessResponse = (docSnap: any): BusinessResponse => {
+  const data = docSnap.data();
+  return {
+    id: docSnap.id,
+    reviewId: data.reviewId,
+    businessId: data.businessId,
+    businessOwnerId: data.businessOwnerId,
+    businessOwnerName: data.businessOwnerName || 'Business Owner',
+    message: data.message,
+    createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+    updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(),
+    isDeleted: data.isDeleted || false,
+  };
+};
 
-  if (!reviewId) throw new Error('reviewId is required');
-  if (!businessId) throw new Error('businessId is required');
-  if (!businessOwnerId) throw new Error('businessOwnerId is required');
-  if (!message?.trim()) throw new Error('message is required');
+class BusinessResponseService {
+  private responsesCollection = collection(db, 'businessResponses');
 
-  // Check if response already exists for this review
-  const existingResponse = await getBusinessResponseByReviewId(reviewId);
-  if (existingResponse) {
-    throw new Error('A response already exists for this review. Use updateBusinessResponse to modify it.');
-  }
+  async create(input: CreateBusinessResponseInput): Promise<string> {
+    const { reviewId, businessId, businessOwnerId, businessOwnerName, message } = input;
 
-  const docRef = await addDoc(collection(db, 'businessResponses'), {
-    reviewId,
-    businessId,
-    businessOwnerId,
-    businessOwnerName: businessOwnerName || 'Business Owner',
-    message: message.trim(),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-
-  console.log('✅ Business response created:', docRef.id);
-  return docRef.id;
-}
-
-/**
- * Update an existing business response
- */
-export async function updateBusinessResponse(responseId: string, message: string): Promise<void> {
-  if (!responseId) throw new Error('responseId is required');
-  if (!message?.trim()) throw new Error('message is required');
-
-  const responseRef = doc(db, 'businessResponses', responseId);
-  await updateDoc(responseRef, {
-    message: message.trim(),
-    updatedAt: serverTimestamp(),
-  });
-
-  console.log('✅ Business response updated:', responseId);
-}
-
-/**
- * Get business response for a specific review
- */
-export async function getBusinessResponseByReviewId(reviewId: string): Promise<BusinessResponse | null> {
-  try {
-    const q = query(
-      collection(db, 'businessResponses'),
-      where('reviewId', '==', reviewId)
-    );
-    
-    const snap = await getDocs(q);
-    
-    if (snap.empty) {
-      return null;
+    if (!reviewId || !businessId || !businessOwnerId || !message?.trim()) {
+      throw new Error('Missing required fields for business response.');
     }
 
-    const doc = snap.docs[0];
-    const data = doc.data();
-    
-    const toIso = (t: any) => {
-      if (!t) return new Date().toISOString();
-      if (t instanceof Timestamp) return t.toDate().toISOString();
-      if (typeof t?.toDate === 'function') return t.toDate().toISOString();
-      if (typeof t === 'string') return t;
-      if (typeof t === 'number') return new Date(t).toISOString();
-      return new Date().toISOString();
-    };
-
-    return {
-      id: doc.id,
-      reviewId: data.reviewId,
-      businessId: data.businessId,
-      businessOwnerId: data.businessOwnerId,
-      businessOwnerName: data.businessOwnerName || 'Business Owner',
-      message: data.message,
-      createdAt: toIso(data.createdAt),
-      updatedAt: toIso(data.updatedAt),
-    };
-  } catch (error) {
-    console.error('❌ Error fetching business response:', error);
-    throw error;
-  }
-}
-
-/**
- * Get all business responses for a specific business
- */
-export async function getBusinessResponses(businessId: string): Promise<BusinessResponse[]> {
-  try {
-    const q = query(
-      collection(db, 'businessResponses'),
-      where('businessId', '==', businessId),
-      orderBy('createdAt', 'desc')
-    );
-    
-    const snap = await getDocs(q);
-    
-    const responses = snap.docs.map((doc) => {
-      const data = doc.data();
-      
-      const toIso = (t: any) => {
-        if (!t) return new Date().toISOString();
-        if (t instanceof Timestamp) return t.toDate().toISOString();
-        if (typeof t?.toDate === 'function') return t.toDate().toISOString();
-        if (typeof t === 'string') return t;
-        if (typeof t === 'number') return new Date(t).toISOString();
-        return new Date().toISOString();
-      };
-
-      return {
-        id: doc.id,
-        reviewId: data.reviewId,
-        businessId: data.businessId,
-        businessOwnerId: data.businessOwnerId,
-        businessOwnerName: data.businessOwnerName || 'Business Owner',
-        message: data.message,
-        createdAt: toIso(data.createdAt),
-        updatedAt: toIso(data.updatedAt),
-      };
-    });
-
-    console.log('✅ Fetched', responses.length, 'business responses for business:', businessId);
-    return responses;
-  } catch (error) {
-    console.error('❌ Error fetching business responses:', error);
-    throw error;
-  }
-}
-
-/**
- * Get all responses by a specific business owner
- */
-export async function getResponsesByBusinessOwner(businessOwnerId: string): Promise<BusinessResponse[]> {
-  try {
-    const q = query(
-      collection(db, 'businessResponses'),
-      where('businessOwnerId', '==', businessOwnerId),
-      orderBy('createdAt', 'desc')
-    );
-    
-    const snap = await getDocs(q);
-    
-    const responses = snap.docs.map((doc) => {
-      const data = doc.data();
-      
-      const toIso = (t: any) => {
-        if (!t) return new Date().toISOString();
-        if (t instanceof Timestamp) return t.toDate().toISOString();
-        if (typeof t?.toDate === 'function') return t.toDate().toISOString();
-        if (typeof t === 'string') return t;
-        if (typeof t === 'number') return new Date(t).toISOString();
-        return new Date().toISOString();
-      };
-
-      return {
-        id: doc.id,
-        reviewId: data.reviewId,
-        businessId: data.businessId,
-        businessOwnerId: data.businessOwnerId,
-        businessOwnerName: data.businessOwnerName || 'Business Owner',
-        message: data.message,
-        createdAt: toIso(data.createdAt),
-        updatedAt: toIso(data.updatedAt),
-      };
-    });
-
-    console.log('✅ Fetched', responses.length, 'responses by business owner:', businessOwnerId);
-    return responses;
-  } catch (error) {
-    console.error('❌ Error fetching responses by business owner:', error);
-    throw error;
-  }
-}
-
-/**
- * Delete a business response (in case business owner wants to remove their response)
- */
-export async function deleteBusinessResponse(responseId: string): Promise<void> {
-  try {
-    const responseRef = doc(db, 'businessResponses', responseId);
-    
-    // Check if response exists
-    const responseDoc = await getDoc(responseRef);
-    if (!responseDoc.exists()) {
-      throw new Error('Response not found');
+    const existingResponse = await this.getByReviewId(reviewId);
+    if (existingResponse) {
+      throw new Error('A response already exists for this review. Use update to modify it.');
     }
 
+    const docRef = await addDoc(this.responsesCollection, {
+      reviewId,
+      businessId,
+      businessOwnerId,
+      businessOwnerName: businessOwnerName || 'Business Owner',
+      message: message.trim(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      isDeleted: false,
+    });
+
+    console.log('✅ Business response created:', docRef.id);
+    return docRef.id;
+  }
+
+  async update(responseId: string, message: string): Promise<void> {
+    if (!responseId || !message?.trim()) {
+      throw new Error('Response ID and message are required for update.');
+    }
+
+    const responseRef = doc(this.responsesCollection, responseId);
     await updateDoc(responseRef, {
-      message: '[Response deleted by business owner]',
+      message: message.trim(),
       updatedAt: serverTimestamp(),
     });
 
-    console.log('✅ Business response marked as deleted:', responseId);
-  } catch (error) {
-    console.error('❌ Error deleting business response:', error);
-    throw error;
+    console.log('✅ Business response updated:', responseId);
+  }
+
+  async getByReviewId(reviewId: string): Promise<BusinessResponse | null> {
+    try {
+      const q = query(
+        this.responsesCollection,
+        where('reviewId', '==', reviewId),
+        limit(1)
+      );
+      
+      const snap = await getDocs(q);
+      
+      if (snap.empty) {
+        return null;
+      }
+
+      return toBusinessResponse(snap.docs[0]);
+    } catch (error) {
+      console.error('❌ Error fetching business response by review ID:', error);
+      throw error;
+    }
+  }
+
+  async getForBusiness(businessId: string): Promise<BusinessResponse[]> {
+    try {
+      const q = query(
+        this.responsesCollection,
+        where('businessId', '==', businessId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const snap = await getDocs(q);
+      const responses = snap.docs.map(toBusinessResponse);
+
+      console.log('✅ Fetched', responses.length, 'business responses for business:', businessId);
+      return responses;
+    } catch (error) {
+      console.error('❌ Error fetching business responses for business:', error);
+      throw error;
+    }
+  }
+
+  async getByOwner(businessOwnerId: string): Promise<BusinessResponse[]> {
+    try {
+      const q = query(
+        this.responsesCollection,
+        where('businessOwnerId', '==', businessOwnerId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const snap = await getDocs(q);
+      const responses = snap.docs.map(toBusinessResponse);
+
+      console.log('✅ Fetched', responses.length, 'responses by business owner:', businessOwnerId);
+      return responses;
+    } catch (error) {
+      console.error('❌ Error fetching responses by business owner:', error);
+      throw error;
+    }
+  }
+
+  async softDelete(responseId: string): Promise<void> {
+    try {
+      const responseRef = doc(this.responsesCollection, responseId);
+      const responseDoc = await getDoc(responseRef);
+
+      if (!responseDoc.exists()) {
+        throw new Error('Response not found');
+      }
+
+      await updateDoc(responseRef, {
+        message: '[Response deleted by business owner]',
+        isDeleted: true,
+        updatedAt: serverTimestamp(),
+      });
+
+      console.log('✅ Business response marked as deleted:', responseId);
+    } catch (error) {
+      console.error('❌ Error soft-deleting business response:', error);
+      throw error;
+    }
+  }
+
+  async hardDelete(responseId: string): Promise<void> {
+    try {
+      const responseRef = doc(this.responsesCollection, responseId);
+      await deleteDoc(responseRef);
+      console.log('✅ Business response permanently deleted:', responseId);
+    } catch (error) {
+      console.error('❌ Error permanently deleting business response:', error);
+      throw error;
+    }
   }
 }
+
+export const businessResponseService = new BusinessResponseService();
+export default businessResponseService;

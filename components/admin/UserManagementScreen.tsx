@@ -1,153 +1,110 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   Alert,
-  Modal,
+  FlatList,
+  ActivityIndicator,
+  ScrollView,
   RefreshControl,
-  FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { adminService, UserDetails, UserFilters } from '../../services/adminService';
+import { useUserManagement, useUserDetails, useUserActions } from '../../hooks/useUserManagement';
+import { UserDetails } from '../../services/adminService';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
+import { useTheme } from '../../hooks/useTheme';
+import { Modal } from '../common/FixedModal';
+
+// Navigation Prop Type
+type UserManagementScreenNavigationProp = StackNavigationProp<RootStackParamList, 'UserManagement'>;
 
 interface UserManagementScreenProps {
-  navigation: any;
+  navigation: UserManagementScreenNavigationProp;
 }
 
-const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation }) => {
-  const [users, setUsers] = useState<UserDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<UserFilters>({});
+// Helper function for status colors
+const getStatusColor = (status: string, colors: any) => {
+  switch (status) {
+    case 'active': return colors.success;
+    case 'inactive': return colors.warning;
+    case 'suspended': return colors.notification;
+    default: return colors.textSecondary;
+  }
+};
 
-  useEffect(() => {
-    loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, filters]);
+// Helper function for verification colors
+const getVerificationColor = (level: string, colors: any) => {
+  switch (level) {
+    case 'full': return colors.success;
+    case 'email': return colors.primary;
+    case 'phone': return '#8b5cf6'; // No direct theme color, consider adding one
+    case 'unverified': return colors.notification;
+    default: return colors.textSecondary;
+  }
+};
 
-  const loadUsers = async (reset: boolean = false) => {
-    try {
-      if (reset) {
-        setLoading(true);
-        setCurrentPage(1);
-      }
-      const result = await adminService.getUsers(
-        reset ? 1 : currentPage,
-        50,
-        searchQuery,
-        filters
-      );
-      if (reset) {
-        setUsers(result.users);
-      } else {
-        setUsers(prev => [...prev, ...result.users]);
-      }
-      setTotalCount(result.totalCount);
-    } catch (error) {
-      console.error('Error loading users:', error);
-      Alert.alert('Error', 'Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
+// Memoized Sub-components
+const Header: React.FC<{ onBack: () => void; totalCount: number }> = React.memo(({ onBack, totalCount }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <Ionicons name="arrow-back" size={24} color="#ffffff" />
+      </TouchableOpacity>
+      <View style={styles.headerContent}>
+        <Text style={styles.headerTitle}>User Management</Text>
+        <Text style={styles.headerSubtitle}>{totalCount} total users</Text>
+      </View>
+    </View>
+  );
+});
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadUsers(true);
-    setRefreshing(false);
-  };
+const SearchBar: React.FC<{
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  onSearch: () => void;
+}> = React.memo(({ searchQuery, setSearchQuery, onSearch }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.searchContainer}>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search users by name or email..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onSubmitEditing={onSearch}
+        returnKeyType="search"
+      />
+      <TouchableOpacity style={styles.searchButton} onPress={onSearch}>
+        <Text style={styles.searchButtonText}>Search</Text>
+      </TouchableOpacity>
+    </View>
+  );
+});
 
-  const handleSearch = () => {
-    loadUsers(true);
-  };
-
-  const handleUserPress = async (user: UserDetails) => {
-    try {
-      const userDetails = await adminService.getUserDetails(user.uid);
-      setSelectedUser(userDetails);
-      setShowUserModal(true);
-    } catch (error) {
-      console.error('Error loading user details:', error);
-      Alert.alert('Error', 'Failed to load user details');
-    }
-  };
-
-  const handleUpdateUserStatus = async (userId: string, newStatus: 'active' | 'inactive' | 'suspended') => {
-    try {
-      await adminService.updateUserStatus(userId, newStatus);
-      Alert.alert('Success', 'User status updated successfully');
-      loadUsers(true);
-      setShowUserModal(false);
-    } catch (error) {
-      console.error('Error updating user status:', error);
-      Alert.alert('Error', 'Failed to update user status');
-    }
-  };
-
-  const handleAddNote = (userId: string) => {
-    Alert.prompt(
-      'Add Admin Note',
-      'Enter a note for this user:',
-      async (note) => {
-        if (note && note.trim()) {
-          try {
-            // You may want to pass actual adminId/adminName from context
-            await adminService.addUserNote(userId, note.trim());
-            Alert.alert('Success', 'Note added successfully');
-            // Reload user details
-            const userDetails = await adminService.getUserDetails(userId);
-            setSelectedUser(userDetails);
-          } catch (error) {
-            console.error('Error adding note:', error);
-            Alert.alert('Error', 'Failed to add note');
-          }
-        }
-      }
-    );
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#10b981';
-      case 'inactive': return '#f59e0b';
-      case 'suspended': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  const getVerificationColor = (level: string) => {
-    switch (level) {
-      case 'full': return '#10b981';
-      case 'email': return '#3b82f6';
-      case 'phone': return '#8b5cf6';
-      case 'unverified': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  const renderUser = ({ item }: { item: UserDetails }) => (
-    <TouchableOpacity style={styles.userCard} onPress={() => handleUserPress(item)}>
+const UserCard: React.FC<{ item: UserDetails; onPress: () => void }> = React.memo(({ item, onPress }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <TouchableOpacity style={styles.userCard} onPress={onPress}>
       <View style={styles.userHeader}>
         <Text style={styles.userName}>{item.displayName}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.accountStatus) }]}>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.accountStatus, colors) }]}>
           <Text style={styles.statusText}>{item.accountStatus}</Text>
         </View>
       </View>
       <Text style={styles.userEmail}>{item.email}</Text>
       <View style={styles.userMeta}>
         <Text style={styles.userMetaText}>
-          Joined: {item.registrationDate.toLocaleDateString()}
+          Joined: {item.registrationDate instanceof Date ? item.registrationDate.toLocaleDateString() : 'N/A'}
         </Text>
-        <View style={[styles.verificationBadge, { backgroundColor: getVerificationColor(item.verificationLevel) }]}>
+        <View style={[styles.verificationBadge, { backgroundColor: getVerificationColor(item.verificationLevel, colors) }]}>
           <Text style={styles.verificationText}>{item.verificationLevel}</Text>
         </View>
       </View>
@@ -157,180 +114,185 @@ const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation 
       </View>
     </TouchableOpacity>
   );
+});
 
-  const renderUserModal = () => {
-    if (!selectedUser) return null;
+const UserDetailsModal: React.FC<{
+  userId: string;
+  visible: boolean;
+  onClose: () => void;
+  onUpdate: () => void;
+}> = ({ userId, visible, onClose, onUpdate }) => {
+  const { user: selectedUser, loading, error, refresh } = useUserDetails(userId);
+  const { updateUserStatus, addUserNote, loading: actionLoading } = useUserActions();
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+
+  const handleUpdateStatus = async (newStatus: 'active' | 'inactive' | 'suspended') => {
+    try {
+      await updateUserStatus(userId, newStatus);
+      Alert.alert('Success', 'User status updated successfully');
+      onUpdate();
+      onClose();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred.';
+      Alert.alert('Error', message);
+    }
+  };
+
+  const handleAddNote = () => {
+    Alert.prompt('Add Admin Note', 'Enter a note for this user:', async (note) => {
+      if (note && note.trim()) {
+        try {
+          await addUserNote(userId, note.trim());
+          Alert.alert('Success', 'Note added successfully');
+          refresh();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'An unknown error occurred.';
+          Alert.alert('Error', message);
+        }
+      }
+    });
+  };
+
+  const renderContent = () => {
+    if (loading && !selectedUser) return <View style={styles.modalLoading}><ActivityIndicator size="large" /></View>;
+    if (error) return <View style={styles.modalLoading}><Text style={{ color: 'red' }}>{error}</Text></View>;
+    if (!selectedUser) return <View style={styles.modalLoading}><Text>User not found.</Text></View>;
 
     return (
-      <Modal
-        visible={showUserModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>User Details</Text>
-            <TouchableOpacity onPress={() => setShowUserModal(false)}>
-              <Text style={styles.closeButton}>✕</Text>
-            </TouchableOpacity>
+      <>
+        <ScrollView style={styles.modalContent}>
+          <View style={styles.userDetailSection}>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <DetailRow label="Display Name" value={selectedUser.displayName} />
+            <DetailRow label="Email" value={selectedUser.email} />
+            <DetailRow label="Role" value={selectedUser.role} />
           </View>
-
-          <ScrollView style={styles.modalContent}>
+          <View style={styles.userDetailSection}>
+            <Text style={styles.sectionTitle}>Account Status</Text>
+            <DetailRow label="Status">
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedUser.accountStatus, colors) }]}>
+                <Text style={styles.statusText}>{selectedUser.accountStatus}</Text>
+              </View>
+            </DetailRow>
+            <DetailRow label="Verification">
+              <View style={[styles.verificationBadge, { backgroundColor: getVerificationColor(selectedUser.verificationLevel, colors) }]}>
+                <Text style={styles.verificationText}>{selectedUser.verificationLevel}</Text>
+              </View>
+            </DetailRow>
+          </View>
+          <View style={styles.userDetailSection}>
+            <Text style={styles.sectionTitle}>Activity</Text>
+            <DetailRow label="Registration Date" value={selectedUser.registrationDate.toLocaleDateString()} />
+            <DetailRow label="Last Login" value={selectedUser.lastLoginDate.toLocaleDateString()} />
+            <DetailRow label="Reviews Written" value={selectedUser.reviewCount.toString()} />
+            <DetailRow label="Business Accounts" value={selectedUser.businessCount.toString()} />
+          </View>
+          {selectedUser.adminNotes.length > 0 && (
             <View style={styles.userDetailSection}>
-              <Text style={styles.sectionTitle}>Basic Information</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Display Name:</Text>
-                <Text style={styles.detailValue}>{selectedUser.displayName}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Email:</Text>
-                <Text style={styles.detailValue}>{selectedUser.email}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Role:</Text>
-                <Text style={styles.detailValue}>{selectedUser.role}</Text>
-              </View>
-            </View>
-
-            <View style={styles.userDetailSection}>
-              <Text style={styles.sectionTitle}>Account Status</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Status:</Text>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedUser.accountStatus) }]}>
-                  <Text style={styles.statusText}>{selectedUser.accountStatus}</Text>
-                </View>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Verification:</Text>
-                <View style={[styles.verificationBadge, { backgroundColor: getVerificationColor(selectedUser.verificationLevel) }]}>
-                  <Text style={styles.verificationText}>{selectedUser.verificationLevel}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.userDetailSection}>
-              <Text style={styles.sectionTitle}>Activity</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Registration Date:</Text>
-                <Text style={styles.detailValue}>{selectedUser.registrationDate.toLocaleDateString()}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Last Login:</Text>
-                <Text style={styles.detailValue}>{selectedUser.lastLoginDate.toLocaleDateString()}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Reviews Written:</Text>
-                <Text style={styles.detailValue}>{selectedUser.reviewCount}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Business Accounts:</Text>
-                <Text style={styles.detailValue}>{selectedUser.businessCount}</Text>
-              </View>
-            </View>
-
-            {selectedUser.adminNotes.length > 0 && (
-              <View style={styles.userDetailSection}>
-                <Text style={styles.sectionTitle}>Admin Notes</Text>
-                {selectedUser.adminNotes.map((note, index) => (
-                  <View key={index} style={styles.noteCard}>
-                    <View style={styles.noteHeader}>
-                      <Text style={styles.noteAdmin}>{note.adminName}</Text>
-                      <Text style={styles.noteDate}>{note.timestamp.toLocaleDateString()}</Text>
-                    </View>
-                    <Text style={styles.noteText}>{note.note}</Text>
+              <Text style={styles.sectionTitle}>Admin Notes</Text>
+              {selectedUser.adminNotes.map((note, index) => (
+                <View key={index} style={styles.noteCard}>
+                  <View style={styles.noteHeader}>
+                    <Text style={styles.noteAdmin}>{note.adminName}</Text>
+                    <Text style={styles.noteDate}>{note.timestamp.toLocaleDateString()}</Text>
                   </View>
-                ))}
-              </View>
-            )}
-          </ScrollView>
-
-          <View style={styles.modalActions}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.noteButton]}
-              onPress={() => handleAddNote(selectedUser.uid)}
-            >
-              <Text style={styles.actionButtonText}>Add Note</Text>
+                  <Text style={styles.noteText}>{note.note}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+        <View style={styles.modalActions}>
+          <TouchableOpacity style={[styles.actionButton, styles.noteButton]} onPress={handleAddNote} disabled={actionLoading}>
+            <Text style={styles.actionButtonText}>Add Note</Text>
+          </TouchableOpacity>
+          {selectedUser.accountStatus === 'active' ? (
+            <TouchableOpacity style={[styles.actionButton, styles.suspendButton]} onPress={() => handleUpdateStatus('suspended')} disabled={actionLoading}>
+              <Text style={styles.actionButtonText}>Suspend</Text>
             </TouchableOpacity>
-            
-            {selectedUser.accountStatus === 'active' && (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.suspendButton]}
-                onPress={() => handleUpdateUserStatus(selectedUser.uid, 'suspended')}
-              >
-                <Text style={styles.actionButtonText}>Suspend</Text>
-              </TouchableOpacity>
-            )}
-            
-            {selectedUser.accountStatus === 'suspended' && (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.activateButton]}
-                onPress={() => handleUpdateUserStatus(selectedUser.uid, 'active')}
-              >
-                <Text style={styles.actionButtonText}>Activate</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          ) : (
+            <TouchableOpacity style={[styles.actionButton, styles.activateButton]} onPress={() => handleUpdateStatus('active')} disabled={actionLoading}>
+              <Text style={styles.actionButtonText}>Activate</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      </Modal>
+      </>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>User Management</Text>
-          <Text style={styles.headerSubtitle}>{totalCount} total users</Text>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>User Details</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Text style={styles.closeButton}>✕</Text>
+          </TouchableOpacity>
         </View>
+        {renderContent()}
       </View>
+    </Modal>
+  );
+};
 
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search users by name or email..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSubmitEditing={handleSearch}
-        />
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-          <Text style={styles.searchButtonText}>Search</Text>
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={users}
-        renderItem={renderUser}
-        keyExtractor={(item) => item.uid}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        contentContainerStyle={styles.listContainer}
-        onEndReached={() => {
-          if (!loading && users.length < totalCount) {
-            setCurrentPage(prev => prev + 1);
-          }
-        }}
-        onEndReachedThreshold={0.1}
-      />
-
-      {renderUserModal()}
+const DetailRow: React.FC<{ label: string; value?: string; children?: React.ReactNode }> = ({ label, value, children }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.detailRow}>
+      <Text style={styles.detailLabel}>{label}:</Text>
+      {value ? <Text style={styles.detailValue}>{value}</Text> : children}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+// Main Component
+const UserManagementScreen: React.FC<UserManagementScreenProps> = ({ navigation }) => {
+  const { users, loading, totalCount, searchQuery, setSearchQuery, refresh, loadMore } = useUserManagement();
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+
+  return (
+    <View style={styles.container}>
+      <Header onBack={() => navigation.goBack()} totalCount={totalCount} />
+      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} onSearch={refresh} />
+      <FlatList
+        data={users}
+        renderItem={({ item }) => <UserCard item={item} onPress={() => setSelectedUserId(item.uid)} />}
+        keyExtractor={(item) => item.uid}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
+        contentContainerStyle={styles.listContainer}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loading && users.length > 0 ? <ActivityIndicator style={{ marginVertical: 20 }} /> : null}
+        ListEmptyComponent={!loading ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="people-outline" size={64} color="#9ca3af" />
+            <Text style={styles.emptyText}>No users found</Text>
+          </View>
+        ) : null}
+      />
+      {selectedUserId && (
+        <UserDetailsModal
+          userId={selectedUserId}
+          visible={!!selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+          onUpdate={refresh}
+        />
+      )}
+    </View>
+  );
+};
+
+const localStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: '#1e293b',
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
@@ -351,37 +313,39 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
+    color: colors.card,
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#cbd5e1',
+    color: colors.textSecondary,
   },
   searchContainer: {
     flexDirection: 'row',
     padding: 16,
     gap: 12,
+    backgroundColor: colors.background,
   },
   searchInput: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.card,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
+    color: colors.text,
   },
   searchButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingHorizontal: 20,
     paddingVertical: 12,
     justifyContent: 'center',
   },
   searchButtonText: {
-    color: 'white',
+    color: colors.card,
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -390,11 +354,11 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   userCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -409,7 +373,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: colors.text,
     flex: 1,
   },
   statusBadge: {
@@ -424,7 +388,7 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   userMeta: {
@@ -435,7 +399,7 @@ const styles = StyleSheet.create({
   },
   userMetaText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.textSecondary,
   },
   verificationBadge: {
     paddingHorizontal: 8,
@@ -453,11 +417,11 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 14,
-    color: '#374151',
+    color: colors.text,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -465,16 +429,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     paddingTop: 60,
-    backgroundColor: '#1e293b',
+    backgroundColor: colors.primary,
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
+    color: colors.card,
   },
   closeButton: {
     fontSize: 24,
-    color: 'white',
+    color: colors.card,
     padding: 8,
   },
   modalContent: {
@@ -482,11 +446,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   userDetailSection: {
-    backgroundColor: 'white',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -495,7 +459,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: colors.text,
     marginBottom: 16,
   },
   detailRow: {
@@ -506,23 +470,23 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.textSecondary,
     flex: 1,
   },
   detailValue: {
     fontSize: 16,
-    color: '#1f2937',
+    color: colors.text,
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
   },
   noteCard: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#6366f1',
+    borderLeftColor: colors.primary,
   },
   noteHeader: {
     flexDirection: 'row',
@@ -532,21 +496,24 @@ const styles = StyleSheet.create({
   noteAdmin: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#374151',
+    color: colors.text,
   },
   noteDate: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.textSecondary,
   },
   noteText: {
     fontSize: 16,
-    color: '#1f2937',
+    color: colors.text,
     lineHeight: 22,
   },
   modalActions: {
     flexDirection: 'row',
     padding: 20,
     gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.card,
   },
   actionButton: {
     flex: 1,
@@ -555,19 +522,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noteButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
   },
   suspendButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.notification,
   },
   activateButton: {
-    backgroundColor: '#10b981',
+    backgroundColor: colors.success,
   },
   actionButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+  },
+  modalLoading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });
 
 export default UserManagementScreen;

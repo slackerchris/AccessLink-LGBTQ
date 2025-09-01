@@ -3,15 +3,19 @@
  * Provides debugging tools and system information for admin dashboard
  */
 
-import { databaseService } from './webDatabaseService';
-import type { User, Business, Review } from './webDatabaseService';
+import { adminService } from './adminService';
+import { UserProfile } from './authService';
+import { businessService, BusinessListing } from './businessService';
+import { getAllReviews, Review } from './reviewService';
+import { logger } from '../utils/logger';
+import { Timestamp } from 'firebase/firestore';
 
 export interface SystemInfo {
   platform: string;
   timestamp: string;
   userAgent: string;
   url: string;
-  localStorage: { [key: string]: any };
+  localStorage: { [key: string]: string | null };
   indexedDBSupport: boolean;
   databases: string[];
 }
@@ -20,10 +24,10 @@ export interface DatabaseStats {
   totalUsers: number;
   totalBusinesses: number;
   totalReviews: number;
-  usersByType: { [key: string]: number };
+  usersByRole: { [key: string]: number };
   businessesByCategory: { [key: string]: number };
-  recentUsers: User[];
-  recentBusinesses: Business[];
+  recentUsers: UserProfile[];
+  recentBusinesses: BusinessListing[];
   recentReviews: Review[];
 }
 
@@ -33,7 +37,7 @@ export interface LogEntry {
   level: 'info' | 'warn' | 'error' | 'debug';
   category: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 class DebugService {
@@ -42,7 +46,7 @@ class DebugService {
   private isLogging = false; // Prevent infinite recursion
 
   // Log collection
-  log(level: LogEntry['level'], category: string, message: string, data?: any) {
+  log(level: LogEntry['level'], category: string, message: string, data?: unknown) {
     // Prevent infinite recursion when console methods call this
     if (this.isLogging) return;
     
@@ -82,19 +86,19 @@ class DebugService {
     }
   }
 
-  info(category: string, message: string, data?: any) {
+  info(category: string, message: string, data?: unknown) {
     this.log('info', category, message, data);
   }
 
-  warn(category: string, message: string, data?: any) {
+  warn(category: string, message: string, data?: unknown) {
     this.log('warn', category, message, data);
   }
 
-  error(category: string, message: string, data?: any) {
+  error(category: string, message: string, data?: unknown) {
     this.log('error', category, message, data);
   }
 
-  debug(category: string, message: string, data?: any) {
+  debug(category: string, message: string, data?: unknown) {
     this.log('debug', category, message, data);
   }
 
@@ -185,42 +189,43 @@ class DebugService {
   async getDatabaseStats(): Promise<DatabaseStats> {
     try {
       // Get all data
-      const users = await databaseService.getAllUsers();
-      const businesses = await databaseService.getAllBusinesses();
-      const reviews = await databaseService.getAllReviews();
+      const { users } = await adminService.getUsers(1, 10000); // Use adminService and a larger limit
+      const { businesses } = await businessService.getAllBusinesses();
+      const { reviews } = await getAllReviews();
 
       // Calculate statistics
-      const usersByType: { [key: string]: number } = {};
+      const usersByRole: { [key: string]: number } = {};
       users.forEach(user => {
-        usersByType[user.userType] = (usersByType[user.userType] || 0) + 1;
+        const role = user.role || 'user';
+        usersByRole[role] = (usersByRole[role] || 0) + 1;
       });
 
       const businessesByCategory: { [key: string]: number } = {};
       businesses.forEach(business => {
-        const category = business.category || 'uncategorized';
+        const category = business.category || 'other';
         businessesByCategory[category] = (businessesByCategory[category] || 0) + 1;
       });
 
       // Get recent items (last 10)
-      const recentUsers = users
-        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      const recentUsers = [...users]
+        .sort((a, b) => (b.createdAt as Date).getTime() - (a.createdAt as Date).getTime())
         .slice(0, 10);
 
-      const recentBusinesses = businesses
-        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      const recentBusinesses = [...businesses]
+        .sort((a, b) => (b.createdAt as Date).getTime() - (a.createdAt as Date).getTime())
         .slice(0, 10);
 
-      const recentReviews = reviews
-        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      const recentReviews = [...reviews]
+        .sort((a, b) => (b.createdAt as Timestamp).toDate().getTime() - (a.createdAt as Timestamp).toDate().getTime())
         .slice(0, 10);
 
       return {
         totalUsers: users.length,
         totalBusinesses: businesses.length,
         totalReviews: reviews.length,
-        usersByType,
+        usersByRole,
         businessesByCategory,
-        recentUsers,
+        recentUsers: recentUsers as UserProfile[],
         recentBusinesses,
         recentReviews
       };
@@ -239,19 +244,19 @@ class DebugService {
       const lowerQuery = query.toLowerCase().trim();
       
       if (lowerQuery.startsWith('select * from users')) {
-        return await databaseService.getAllUsers();
+        return (await adminService.getUsers(1, 1000)).users;
       } else if (lowerQuery.startsWith('select * from businesses')) {
-        return await databaseService.getAllBusinesses();
+        return (await businessService.getAllBusinesses()).businesses;
       } else if (lowerQuery.startsWith('select * from reviews')) {
-        return await databaseService.getAllReviews();
+        return (await getAllReviews()).reviews;
       } else if (lowerQuery.includes('count') && lowerQuery.includes('users')) {
-        const users = await databaseService.getAllUsers();
-        return [{ count: users.length }];
+        const { totalCount } = await adminService.getUsers(1, 1);
+        return [{ count: totalCount }];
       } else if (lowerQuery.includes('count') && lowerQuery.includes('businesses')) {
-        const businesses = await databaseService.getAllBusinesses();
+        const { businesses } = await businessService.getAllBusinesses();
         return [{ count: businesses.length }];
       } else if (lowerQuery.includes('count') && lowerQuery.includes('reviews')) {
-        const reviews = await databaseService.getAllReviews();
+        const { reviews } = await getAllReviews();
         return [{ count: reviews.length }];
       } else {
         throw new Error(`Unsupported query: ${query}. Supported: SELECT * FROM [users|businesses|reviews], COUNT(*) FROM [table]`);
@@ -273,25 +278,26 @@ class DebugService {
 
     // Test database read performance
     const readStart = performance.now();
-    await databaseService.getAllUsers();
+    await adminService.getUsers(1, 100);
     const readEnd = performance.now();
     const dbReadTime = readEnd - readStart;
 
     // Test database write performance (create and delete a test user)
     const writeStart = performance.now();
     try {
-      const testUser: User = {
-        id: 'perf-test-' + Date.now(),
+      const testUser: UserProfile = {
+        uid: 'perf-test-' + Date.now(),
         email: 'perf-test@example.com',
         displayName: 'Performance Test User',
-        userType: 'user',
-        passwordHash: 'test-hash', // Add required field
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString(),
-        profileData: '{}'
+        role: 'user',
+        isEmailVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        profile: {}
       };
-      await databaseService.createUser(testUser);
-      await databaseService.deleteUser(testUser.id);
+      // These methods don't exist, would need to implement in authService
+      // await authService.createUser(testUser); 
+      // await authService.deleteUser(testUser.uid);
     } catch (error) {
       this.warn('Debug', 'Performance test write operation failed', error);
     }
@@ -299,7 +305,7 @@ class DebugService {
     const dbWriteTime = writeEnd - writeStart;
 
     // Skip auth service test to avoid circular dependency
-    const authTime = 0; // Placeholder - we removed webAuthService import
+    const authTime = 0; // Placeholder
 
     const results = {
       dbReadTime,
@@ -314,8 +320,8 @@ class DebugService {
 
   // Export data for debugging
   async exportData(): Promise<{
-    users: User[];
-    businesses: Business[];
+    users: UserProfile[];
+    businesses: BusinessListing[];
     reviews: Review[];
     logs: LogEntry[];
     systemInfo: SystemInfo;
@@ -323,15 +329,15 @@ class DebugService {
   }> {
     this.info('Debug', 'Exporting debug data');
 
-    const [users, businesses, reviews, systemInfo] = await Promise.all([
-      databaseService.getAllUsers(),
-      databaseService.getAllBusinesses(),
-      databaseService.getAllReviews(),
+    const [{ users }, { businesses }, { reviews }, systemInfo] = await Promise.all([
+      adminService.getUsers(1, 10000),
+      businessService.getAllBusinesses(),
+      getAllReviews(),
       this.getSystemInfo()
     ]);
 
     return {
-      users,
+      users: users as UserProfile[],
       businesses,
       reviews,
       logs: this.logs,
@@ -345,35 +351,8 @@ class DebugService {
     this.info('Debug', 'Importing additional sample data');
     
     try {
-      // Create some test users
-      const testUsers: User[] = [
-        {
-          id: 'test-user-1-' + Date.now(),
-          email: 'test-user-1@example.com',
-          displayName: 'Test User 1',
-          userType: 'user',
-          passwordHash: 'test-hash', // Add required field
-          createdAt: new Date().toISOString(),
-          lastLoginAt: new Date().toISOString(),
-          profileData: '{}'
-        },
-        {
-          id: 'test-business-1-' + Date.now(),
-          email: 'test-business-1@example.com',
-          displayName: 'Test Business Owner 1',
-          userType: 'business',
-          passwordHash: 'test-hash', // Add required field
-          createdAt: new Date().toISOString(),
-          lastLoginAt: new Date().toISOString(),
-          profileData: '{}'
-        }
-      ];
-
-      for (const userData of testUsers) {
-        await databaseService.createUser(userData);
-      }
-
-      this.info('Debug', 'Sample data imported successfully');
+      // This would require a registration flow
+      this.warn('Debug', 'Sample data import needs to be implemented via authService.registerUser');
     } catch (error) {
       this.error('Debug', 'Failed to import sample data', error);
       throw error;
@@ -384,44 +363,8 @@ class DebugService {
 // Create singleton instance
 export const debugService = new DebugService();
 
-// Store original console methods globally to prevent recursion
-(globalThis as any).__originalConsole = {
-  log: console.log,
-  warn: console.warn,
-  error: console.error,
-  info: console.info
-};
-
-const originalConsole = (globalThis as any).__originalConsole;
-
-// Hook into console methods to capture logs (but prevent recursion)
-console.log = (...args) => {
-  if (!debugService['isLogging']) {
-    debugService.log('info', 'Console', args.join(' '));
-  }
-  originalConsole.log(...args);
-};
-
-console.warn = (...args) => {
-  if (!debugService['isLogging']) {
-    debugService.log('warn', 'Console', args.join(' '));
-  }
-  originalConsole.warn(...args);
-};
-
-console.error = (...args) => {
-  if (!debugService['isLogging']) {
-    debugService.log('error', 'Console', args.join(' '));
-  }
-  originalConsole.error(...args);
-};
-
-console.info = (...args) => {
-  if (!debugService['isLogging']) {
-    debugService.log('info', 'Console', args.join(' '));
-  }
-  originalConsole.info(...args);
-};
+// Replace console logging with our logger
+logger.overrideConsole();
 
 // Log initial system information
 debugService.info('Debug', 'Debug service initialized');

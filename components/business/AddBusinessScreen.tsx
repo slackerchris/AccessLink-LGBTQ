@@ -1,9 +1,4 @@
-/**
- * Add Business Screen
- * Allows admins and business owners to add new businesses
- */
-
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -11,51 +6,79 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   SafeAreaView,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useFirebaseAuth';
 import { BusinessCategory } from '../../services/businessService';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../services/firebase';
-import { validators } from '../../utils/validators';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
+import { useTheme } from '../../hooks/useTheme';
+import { useAddBusiness } from '../../hooks/useAddBusiness';
+
+// Navigation Prop
+type AddBusinessScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddBusiness'>;
 
 interface AddBusinessScreenProps {
-  navigation: any;
+  navigation: AddBusinessScreenNavigationProp;
 }
 
-export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps) {
-  const { user, userProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
-  
-  // Business basic info
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<BusinessCategory>('other');
-  
-  // Location
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  
-  // Contact
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [website, setWebsite] = useState('');
-  
-  // LGBTQ+ Friendly
-  const [lgbtqVerified, setLgbtqVerified] = useState(false);
-  
-  // Accessibility
-  const [wheelchairAccessible, setWheelchairAccessible] = useState(false);
-  const [brailleMenus, setBrailleMenus] = useState(false);
-  const [signLanguageSupport, setSignLanguageSupport] = useState(false);
-  const [quietSpaces, setQuietSpaces] = useState(false);
-  const [accessibilityNotes, setAccessibilityNotes] = useState('');
+// Memoized Sub-components
+const Header: React.FC<{ onBack: () => void }> = React.memo(({ onBack }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <Ionicons name="arrow-back" size={24} color={colors.headerText} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Add New Business</Text>
+      <View style={styles.headerSpacer} />
+    </View>
+  );
+});
 
+const FormSection: React.FC<{ title: string; children: React.ReactNode }> = React.memo(({ title, children }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {children}
+    </View>
+  );
+});
+
+const FormInput: React.FC<{
+  label: string;
+  value: string | undefined;
+  onChangeText: (text: string) => void;
+  placeholder: string;
+  multiline?: boolean;
+  keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad' | 'url';
+  maxLength?: number;
+}> = React.memo(({ label, ...props }) => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        style={[styles.input, props.multiline && styles.textArea]}
+        placeholderTextColor={colors.textSecondary}
+        {...props}
+      />
+    </View>
+  );
+});
+
+const CategorySelector: React.FC<{
+  selectedCategory: BusinessCategory;
+  onSelectCategory: (category: BusinessCategory) => void;
+}> = React.memo(({ selectedCategory, onSelectCategory }) => {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
   const categories: { value: BusinessCategory; label: string }[] = [
     { value: 'restaurant', label: 'Restaurant' },
     { value: 'healthcare', label: 'Healthcare' },
@@ -69,342 +92,189 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
     { value: 'other', label: 'Other' },
   ];
 
-  const validateForm = (): string | null => {
-    if (!name.trim()) return 'Business name is required';
-    if (!description.trim()) return 'Business description is required';
-    if (!address.trim()) return 'Address is required';
-    if (!city.trim()) return 'City is required';
-    if (!state.trim()) return 'State is required';
-    if (!zipCode.trim()) return 'ZIP code is required';
-    
-    if (email && !validators.email(email).isValid) {
-      return validators.email(email).message;
-    }
-    
-    if (phone && !validators.phone(phone).isValid) {
-      return validators.phone(phone).message;
-    }
-    
-    return null;
-  };
+  return (
+    <View style={styles.categoryContainer}>
+      {categories.map((cat) => (
+        <TouchableOpacity
+          key={cat.value}
+          style={[styles.categoryButton, selectedCategory === cat.value && styles.categoryButtonActive]}
+          onPress={() => onSelectCategory(cat.value)}
+        >
+          <Text style={[styles.categoryButtonText, selectedCategory === cat.value && styles.categoryButtonTextActive]}>
+            {cat.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+});
 
-  const handleSubmit = async () => {
-    const validationError = validateForm();
-    if (validationError) {
-      Alert.alert('Validation Error', validationError);
-      return;
-    }
+const FormSwitch: React.FC<{
+  label: string;
+  value: boolean | undefined;
+  onValueChange: (value: boolean) => void;
+}> = React.memo(({ label, value, onValueChange }) => {
+  const { createStyles, colors } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <View style={styles.switchRow}>
+      <Text style={styles.switchLabel}>{label}</Text>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: colors.border, true: colors.primary }}
+        thumbColor={"#ffffff"}
+      />
+    </View>
+  );
+});
 
-    setLoading(true);
-    try {
-      // Build contact object without undefined values
-      const contactData: any = {};
-      if (phone.trim()) contactData.phone = phone.trim();
-      if (email.trim()) contactData.email = email.trim();
-      if (website.trim()) contactData.website = website.trim();
+const SubmitButton: React.FC<{ loading: boolean; onPress: () => void }> = React.memo(({ loading, onPress }) => {
+  const { colors, createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  return (
+    <TouchableOpacity
+      style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+      onPress={onPress}
+      disabled={loading}
+    >
+      {loading ? <ActivityIndicator color={colors.headerText} /> : <Text style={styles.submitButtonText}>Create Business</Text>}
+    </TouchableOpacity>
+  );
+});
 
-      const businessData = {
-        name: name.trim(),
-        description: description.trim(),
-        category,
-        location: {
-          address: address.trim(),
-          city: city.trim(),
-          state: state.trim(),
-          zipCode: zipCode.trim(),
-        },
-        contact: contactData,
-        accessibility: {
-          wheelchairAccessible,
-          brailleMenus,
-          signLanguageSupport,
-          quietSpaces,
-          accessibilityNotes: accessibilityNotes.trim(),
-        },
-        lgbtqFriendly: {
-          verified: lgbtqVerified,
-          certifications: [],
-          inclusivityFeatures: [],
-        },
-        hours: {},
-        tags: [],
-        images: [],
-        featured: false,
-        ownerId: userProfile?.uid || '',
-        status: 'pending' as const,
-      };
-
-      if (!userProfile) {
-        Alert.alert('Error', 'User profile not found');
-        return;
-      }
-
-      // Create business document directly in Firestore
-      const docRef = await addDoc(collection(db, 'businesses'), {
-        ...businessData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        averageRating: 0,
-        totalReviews: 0,
-      });
-      
-      Alert.alert(
-        'Success',
-        'Business has been created successfully and is pending approval!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create business');
-    } finally {
-      setLoading(false);
-    }
-  };
+// Main Component
+export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps) {
+  const { createStyles } = useTheme();
+  const styles = createStyles(localStyles);
+  const { formData, businessLoading, handleInputChange, handleNestedInputChange, handleSubmit } = useAddBusiness(() =>
+    navigation.goBack()
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Business</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <Header onBack={() => navigation.goBack()} />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Basic Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Business Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter business name"
-              maxLength={100}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Description *</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Describe your business"
-              multiline
-              numberOfLines={4}
-              maxLength={500}
-            />
-          </View>
-
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <FormSection title="Basic Information">
+          <FormInput
+            label="Business Name *"
+            value={formData.name}
+            onChangeText={(val) => handleInputChange('name', val)}
+            placeholder="Enter business name"
+          />
+          <FormInput
+            label="Description *"
+            value={formData.description}
+            onChangeText={(val) => handleInputChange('description', val)}
+            placeholder="Describe your business and its services"
+            multiline
+          />
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Category *</Text>
-            <View style={styles.categoryContainer}>
-              {categories.map((cat) => (
-                <TouchableOpacity
-                  key={cat.value}
-                  style={[
-                    styles.categoryButton,
-                    category === cat.value && styles.categoryButtonActive
-                  ]}
-                  onPress={() => setCategory(cat.value)}
-                >
-                  <Text style={[
-                    styles.categoryButtonText,
-                    category === cat.value && styles.categoryButtonTextActive
-                  ]}>
-                    {cat.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Location */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Address *</Text>
-            <TextInput
-              style={styles.input}
-              value={address}
-              onChangeText={setAddress}
-              placeholder="Street address"
+            <CategorySelector
+              selectedCategory={formData.category}
+              onSelectCategory={(val) => handleInputChange('category', val)}
             />
           </View>
+        </FormSection>
 
+        <FormSection title="Location">
+          <FormInput
+            label="Address *"
+            value={formData.location?.address}
+            onChangeText={(val) => handleNestedInputChange('location', 'address', val)}
+            placeholder="Street address"
+          />
           <View style={styles.row}>
-            <View style={[styles.inputGroup, styles.flex1]}>
-              <Text style={styles.label}>City *</Text>
-              <TextInput
-                style={styles.input}
-                value={city}
-                onChangeText={setCity}
+            <View style={styles.flex1}>
+              <FormInput
+                label="City *"
+                value={formData.location?.city}
+                onChangeText={(val) => handleNestedInputChange('location', 'city', val)}
                 placeholder="City"
               />
             </View>
-
-            <View style={[styles.inputGroup, styles.flex1, styles.marginLeft]}>
-              <Text style={styles.label}>State *</Text>
-              <TextInput
-                style={styles.input}
-                value={state}
-                onChangeText={setState}
-                placeholder="State"
+            <View style={[styles.flex1, styles.marginLeft]}>
+              <FormInput
+                label="State *"
+                value={formData.location?.state}
+                onChangeText={(val) => handleNestedInputChange('location', 'state', val)}
+                placeholder="ST"
                 maxLength={2}
               />
             </View>
           </View>
+          <FormInput
+            label="ZIP Code *"
+            value={formData.location?.zipCode}
+            onChangeText={(val) => handleNestedInputChange('location', 'zipCode', val)}
+            placeholder="ZIP Code"
+            keyboardType="numeric"
+            maxLength={10}
+          />
+        </FormSection>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>ZIP Code *</Text>
-            <TextInput
-              style={[styles.input, styles.zipInput]}
-              value={zipCode}
-              onChangeText={setZipCode}
-              placeholder="ZIP Code"
-              keyboardType="numeric"
-              maxLength={10}
-            />
-          </View>
-        </View>
+        <FormSection title="Contact Information">
+          <FormInput
+            label="Phone"
+            value={formData.contact?.phone}
+            onChangeText={(val) => handleNestedInputChange('contact', 'phone', val)}
+            placeholder="(555) 123-4567"
+            keyboardType="phone-pad"
+          />
+          <FormInput
+            label="Email"
+            value={formData.contact?.email}
+            onChangeText={(val) => handleNestedInputChange('contact', 'email', val)}
+            placeholder="contact@business.com"
+            keyboardType="email-address"
+          />
+          <FormInput
+            label="Website"
+            value={formData.contact?.website}
+            onChangeText={(val) => handleNestedInputChange('contact', 'website', val)}
+            placeholder="https://your-business.com"
+            keyboardType="url"
+          />
+        </FormSection>
 
-        {/* Contact Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="Phone number"
-              keyboardType="phone-pad"
-            />
-          </View>
+        <FormSection title="Inclusivity & Accessibility">
+          <FormSwitch
+            label="LGBTQ+ Verified"
+            value={formData.lgbtqFriendly?.verified}
+            onValueChange={(val) => handleNestedInputChange('lgbtqFriendly', 'verified', val)}
+          />
+          <FormSwitch
+            label="Wheelchair Accessible"
+            value={formData.accessibility?.wheelchairAccessible}
+            onValueChange={(val) => handleNestedInputChange('accessibility', 'wheelchairAccessible', val)}
+          />
+          <FormSwitch
+            label="Braille Menus"
+            value={formData.accessibility?.brailleMenus}
+            onValueChange={(val) => handleNestedInputChange('accessibility', 'brailleMenus', val)}
+          />
+          <FormSwitch
+            label="Sign Language Support"
+            value={formData.accessibility?.signLanguageSupport}
+            onValueChange={(val) => handleNestedInputChange('accessibility', 'signLanguageSupport', val)}
+          />
+          <FormSwitch
+            label="Quiet Spaces Available"
+            value={formData.accessibility?.quietSpaces}
+            onValueChange={(val) => handleNestedInputChange('accessibility', 'quietSpaces', val)}
+          />
+          <FormInput
+            label="Accessibility Notes"
+            value={formData.accessibility?.accessibilityNotes}
+            onChangeText={(val) => handleNestedInputChange('accessibility', 'accessibilityNotes', val)}
+            placeholder="e.g., Ramp available at side entrance"
+            multiline
+          />
+        </FormSection>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email address"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Website</Text>
-            <TextInput
-              style={styles.input}
-              value={website}
-              onChangeText={setWebsite}
-              placeholder="https://..."
-              keyboardType="url"
-              autoCapitalize="none"
-            />
-          </View>
-        </View>
-
-        {/* LGBTQ+ Friendly */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>LGBTQ+ Friendly</Text>
-          
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>LGBTQ+ Verified</Text>
-            <Switch
-              value={lgbtqVerified}
-              onValueChange={setLgbtqVerified}
-              trackColor={{ false: '#767577', true: '#6366f1' }}
-              thumbColor={lgbtqVerified ? '#ffffff' : '#f4f3f4'}
-            />
-          </View>
-        </View>
-
-        {/* Accessibility */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Accessibility Features</Text>
-          
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Wheelchair Accessible</Text>
-            <Switch
-              value={wheelchairAccessible}
-              onValueChange={setWheelchairAccessible}
-              trackColor={{ false: '#767577', true: '#6366f1' }}
-              thumbColor={wheelchairAccessible ? '#ffffff' : '#f4f3f4'}
-            />
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Braille Menus</Text>
-            <Switch
-              value={brailleMenus}
-              onValueChange={setBrailleMenus}
-              trackColor={{ false: '#767577', true: '#6366f1' }}
-              thumbColor={brailleMenus ? '#ffffff' : '#f4f3f4'}
-            />
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Sign Language Support</Text>
-            <Switch
-              value={signLanguageSupport}
-              onValueChange={setSignLanguageSupport}
-              trackColor={{ false: '#767577', true: '#6366f1' }}
-              thumbColor={signLanguageSupport ? '#ffffff' : '#f4f3f4'}
-            />
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Quiet Spaces Available</Text>
-            <Switch
-              value={quietSpaces}
-              onValueChange={setQuietSpaces}
-              trackColor={{ false: '#767577', true: '#6366f1' }}
-              thumbColor={quietSpaces ? '#ffffff' : '#f4f3f4'}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Accessibility Notes</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={accessibilityNotes}
-              onChangeText={setAccessibilityNotes}
-              placeholder="Additional accessibility information"
-              multiline
-              numberOfLines={3}
-              maxLength={300}
-            />
-          </View>
-        </View>
-
-        {/* Submit Button */}
-        <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Creating Business...' : 'Create Business'}
-          </Text>
-        </TouchableOpacity>
+        <SubmitButton loading={businessLoading} onPress={handleSubmit} />
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -412,138 +282,135 @@ export default function AddBusinessScreen({ navigation }: AddBusinessScreenProps
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    paddingTop: 45,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  headerSpacer: {
-    width: 34,
-  },
-  content: {
-    flex: 1,
-  },
-  section: {
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#ffffff',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  zipInput: {
-    width: 120,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  flex1: {
-    flex: 1,
-  },
-  marginLeft: {
-    marginLeft: 12,
-  },
-  categoryContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  categoryButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#ffffff',
-  },
-  categoryButtonActive: {
-    backgroundColor: '#6366f1',
-    borderColor: '#6366f1',
-  },
-  categoryButtonText: {
-    fontSize: 14,
-    color: '#374151',
-  },
-  categoryButtonTextActive: {
-    color: '#ffffff',
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  switchLabel: {
-    fontSize: 16,
-    color: '#374151',
-    flex: 1,
-  },
-  submitButton: {
-    backgroundColor: '#6366f1',
-    marginHorizontal: 16,
-    marginTop: 24,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  bottomSpacer: {
-    height: 32,
-  },
-});
+const localStyles = (colors: any, shadows: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.header,
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      paddingTop: 45, // Adjust as needed for status bar
+    },
+    backButton: {
+      padding: 5,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.headerText,
+    },
+    headerSpacer: {
+      width: 34, // Match back button size
+    },
+    content: {
+      flex: 1,
+    },
+    section: {
+      backgroundColor: colors.card,
+      marginHorizontal: 16,
+      marginTop: 16,
+      borderRadius: 12,
+      padding: 20,
+      ...shadows.card,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 16,
+    },
+    inputGroup: {
+      marginBottom: 16,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      fontSize: 16,
+      backgroundColor: colors.surface,
+      color: colors.text,
+    },
+    textArea: {
+      height: 100,
+      textAlignVertical: 'top',
+    },
+    row: {
+      flexDirection: 'row',
+    },
+    flex1: {
+      flex: 1,
+    },
+    marginLeft: {
+      marginLeft: 12,
+    },
+    categoryContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    categoryButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    categoryButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    categoryButtonText: {
+      fontSize: 14,
+      color: colors.text,
+    },
+    categoryButtonTextActive: {
+      color: colors.headerText,
+    },
+    switchRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+      paddingVertical: 4,
+    },
+    switchLabel: {
+      fontSize: 16,
+      color: colors.text,
+      flex: 1,
+    },
+    submitButton: {
+      backgroundColor: colors.primary,
+      marginHorizontal: 16,
+      marginTop: 24,
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+      ...shadows.button,
+    },
+    submitButtonDisabled: {
+      backgroundColor: colors.textSecondary,
+    },
+    submitButtonText: {
+      color: colors.headerText,
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    bottomSpacer: {
+      height: 32,
+    },
+  });

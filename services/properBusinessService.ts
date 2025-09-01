@@ -23,7 +23,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { UserProfile } from './authService';
+import { UserProfile, TimestampField } from './authService';
 
 // Core business data (master record)
 export interface BusinessListing {
@@ -70,8 +70,8 @@ export interface BusinessListing {
   tags: string[];
   averageRating: number;
   totalReviews: number;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: TimestampField;
+  updatedAt: TimestampField;
 }
 
 // Optimized for fast directory reads
@@ -90,8 +90,8 @@ export interface ApprovedBusiness {
   totalReviews: number;
   tags: string[];
   searchTerms: string[]; // Pre-computed for search
-  lastActive: any;
-  createdAt: any;
+  lastActive: TimestampField;
+  createdAt: TimestampField;
 }
 
 // Optimized for location-based queries
@@ -122,7 +122,7 @@ export interface FeaturedBusiness {
     state: string;
   };
   averageRating: number;
-  featuredUntil: any;
+  featuredUntil: TimestampField;
   priority: number;
 }
 
@@ -324,13 +324,15 @@ class ProperBusinessService {
       // Sort in memory instead of using orderBy in the query
       const sortedBusinesses = businesses
         .sort((a, b) => {
+          const toDate = (ts: TimestampField): Date => {
+            if (ts instanceof Timestamp) return ts.toDate();
+            if (ts instanceof Date) return ts;
+            // For FieldValue, we can't get a date. Return epoch as a fallback for sorting.
+            return new Date(0);
+          }
           // First by featuredUntil (asc)
-          const dateA = a.featuredUntil instanceof Timestamp 
-            ? a.featuredUntil.toDate()
-            : new Date(a.featuredUntil);
-          const dateB = b.featuredUntil instanceof Timestamp 
-            ? b.featuredUntil.toDate()
-            : new Date(b.featuredUntil);
+          const dateA = toDate(a.featuredUntil);
+          const dateB = toDate(b.featuredUntil);
           
           if (dateA < dateB) return -1;
           if (dateA > dateB) return 1;
